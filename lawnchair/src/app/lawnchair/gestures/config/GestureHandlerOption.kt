@@ -5,6 +5,7 @@ import android.content.Context
 import app.lawnchair.BlankActivity
 import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.GesturesPickApp
+import app.lawnchair.ui.preferences.navigation.GesturesPickShortcut
 import app.lawnchair.util.kotlinxJson
 import com.android.launcher3.R
 
@@ -39,6 +40,19 @@ sealed class GestureHandlerOption(
     ) {
         override suspend fun buildConfig(activity: Activity): GestureHandlerConfig? {
             val intent = PreferenceActivity.createIntent(activity, GesturesPickApp)
+            val result = BlankActivity.startBlankActivityForResult(activity, intent)
+            val configString = result.data?.getStringExtra("config") ?: return null
+            return kotlinxJson.decodeFromString(configString)
+        }
+    }
+
+    data object OpenShortcut : GestureHandlerOption(
+        R.string.gesture_handler_open_shortcut_option,
+        R.drawable.ic_launcher_home,
+        GestureHandlerConfig.OpenShortcut::class.java,
+    ) {
+        override suspend fun buildConfig(activity: Activity): GestureHandlerConfig? {
+            val intent = PreferenceActivity.createIntent(activity, GesturesPickShortcut)
             val result = BlankActivity.startBlankActivityForResult(activity, intent)
             val configString = result.data?.getStringExtra("config") ?: return null
             return kotlinxJson.decodeFromString(configString)

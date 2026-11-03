@@ -23,6 +23,7 @@ import android.os.UserHandle
 import android.util.Log
 import android.util.SparseArray
 import androidx.annotation.AnyThread
+import app.lawnchair.gestures.GestureShortcutPins
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.BuildConfigs
 import com.android.launcher3.Flags
@@ -254,6 +255,8 @@ constructor(
         allWorkspaceItems.addAll(
             ItemInstallQueue.INSTANCE[context].getPendingShortcuts(user).toList()
         )
+        // LC: shortcuts opened by swipe gestures aren't on the workspace but must stay pinned.
+        allWorkspaceItems.addAll(GestureShortcutPins.getShortcutKeys(context, user))
         // Map of packageName to shortcutIds that are currently in our model
         val modelMap =
             allWorkspaceItems

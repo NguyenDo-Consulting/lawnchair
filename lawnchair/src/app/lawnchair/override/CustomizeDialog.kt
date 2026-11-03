@@ -202,20 +202,60 @@ fun CustomizeAppDialog(
             )
         }
         if (context.launcher.stateManager.state != LauncherState.ALL_APPS) {
-            PreferenceGroup(heading = stringResource(R.string.gestures_label)) {
-                listOf(
-                    GestureType.SWIPE_UP,
-                    GestureType.SWIPE_DOWN,
-                    GestureType.SWIPE_LEFT,
-                    GestureType.SWIPE_RIGHT,
-                ).map { gestureType ->
-                    AppGesturePreference(
-                        componentKey,
-                        gestureType,
-                        stringResource(id = gestureType.labelResId),
-                    )
-                }
-            }
+            IconGesturesGroup(iconKey = componentKey.toString())
+        }
+    }
+}
+
+/**
+ * Customize dialog of a pinned shortcut (e.g. a conversation or a direct dial shortcut). A
+ * shortcut can't be renamed or re-iconed here, but it has its own swipe gestures.
+ */
+@Composable
+fun CustomizeShortcutDialog(
+    icon: Drawable,
+    title: String,
+    iconKey: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .navigationBarsOrDisplayCutoutPadding()
+            .fillMaxWidth(),
+    ) {
+        Image(
+            painter = rememberDrawablePainter(drawable = icon),
+            contentDescription = null,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(top = 32.dp, bottom = 8.dp)
+                .size(54.dp),
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .padding(horizontal = 16.dp),
+        )
+        IconGesturesGroup(iconKey = iconKey)
+    }
+}
+
+@Composable
+private fun IconGesturesGroup(iconKey: String) {
+    PreferenceGroup(heading = stringResource(R.string.gestures_label)) {
+        listOf(
+            GestureType.SWIPE_UP,
+            GestureType.SWIPE_DOWN,
+            GestureType.SWIPE_LEFT,
+            GestureType.SWIPE_RIGHT,
+        ).map { gestureType ->
+            AppGesturePreference(
+                iconKey,
+                gestureType,
+                stringResource(id = gestureType.labelResId),
+            )
         }
     }
 }

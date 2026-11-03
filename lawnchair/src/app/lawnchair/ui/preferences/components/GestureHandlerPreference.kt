@@ -37,7 +37,6 @@ import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.ui.preferences.components.layout.PreferenceDivider
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.ui.util.LocalBottomSheetHandler
-import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.google.android.msdl.data.model.MSDLToken
 import kotlinx.coroutines.launch
@@ -113,9 +112,12 @@ fun GestureHandlerPreference(
     )
 }
 
+/**
+ * A swipe gesture of one icon, see [app.lawnchair.gestures.IconGestureKeys] for [iconKey].
+ */
 @Composable
 fun AppGesturePreference(
-    cmp: ComponentKey,
+    iconKey: String,
     gestureType: GestureType,
     label: String,
     modifier: Modifier = Modifier,
@@ -126,7 +128,7 @@ fun AppGesturePreference(
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
 
     val currentConfig by produceState<GestureHandlerConfig>(initialValue = GestureHandlerConfig.NoOp) {
-        prefs.getGestureForApp(cmp, gestureType).collect { value = it }
+        prefs.getGestureForIcon(iconKey, gestureType).collect { value = it }
     }
 
     val resultReceiver = remember {
@@ -137,7 +139,7 @@ fun AppGesturePreference(
                     if (handlerString != null) {
                         val config = GestureHandlerConfig.fromString(handlerString)
                         scope.launch {
-                            prefs.setGestureForApp(cmp, gestureType, config)
+                            prefs.setGestureForIcon(iconKey, gestureType, config)
                         }
                     }
                 }

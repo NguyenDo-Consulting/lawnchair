@@ -943,34 +943,43 @@ class PreferenceManager2 @Inject constructor(
         key: ComponentKey,
         gestureType: GestureType,
         gesture: GestureHandlerConfig,
+    ) = setGestureForIcon(Converters().fromComponentKey(key)!!, gestureType, gesture)
+
+    fun getGestureForApp(key: ComponentKey, gestureType: GestureType): Flow<GestureHandlerConfig> =
+        getGestureForIcon(Converters().fromComponentKey(key)!!, gestureType)
+
+    fun getGestureForAppCached(key: ComponentKey, gestureType: GestureType): GestureHandlerConfig =
+        getGestureForIconCached(Converters().fromComponentKey(key)!!, gestureType)
+
+    /**
+     * Icon gestures are stored per icon key: an app's [ComponentKey] string, or
+     * [app.lawnchair.gestures.IconGestureKeys.forShortcut] for a pinned shortcut.
+     */
+    suspend fun setGestureForIcon(
+        iconKey: String,
+        gestureType: GestureType,
+        gesture: GestureHandlerConfig,
     ) {
-        val cmp = Converters().fromComponentKey(key)
-        val key = stringPreferencesKey("$cmp:${gestureType.name}")
+        val key = stringPreferencesKey("$iconKey:${gestureType.name}")
         preferencesDataStore.edit { prefs ->
             prefs[key] = kotlinxJson.encodeToString(gesture)
         }
     }
 
-    fun getGestureForApp(key: ComponentKey, gestureType: GestureType): Flow<GestureHandlerConfig> {
-        val cmp = Converters().fromComponentKey(key)
-        val key = stringPreferencesKey("$cmp:${gestureType.name}")
-        return preferencesDataStore.data.map { prefs ->
-            prefs[key]?.let {
-                runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }
-                    .getOrDefault(GestureHandlerConfig.NoOp)
-            } ?: GestureHandlerConfig.NoOp
-        }
+    fun getGestureForIcon(iconKey: String, gestureType: GestureType): Flow<GestureHandlerConfig> {
+        val key = stringPreferencesKey("$iconKey:${gestureType.name}")
+        return preferencesDataStore.data.map { prefs -> decodeGesture(prefs[key]) }
     }
 
-    fun getGestureForAppCached(key: ComponentKey, gestureType: GestureType): GestureHandlerConfig {
-        val cmp = Converters().fromComponentKey(key)
-        val key = stringPreferencesKey("$cmp:${gestureType.name}")
-        val prefs = getCachedPreferences()
-        return prefs[key]?.let {
-            runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }
-                .getOrDefault(GestureHandlerConfig.NoOp)
-        } ?: GestureHandlerConfig.NoOp
+    fun getGestureForIconCached(iconKey: String, gestureType: GestureType): GestureHandlerConfig {
+        val key = stringPreferencesKey("$iconKey:${gestureType.name}")
+        return decodeGesture(getCachedPreferences()[key])
     }
+
+    private fun decodeGesture(value: String?): GestureHandlerConfig = value?.let {
+        runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }
+            .getOrDefault(GestureHandlerConfig.NoOp)
+    } ?: GestureHandlerConfig.NoOp
 
     private fun initializeIconShape(shape: IconShape) {
         CustomAdaptiveIconDrawable.sInitialized = true

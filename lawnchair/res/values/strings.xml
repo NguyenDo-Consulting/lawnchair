@@ -672,6 +672,11 @@
     <string name="gesture_handler_open_assistant">Open assistant</string>
 
     <string name="pick_app_for_gesture">Pick app</string>
+    <string name="gesture_handler_open_shortcut_option">Open shortcut</string>
+    <!-- Label of a shortcut opened by a gesture: 1 is the shortcut's name (e.g. a contact), 2 is the kind of shortcut (e.g. "Direct dial") -->
+    <string name="gesture_handler_open_shortcut_label">%1$s (%2$s)</string>
+    <string name="pick_shortcut_for_gesture">Pick shortcut</string>
+    <string name="pick_shortcut_for_gesture_empty">No app offers shortcuts</string>
 
     <string name="dt2s_admin_hint_title">Admin permissions required</string>
     <string name="dt2s_admin_hint">To put the device to sleep, set Lawnchair as a device admin app. Tap \"Open settings\", then tap \"Activate this device admin app.\"</string>

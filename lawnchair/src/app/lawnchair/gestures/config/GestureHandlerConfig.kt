@@ -183,6 +183,24 @@ sealed class GestureHandlerConfig {
         override fun createHandler(context: Context) = OpenAppGestureHandler(context, target)
     }
 
+    /**
+     * Opens a pinned shortcut, created by an app's shortcut config activity (e.g. a direct dial
+     * shortcut of Contacts). [label] is shown in settings, e.g. "Mai (Direct dial)".
+     */
+    @Serializable
+    @SerialName(OpenShortcut.SERIAL_NAME)
+    data class OpenShortcut(val label: String, val target: OpenAppTarget.Shortcut) : GestureHandlerConfig() {
+        override fun getIcon(context: Context): Icon = Icon.createWithResource(context, iconRes)
+
+        override fun getDisplayLabel(context: Context) = label
+        override fun getLabel(context: Context) = context.getString(R.string.gesture_handler_open_app_config, label)
+        override fun createHandler(context: Context) = OpenAppGestureHandler(context, target)
+
+        companion object {
+            const val SERIAL_NAME = "openShortcut"
+        }
+    }
+
     companion object {
         fun toString(config: GestureHandlerConfig): String {
             return kotlinxJson.encodeToString(config)

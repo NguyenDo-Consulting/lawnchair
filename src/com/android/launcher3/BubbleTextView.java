@@ -113,6 +113,7 @@ import java.util.Objects;
 
 import app.lawnchair.preferences2.PreferenceCacheExtensionsKt;
 import app.lawnchair.font.FontManager;
+import app.lawnchair.gestures.IconGestureKeys;
 import app.lawnchair.gestures.IconGestureListener;
 import app.lawnchair.preferences.PreferenceManager;
 import app.lawnchair.preferences2.PreferenceManager2;
@@ -506,7 +507,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         setTag(itemInfo);
         // Lawnchair: Icon swipe gesture feature
         mGestureListener = shouldSupportIconSwipeGestures()
-                ? new IconGestureListener(this, pref2, itemInfo.getComponentKey())
+                ? new IconGestureListener(this, pref2, IconGestureKeys.forItem(itemInfo))
                 : null;
     }
 

@@ -12,7 +12,6 @@ import app.lawnchair.gestures.type.GestureType
 import app.lawnchair.launcher
 import app.lawnchair.preferences2.PreferenceManager2
 import com.android.launcher3.BubbleTextView
-import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.VibratorWrapper
 import com.google.android.msdl.data.model.MSDLToken
@@ -22,7 +21,7 @@ import kotlinx.coroutines.launch
 class IconGestureListener(
     private val view: BubbleTextView,
     private val prefs: PreferenceManager2,
-    private val componentKey: ComponentKey?,
+    private val iconKey: String?,
 ) : DirectionalGestureListener(view.context) {
 
     private val context get() = view.context
@@ -152,11 +151,11 @@ class IconGestureListener(
             .start()
     }
 
-    /** Get gesture handler for that app's component
-     * @param gestureType The type of gesture to resolve for the current component */
+    /** Get gesture handler for this icon (an app, or a pinned shortcut)
+     * @param gestureType The type of gesture to resolve for the current icon */
     private fun resolveGesture(gestureType: GestureType): GestureHandlerConfig? {
-        val currentComponentKey = componentKey ?: return null
-        val gesture = prefs.getGestureForAppCached(currentComponentKey, gestureType)
+        val currentIconKey = iconKey ?: return null
+        val gesture = prefs.getGestureForIconCached(currentIconKey, gestureType)
         return gesture.takeUnless { it is GestureHandlerConfig.NoOp }
     }
 }

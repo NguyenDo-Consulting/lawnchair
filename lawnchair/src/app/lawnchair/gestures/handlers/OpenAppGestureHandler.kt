@@ -1,11 +1,15 @@
 package app.lawnchair.gestures.handlers
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.os.UserHandle
+import android.util.Log
+import android.widget.Toast
 import androidx.core.content.getSystemService
 import app.lawnchair.LawnchairLauncher
+import com.android.launcher3.R
 import app.lawnchair.util.ComponentKeySerializer
 import app.lawnchair.util.IntentSerializer
 import app.lawnchair.util.UserHandlerSerializer
@@ -30,8 +34,34 @@ class OpenAppGestureHandler(
                 )
             }
 
-            is OpenAppTarget.Shortcut -> Unit
+            is OpenAppTarget.Shortcut -> {
+                try {
+                    launcher.getSystemService<LauncherApps>()?.startShortcut(
+                        target.packageName,
+                        target.id,
+                        null,
+                        null,
+                        target.user,
+                    )
+                } catch (e: ActivityNotFoundException) {
+                    onShortcutUnavailable(launcher, e)
+                } catch (e: IllegalStateException) {
+                    onShortcutUnavailable(launcher, e)
+                } catch (e: SecurityException) {
+                    onShortcutUnavailable(launcher, e)
+                }
+            }
         }
+    }
+
+    // The shortcut was removed by its app, or its app was uninstalled.
+    private fun onShortcutUnavailable(launcher: LawnchairLauncher, e: Exception) {
+        Log.w(TAG, "Can't start shortcut", e)
+        Toast.makeText(launcher, R.string.shortcut_not_available, Toast.LENGTH_SHORT).show()
+    }
+
+    companion object {
+        private const val TAG = "OpenAppGestureHandler"
     }
 }
 
