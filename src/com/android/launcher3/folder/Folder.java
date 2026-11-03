@@ -1454,6 +1454,11 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @VisibleForTesting
     int getFooterHeight() {
+        // Lawnchair: Drawer folders hide their title, so with no page indicator either the footer
+        // only needs to mirror the top padding
+        if (isInAppDrawer() && mContent.getPageCount() <= 1) {
+            return mActivityContext.getDeviceProfile().folderContentPaddingTop;
+        }
         return mFooterHeight;
     }
 
@@ -1468,7 +1473,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mContent.measure(contentAreaWidthSpec, contentAreaHeightSpec);
 
         mFooter.measure(contentAreaWidthSpec,
-                MeasureSpec.makeMeasureSpec(mFooterHeight, MeasureSpec.EXACTLY));
+                MeasureSpec.makeMeasureSpec(getFooterHeight(), MeasureSpec.EXACTLY));
 
         int folderWidth = getPaddingLeft() + getPaddingRight() + contentWidth;
         int folderHeight = getFolderHeight(contentHeight);
@@ -1487,7 +1492,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         int minTitleWidth = getResources().getDimensionPixelSize(R.dimen.folder_title_min_width);
-        if (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth) {
+        // Lawnchair: App drawer folders already show their name under the folder icon
+        if (isInAppDrawer()
+                || (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth)) {
             ((MarginLayoutParams) mFolderName.getLayoutParams()).setMarginEnd(0);
             // The post is necessary for margins to be recalculated. RTL UI is shifted otherwise.
             mFolderName.post(() -> mFolderName.setVisibility(View.GONE));

@@ -22,13 +22,17 @@ import android.view.View
 import android.widget.Toast
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
+import app.lawnchair.data.folder.service.FolderService
 import app.lawnchair.gestures.IconGestureKeys
 import app.lawnchair.override.CustomizeAppDialog
 import app.lawnchair.override.CustomizeShortcutDialog
 import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.preferences2.ReloadHelper
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.ui.preferences.PreferenceActivity
+import app.lawnchair.ui.preferences.destinations.FolderEditSheet
 import app.lawnchair.ui.preferences.navigation.AppDrawerAppListToFolder
 import app.lawnchair.views.ComposeBottomSheet
 import com.android.launcher3.AbstractFloatingView
@@ -42,6 +46,7 @@ import com.android.launcher3.graphics.ThemeManager
 import com.android.launcher3.icons.LauncherIcons
 import com.android.launcher3.logging.StatsLogManager
 import com.android.launcher3.model.data.AppInfo as ModelAppInfo
+import com.android.launcher3.model.data.FolderInfo
 import com.android.launcher3.model.data.ItemInfo
 import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.popup.SystemShortcut
@@ -52,6 +57,7 @@ import com.android.launcher3.util.PackageManagerHelper
 import com.android.launcher3.views.ActivityContext
 import com.android.launcher3.views.OptionsPopupView
 import java.net.URISyntaxException
+import kotlinx.coroutines.launch
 
 class LawnchairShortcut {
 
@@ -81,17 +87,41 @@ class LawnchairShortcut {
                         R.drawable.ic_edit,
                         StatsLogManager.LauncherEvent.IGNORE,
                     ) {
+                        showAppDrawerFolderEditSheet(launcher, folderIcon.mInfo)
+                        true
+                    },
+                ),
+                true,
+            ) != null
+        }
+
+        /**
+         * The open drawer folder hides its title, so renaming happens in this sheet instead.
+         */
+        private fun showAppDrawerFolderEditSheet(launcher: LawnchairLauncher, folderInfo: FolderInfo) {
+            ComposeBottomSheet.show(launcher) {
+                FolderEditSheet(
+                    folderId = folderInfo.id,
+                    initialTitle = folderInfo.title?.toString().orEmpty(),
+                    itemCount = folderInfo.getContents().size,
+                    onRename = { folderId, title ->
+                        launcher.lifecycleScope.launch {
+                            FolderService.INSTANCE.get(launcher).renameFolderInfo(folderId, title)
+                            ReloadHelper(launcher).reloadGrid()
+                        }
+                    },
+                    onNavigate = { folderId ->
+                        close(false)
                         launcher.startActivity(
                             PreferenceActivity.createIntent(
                                 launcher,
                                 AppDrawerAppListToFolder(folderId),
                             ),
                         )
-                        true
                     },
-                ),
-                true,
-            ) != null
+                    onDismiss = { close(true) },
+                )
+            }
         }
 
         val CUSTOMIZE =
