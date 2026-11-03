@@ -839,6 +839,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = false,
     )
 
+    /** Puts the dock search bar above the dock icons instead of below them, on phones. */
+    val dockSearchBarAboveIcons = preference(
+        key = booleanPreferencesKey(name = "dock_search_bar_above_icons"),
+        defaultValue = false,
+    )
+
     val doubleTapGestureHandler = serializablePreference<GestureHandlerConfig>(
         key = stringPreferencesKey("double_tap_gesture_handler"),
         defaultValue = GestureHandlerConfig.Sleep,
@@ -946,6 +952,12 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
 
         enableLabelInDock.get()
+            .drop(1)
+            .distinctUntilChanged()
+            .onEach { reloadHelper.reloadGrid() }
+            .launchIn(scope)
+
+        dockSearchBarAboveIcons.get()
             .drop(1)
             .distinctUntilChanged()
             .onEach { reloadHelper.reloadGrid() }

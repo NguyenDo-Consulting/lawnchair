@@ -90,6 +90,13 @@ fun DockSearchPreference(
                             strokeWidth = qsbHotseatStrokeWidth.state.value,
                             strokeColor = strokeColorStyleAdapter.state.value,
                         )
+                        PreferenceGroup {
+                            SwitchPreference(
+                                adapter = prefs2.dockSearchBarAboveIcons.getAdapter(),
+                                label = stringResource(id = R.string.dock_search_bar_above_icons_label),
+                                description = stringResource(id = R.string.dock_search_bar_above_icons_description),
+                            )
+                        }
                     }
                 }
                 ExpandAndShrink(visible = isLawnchairHotseat) {

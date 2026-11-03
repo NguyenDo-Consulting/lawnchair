@@ -351,6 +351,8 @@ public class DeviceProfile {
     private float widgetPaddingFactor;
     private float drawerPaddingTopFactor;
     private PreferenceManager2 preferenceManager2 = null;
+    // Lawnchair: the user put the dock search bar above the dock icons
+    private boolean mDockSearchBarAboveIcons;
 
     /** TODO: Once we fully migrate to staged split, remove "isMultiWindowMode" */
     DeviceProfile(Context context, InvariantDeviceProfile inv, Info info,
@@ -363,6 +365,10 @@ public class DeviceProfile {
         mTextFactors = DeviceProfileOverrides.INSTANCE.get(context).getTextFactors();
 
         preferenceManager2 = PreferenceManager2.INSTANCE.get(context);
+        mDockSearchBarAboveIcons = PreferenceCacheExtensionsKt
+                .firstCached(preferenceManager2.getDockSearchBarAboveIcons())
+                && PreferenceCacheExtensionsKt.firstCached(preferenceManager2.getHotseatMode())
+                        .getLayoutResourceId() != R.layout.empty_view;
         allAppsCellHeightMultiplier = PreferenceCacheExtensionsKt
                 .firstCached(preferenceManager2.getDrawerCellHeightFactor());
         // Lawnchair: clamp the user padding factors to their slider ranges so a restored or
@@ -1354,7 +1360,10 @@ public class DeviceProfile {
                 // with vertical bar layout or multi-window mode since the issue is handled
                 // separately with their calls to {@link #adjustToHideWorkspaceLabels}.
                 cellHeightPx -= (iconDrawablePaddingPx - cellPaddingY);
-                iconDrawablePaddingPx = cellPaddingY;
+                // LC-Note: A grid with more rows than fit the icons has a negative cellPaddingY,
+                // which would draw labels over their icons. Dock icons share this padding, and
+                // have room for their labels.
+                iconDrawablePaddingPx = Math.max(0, cellPaddingY);
             }
         }
 
@@ -1955,7 +1964,7 @@ public class DeviceProfile {
             int iconExtraSpacePx = iconSizePx - getIconVisibleSizePx(iconSizePx);
             int sideSpacing = (mDeviceProperties.getAvailableWidthPx() - (hotseatQsbWidth + iconExtraSpacePx)) / 2;
             hotseatBarPadding.set(sideSpacing,
-                    0,
+                    getPhoneHotseatTopPadding(),
                     sideSpacing,
                     getHotseatBarBottomPadding());
         } else {
@@ -1969,7 +1978,7 @@ public class DeviceProfile {
             hotseatBarPadding.set(
                     hotseatAdjustment + workspacePadding.left + cellLayoutPaddingPx.left
                             + mInsets.left,
-                    0,
+                    getPhoneHotseatTopPadding(),
                     hotseatAdjustment + workspacePadding.right + cellLayoutPaddingPx.right
                             + mInsets.right,
                     getHotseatBarBottomPadding());
@@ -2032,13 +2041,33 @@ public class DeviceProfile {
     }
 
     /**
+     * LC-Note: The user put the dock search bar above the icons, in the phone layout. Unlike
+     * {@link #isQsbOnTop()}, the dock keeps its phone size and spacing, only the icons and the
+     * search bar swap places.
+     */
+    private boolean isQsbAboveIconsOnPhone() {
+        return mDockSearchBarAboveIcons && !isQsbOnTop() && !isQsbInline
+                && !isVerticalBarLayout() && !inv.isFixedLandscape;
+    }
+
+    /** LC-Note: Space above the dock icons in the phone layout, where the search bar can be. */
+    private int getPhoneHotseatTopPadding() {
+        if (!isQsbAboveIconsOnPhone()) {
+            return 0;
+        }
+        return Math.max(0, hotseatBarSizePx - getHotseatBarBottomPadding()
+                - hotseatCellHeightPx * numHotseatRows);
+    }
+
+    /**
      * Returns the number of pixels the QSB is translated from the bottom of the screen.
      */
     public int getQsbOffsetY() {
         if (mDeviceProperties.isPhone() && isQsbInline) {
             return getHotseatBarBottomPadding()
                     - ((getHotseatProfile().getQsbHeight() - hotseatCellHeightPx) / 2);
-        } else if (isQsbOnTop() || (mDeviceProperties.isLandscape() && isQsbInline)) { // LC-Note: isQsbOnTop
+        } else if (isQsbOnTop() || (mDeviceProperties.isLandscape() && isQsbInline)
+                || isQsbAboveIconsOnPhone()) { // LC-Note: isQsbOnTop, isQsbAboveIconsOnPhone
             return hotseatBarSizePx - getHotseatProfile().getQsbHeight()
                     + getHotseatProfile().getQsbShadowHeight();
         } else {
@@ -2052,6 +2081,9 @@ public class DeviceProfile {
     private int getHotseatBarBottomPadding() {
         if (isQsbOnTop() || isQsbInline) { // LC-Note: isQsbOnTop
             return hotseatBarBottomSpacePx - (Math.abs(hotseatCellHeightPx - iconSizePx) / 2);
+        } else if (isQsbAboveIconsOnPhone()) {
+            // LC-Note: The icons take the bottom space that the search bar has otherwise.
+            return hotseatBarBottomSpacePx;
         } else {
             return hotseatBarSizePx - hotseatCellHeightPx * numHotseatRows;
         }

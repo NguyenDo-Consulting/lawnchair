@@ -672,6 +672,8 @@
     <string name="gesture_handler_open_assistant">Open assistant</string>
 
     <string name="pick_app_for_gesture">Pick app</string>
+    <string name="dock_search_bar_above_icons_label">Search bar above icons</string>
+    <string name="dock_search_bar_above_icons_description">Tablets and foldables always show it above the icons.</string>
     <!-- App drawer filters: chips above the app list that show only the apps of a user-made filter -->
     <string name="drawer_filters_label">Filters</string>
     <string name="drawer_filters_description">Filters appear as chips above the app list. Tap a chip to see only its apps.</string>
