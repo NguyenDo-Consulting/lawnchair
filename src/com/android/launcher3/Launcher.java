@@ -2919,6 +2919,29 @@ public class Launcher extends StatefulActivity<LauncherState>
         return mHotseat;
     }
 
+    /**
+     * Lawnchair: Icon swipe gesture feature. Returns whether the event, in drag layer
+     * coordinates, is on a workspace or dock icon with a swipe gesture configured.
+     */
+    public boolean isTouchOnIconWithSwipeGesture(MotionEvent ev, boolean vertical) {
+        if (mDragLayer == null) {
+            return false;
+        }
+        if (mWorkspace != null) {
+            float[] coord = new float[]{ev.getX(), ev.getY()};
+            mDragLayer.mapCoordInSelfToDescendant(mWorkspace, coord);
+            if (mWorkspace.isTouchOnIconWithSwipeGesture(coord[0], coord[1], vertical)) {
+                return true;
+            }
+        }
+        if (mHotseat != null && mDragLayer.isEventOverView(mHotseat, ev)) {
+            float[] coord = new float[]{ev.getX(), ev.getY()};
+            mDragLayer.mapCoordInSelfToDescendant(mHotseat, coord);
+            return mHotseat.isTouchOnIconWithSwipeGesture(coord[0], coord[1], vertical);
+        }
+        return false;
+    }
+
     public <T extends View> T getOverviewPanel() {
         return (T) mOverviewPanel;
     }

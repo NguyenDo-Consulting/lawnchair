@@ -102,6 +102,7 @@ public class Hotseat extends FrameLayout implements Insettable {
     private Workspace<?> mWorkspace;
     private boolean mSendTouchToWorkspace;
     private boolean mSendTouchToPager;
+    private boolean mTouchOnIconSwipe; // Lawnchair: Icon swipe gesture feature
     private final MultiValueAlpha mIconsAlphaChannels;
     private final MultiValueAlpha mQsbAlphaChannels;
 
@@ -445,6 +446,16 @@ public class Hotseat extends FrameLayout implements Insettable {
                 && y >= mQsb.getTop() && y < mQsb.getBottom();
     }
 
+    /**
+     * Lawnchair: Icon swipe gesture feature. Returns whether the given point, in this view's
+     * coordinates, is on a dock icon with a swipe gesture configured.
+     */
+    public boolean isTouchOnIconWithSwipeGesture(float x, float y, boolean vertical) {
+        float[] coord = new float[]{x, y};
+        Utilities.mapCoordInSelfToDescendant(mPagedView, this, coord);
+        return mPagedView.isTouchOnIconWithSwipeGesture(coord[0], coord[1], vertical);
+    }
+
     private MotionEvent obtainPagerEvent(MotionEvent ev) {
         MotionEvent pagerEv = MotionEvent.obtain(ev);
         pagerEv.offsetLocation(-mIconsContainer.getLeft() - mPagedView.getLeft(),
@@ -468,6 +479,14 @@ public class Hotseat extends FrameLayout implements Insettable {
                 mSendTouchToWorkspace = false;
             }
             return mSendTouchToPager;
+        }
+
+        // Lawnchair: Icon swipe gesture feature, keep left/right swipes on such an icon
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            mTouchOnIconSwipe = isTouchOnIconWithSwipeGesture(ev.getX(), ev.getY(), false);
+        }
+        if (mTouchOnIconSwipe) {
+            return false;
         }
 
         // Single-page dock: forward horizontal swipes to workspace.

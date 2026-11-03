@@ -1265,8 +1265,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         return null;
     }
 
-    // Lawnchair: Icon swipe gesture feature
-    private BubbleTextView findIconInCellLayout(CellLayout cellLayout, float x, float y) {
+    // Lawnchair: Icon swipe gesture feature, also used for the dock pages
+    public static BubbleTextView findIconInCellLayout(CellLayout cellLayout, float x, float y) {
         ShortcutAndWidgetContainer container = cellLayout.getShortcutsAndWidgets();
         float containerX = x - container.getLeft();
         float containerY = y - container.getTop();

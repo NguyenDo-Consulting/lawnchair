@@ -219,15 +219,9 @@ public class StatusBarTouchController implements TouchController {
 
     private boolean canInterceptTouch(MotionEvent ev) {
         // Lawnchair: Icon Swipe Gestures (For vertical down gestures)
-        if (mLauncher instanceof Launcher launcher) {
-            if (launcher.getWorkspace() != null && launcher.getDragLayer() != null) {
-                float[] coord = new float[]{ev.getX(), ev.getY()};
-                launcher.getDragLayer().mapCoordInSelfToDescendant(launcher.getWorkspace(), coord);
-                if (launcher.getWorkspace()
-                        .isTouchOnIconWithSwipeGesture(coord[0], coord[1], true)) {
-                    return false;
-                }
-            }
+        if (mLauncher instanceof Launcher launcher
+                && launcher.isTouchOnIconWithSwipeGesture(ev, true)) {
+            return false;
         }
         if (isTrackpadScroll(ev) || !mIsEnabledCheck.get()
                 || AbstractFloatingView.getTopOpenViewWithType(mLauncher,
