@@ -116,6 +116,7 @@ import java.util.stream.Stream;
 import app.lawnchair.preferences2.PreferenceCacheExtensionsKt;
 import static com.topjohnwu.superuser.internal.Utils.context;
 import app.lawnchair.allapps.LawnchairAlphabeticalAppsList;
+import app.lawnchair.allapps.filters.DrawerFilterSwipeHelper;
 import app.lawnchair.font.FontManager;
 import app.lawnchair.preferences.PreferenceManager;
 import app.lawnchair.preferences2.PreferenceManager2;
@@ -178,6 +179,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private final int mHeaderProtectionColor;
     private final int mPrivateSpaceBottomExtraSpace;
     private final Path mTmpPath = new Path();
+    // Lawnchair: app drawer filter chips
+    private final DrawerFilterSwipeHelper mFilterSwipeHelper = new DrawerFilterSwipeHelper(this);
     private final RectF mTmpRectF = new RectF();
     protected AllAppsPagedView mViewPager;
     protected FloatingHeaderView mHeader;
@@ -1284,13 +1287,18 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mTouchHandler != null) {
             return mTouchHandler.handleTouchEvent(ev, mFastScrollerOffset);
         }
-        return false;
+        // Lawnchair: swipe between drawer filter chips, before the personal/work pager can
+        return mFilterSwipeHelper.onInterceptTouchEvent(ev);
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
         if (!isInAllApps()) {
             return false;
+        }
+        // Lawnchair: rest of a swipe that switched drawer filter chips
+        if (mFilterSwipeHelper.onTouchEvent(ev)) {
+            return true;
         }
 
         if (ev.getAction() == MotionEvent.ACTION_DOWN) {

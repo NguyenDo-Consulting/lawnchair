@@ -672,6 +672,18 @@
     <string name="gesture_handler_open_assistant">Open assistant</string>
 
     <string name="pick_app_for_gesture">Pick app</string>
+    <!-- App drawer filters: chips above the app list that show only the apps of a user-made filter -->
+    <string name="drawer_filters_label">Filters</string>
+    <string name="drawer_filters_description">Filters appear as chips above the app list. Tap a chip to see only its apps.</string>
+    <string name="drawer_filter_all">All</string>
+    <string name="add_drawer_filter">Add filter</string>
+    <string name="my_drawer_filter_label">My filter</string>
+    <string name="hide_filtered_apps_from_all_label">Hide filtered apps from All</string>
+    <string name="hide_filtered_apps_from_all_description">Apps in a filter only appear under their filter\'s chip. Search still finds all apps.</string>
+    <plurals name="drawer_filters_count">
+        <item quantity="one">%d filter</item>
+        <item quantity="other">%d filters</item>
+    </plurals>
     <string name="gesture_handler_open_shortcut_option">Open shortcut</string>
     <!-- Label of a shortcut opened by a gesture: 1 is the shortcut's name (e.g. a contact), 2 is the kind of shortcut (e.g. "Direct dial") -->
     <string name="gesture_handler_open_shortcut_label">%1$s (%2$s)</string>

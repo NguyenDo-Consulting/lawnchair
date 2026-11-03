@@ -42,6 +42,7 @@ import com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip;
 import com.android.systemui.plugins.AllAppsRow;
 import com.android.systemui.plugins.AllAppsRow.OnHeightUpdatedListener;
 import com.android.systemui.plugins.PluginListener;
+import app.lawnchair.allapps.filters.DrawerFilterChipsRow;
 import app.lawnchair.preferences2.PreferenceCacheExtensionsKt;
 
 import java.util.ArrayList;
@@ -274,6 +275,12 @@ public class FloatingHeaderView extends LinearLayout implements
                 : rvType == AdapterHolder.WORK ? mWorkRV : mSearchRV;
         mCurrentRV.addOnScrollListener(mOnScrollListener);
         maybeSetTabVisibility(rvType == AdapterHolder.SEARCH ? GONE : VISIBLE);
+
+        // Lawnchair: drawer filter chips only apply to personal apps
+        DrawerFilterChipsRow filterChips = findFixedRowByType(DrawerFilterChipsRow.class);
+        if (filterChips != null && rvType != AdapterHolder.SEARCH) {
+            filterChips.setWorkTabActive(rvType == AdapterHolder.WORK);
+        }
     }
 
     /** Update tab visibility to the given state, only if tabs are active (work profile exists). */

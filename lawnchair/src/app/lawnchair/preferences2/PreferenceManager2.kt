@@ -40,6 +40,7 @@ import app.lawnchair.icons.shape.IconShapeManager
 import app.lawnchair.predictions.PredictionMode
 import app.lawnchair.preferences.PreferenceManager as LawnchairPreferenceManager
 import app.lawnchair.qsb.providers.QsbSearchProvider
+import app.lawnchair.allapps.filters.DrawerFilter
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.engine.provider.web.WebSearchProvider
 import app.lawnchair.smartspace.model.SmartspaceCalendar
@@ -335,6 +336,18 @@ class PreferenceManager2 @Inject constructor(
     val hiddenApps = preference(
         key = stringSetPreferencesKey(name = "hidden_apps"),
         defaultValue = setOf(),
+    )
+
+    /** User-made app drawer filters, in chip order. */
+    val drawerFilters = serializablePreference<List<DrawerFilter>>(
+        key = stringPreferencesKey(name = "drawer_filters"),
+        defaultValue = emptyList(),
+    )
+
+    /** Whether the "All" chip leaves out apps that are in any drawer filter. */
+    val hideFilteredAppsFromAll = preference(
+        key = booleanPreferencesKey(name = "drawer_filters_hide_from_all"),
+        defaultValue = false,
     )
 
     val roundedWidgets = preference(

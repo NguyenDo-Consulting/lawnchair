@@ -176,6 +176,14 @@ data object AppDrawerFolder : PreferenceRoute, PreferenceDeepLink {
 @Serializable
 data class AppDrawerAppListToFolder(val id: Int) : PreferenceRoute
 
+@Serializable
+data object AppDrawerFilters : PreferenceRoute, PreferenceDeepLink {
+    override val deepLink = "$URI/app-drawer-filters"
+}
+
+@Serializable
+data class AppDrawerFilterApps(val id: String) : PreferenceRoute
+
 // Search section routes
 @Serializable
 data class SearchProviderPreference(val id: SearchProviderId) :

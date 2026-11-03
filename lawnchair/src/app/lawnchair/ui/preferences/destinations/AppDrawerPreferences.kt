@@ -50,6 +50,7 @@ import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.AppDrawerFilters
 import app.lawnchair.ui.preferences.navigation.AppDrawerHiddenApps
 import app.lawnchair.ui.preferences.navigation.Predictions
 import com.android.launcher3.InvariantDeviceProfile
@@ -82,11 +83,21 @@ fun AppDrawerPreferences(
             }
         }
         val hiddenApps = prefs2.hiddenApps.getAdapter().state.value
+        val drawerFilters = prefs2.drawerFilters.getAdapter().state.value
         PreferenceGroup(heading = stringResource(id = R.string.general_label)) {
             NavigationActionPreference(
                 label = stringResource(id = R.string.hidden_apps_label),
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
+            )
+            NavigationActionPreference(
+                label = stringResource(id = R.string.drawer_filters_label),
+                destination = AppDrawerFilters,
+                subtitle = resources.getQuantityString(
+                    R.plurals.drawer_filters_count,
+                    drawerFilters.size,
+                    drawerFilters.size,
+                ),
             )
             SearchBarPreference(SearchRoute.DRAWER_SEARCH, showLabel = false)
             NavigationActionPreference(

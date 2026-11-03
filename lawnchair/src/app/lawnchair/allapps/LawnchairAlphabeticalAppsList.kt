@@ -1,11 +1,14 @@
 package app.lawnchair.allapps
 
 import android.content.Context
+import android.os.Process
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
+import app.lawnchair.allapps.filters.DrawerFilter
+import app.lawnchair.allapps.filters.DrawerFilterState
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.model.FolderViewModel
 import app.lawnchair.launcher
@@ -26,6 +29,8 @@ import com.android.launcher3.util.ComponentKey
 import com.android.launcher3.views.ActivityContext
 import com.patrykmichalik.opto.core.onEach
 import java.util.function.Predicate
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach as onEachFlow
 
 @Suppress("SYNTHETIC_PROPERTY_WITHOUT_JAVA_ORIGIN")
 class LawnchairAlphabeticalAppsList<T>(
@@ -41,6 +46,11 @@ class LawnchairAlphabeticalAppsList<T>(
     private var hiddenApps: Set<String> = setOf()
     private val prefs2 = PreferenceManager2.getInstance(context)
     private val prefs = PreferenceManager.getInstance(context)
+
+    // Drawer filter chips, see [DrawerFilter]
+    private var drawerFilters: List<DrawerFilter> = emptyList()
+    private var hideFilteredAppsFromAll = false
+    private var activeFilterId: String? = null
 
     private val viewModel = FolderViewModel(
         (context as? ComponentActivity)?.application ?: context.launcher.application,
@@ -60,6 +70,42 @@ class LawnchairAlphabeticalAppsList<T>(
             Log.w(TAG, "Failed to initialize hidden apps", t)
         }
         observeFolders()
+        observeDrawerFilters()
+    }
+
+    private fun observeDrawerFilters() {
+        val scope = context.launcher.lifecycleScope
+        prefs2.drawerFilters.onEach(launchIn = scope) {
+            drawerFilters = it
+            onAppsUpdated()
+        }
+        prefs2.hideFilteredAppsFromAll.onEach(launchIn = scope) {
+            hideFilteredAppsFromAll = it
+            onAppsUpdated()
+        }
+        DrawerFilterState.activeFilterId
+            .onEachFlow {
+                activeFilterId = it
+                onAppsUpdated()
+            }
+            .launchIn(scope)
+    }
+
+    private val activeFilter: DrawerFilter?
+        get() = activeFilterId?.let { id -> drawerFilters.firstOrNull { it.id == id } }
+
+    /**
+     * Whether an app is shown under the selected filter chip. Filters only apply to the personal
+     * profile, so work and private space apps are always shown.
+     */
+    private fun matchesDrawerFilter(info: AppInfo, componentKey: String): Boolean {
+        if (info.user != Process.myUserHandle()) return true
+        val filter = activeFilter
+        return when {
+            filter != null -> componentKey in filter.componentKeys
+            hideFilteredAppsFromAll -> drawerFilters.none { componentKey in it.componentKeys }
+            else -> true
+        }
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -80,7 +126,9 @@ class LawnchairAlphabeticalAppsList<T>(
         mItemFilter = Predicate { info ->
             require(info is AppInfo) { "`info` must be an instance of `AppInfo`." }
             val componentKey = info.toComponentKey().toString()
-            (itemFilter?.test(info) != false) && !hiddenApps.contains(componentKey)
+            (itemFilter?.test(info) != false) &&
+                !hiddenApps.contains(componentKey) &&
+                matchesDrawerFilter(info, componentKey)
         }
         onAppsUpdated()
     }
@@ -93,6 +141,9 @@ class LawnchairAlphabeticalAppsList<T>(
 
         // Show app drawer folders only on main profile, to prevent state complexity
         if (isWorkOrPrivateSpace(appList)) return super.addAppsWithSections(appList, position)
+
+        // A filter chip shows its apps as a plain list, without drawer folders or categories
+        if (activeFilter != null) return super.addAppsWithSections(appList, position)
 
         if (!drawerListDefault) {
             val validApps = appList.mapNotNull { it }
