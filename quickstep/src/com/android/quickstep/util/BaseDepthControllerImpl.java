@@ -106,6 +106,8 @@ public class BaseDepthControllerImpl implements BaseDepthController {
     private float mDepth;
     // Used just for animating wallpaper zoom without affecting blur.
     private final AnimatedFloat mWallpaperZoomOnly = new AnimatedFloat(this::applyDepthAndBlur);
+    // LC: Used just for blurring behind an open folder, without zooming the wallpaper.
+    private final AnimatedFloat mFolderBlur = new AnimatedFloat(this::applyDepthAndBlur);
 
     protected SurfaceControl mBaseSurface;
 
@@ -182,6 +184,11 @@ public class BaseDepthControllerImpl implements BaseDepthController {
     @Override
     public MultiProperty getFolderZoom() {
         return folderZoom;
+    }
+
+    @Override
+    public AnimatedFloat getFolderBlur() {
+        return mFolderBlur;
     }
 
     /**
@@ -261,6 +268,7 @@ public class BaseDepthControllerImpl implements BaseDepthController {
         } else {
             blurAmount = depth;
         }
+        blurAmount = Math.max(blurAmount, mFolderBlur.value);
 
         int previousBlur = mCurrentBlur;
         int newBlur = BlurUtils.supportsBlursOnWindows() && mCrossWindowBlursEnabled
@@ -378,6 +386,14 @@ public class BaseDepthControllerImpl implements BaseDepthController {
         if (!Utilities.ATLEAST_S) {
             return false;
         }
+        // LC: An open folder blurs the workspace and hotseat behind it.
+        if (mFolderBlur.value > 0f && mCurrentBlur > 0) {
+            RenderEffect blurEffect = RenderEffect.createBlurEffect(
+                    mCurrentBlur, mCurrentBlur, Shader.TileMode.DECAL);
+            mLauncher.getDepthBlurTargets().forEach(target -> target.setRenderEffect(blurEffect));
+            return true;
+        }
+
         StateManager<LauncherState, Launcher> stateManager = mLauncher.getStateManager();
         LauncherState settledState = stateManager.getState();
 

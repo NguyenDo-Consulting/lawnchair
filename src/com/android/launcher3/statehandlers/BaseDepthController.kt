@@ -40,4 +40,9 @@ interface BaseDepthController {
      * Property for folder expansion wallpaper zoom.
      */
     val folderZoom: MultiPropertyFactory<*>.MultiProperty?
+
+    /**
+     * LC: Blur behind an open folder, from 0 to 1. Doesn't zoom the wallpaper.
+     */
+    val folderBlur: AnimatedFloat?
 }

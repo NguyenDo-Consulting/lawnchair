@@ -527,6 +527,11 @@ class PreferenceManager2 @Inject constructor(
         onSet = { reloadHelper.reloadGrid() },
     )
 
+    val folderBackgroundBlur = preference(
+        key = booleanPreferencesKey(name = "folder_background_blur"),
+        defaultValue = false,
+    )
+
     val showIconLabelsOnHomeScreen = preference(
         key = booleanPreferencesKey(name = "show_icon_labels_on_home_screen"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_show_icon_labels_on_home_screen),
