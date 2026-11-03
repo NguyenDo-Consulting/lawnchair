@@ -74,6 +74,7 @@ import javax.inject.Inject;
 
 import app.lawnchair.LawnchairApp;
 import app.lawnchair.LawnchairAppKt;
+import app.lawnchair.backup.LawnchairBackup;
 
 /**
  * Utility class which maintains an instance of Launcher database and provides utility methods
@@ -127,6 +128,12 @@ public class ModelDbController {
                 dbFile = mIdp.dbFile;
             }
             mOpenHelper = createDatabaseHelper(false /* forMigration */, dbFile);
+            // LC-Note: A Lawnchair backup is sanitized here, in the process that starts after the
+            // restore, so it uses the restored grid and profile ids.
+            if (!(mContext instanceof SandboxContext)
+                    && LawnchairBackup.consumePendingSanitize(mContext)) {
+                RestoreDbTask.performRestore(mContext, this);
+            }
             restoreTask.accept(this);
         }
     }

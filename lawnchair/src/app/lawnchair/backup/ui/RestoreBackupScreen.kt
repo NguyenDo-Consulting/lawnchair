@@ -15,11 +15,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -124,6 +126,7 @@ fun ColumnScope.RestoreBackupOptions(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var restoringBackup by remember { mutableStateOf(false) }
+    var restoreFailed by remember { mutableStateOf(false) }
     if (restoringBackup) {
         BackHandler {}
     }
@@ -138,10 +141,23 @@ fun ColumnScope.RestoreBackupOptions(
                 restartLauncher(context)
             } catch (t: Throwable) {
                 Log.e("RestoreBackupScreen", "failed to restore backup", t)
-                Toast.makeText(context, R.string.backup_restore_error, Toast.LENGTH_SHORT).show()
+                restoreFailed = true
             }
             restoringBackup = false
         }
+    }
+
+    if (restoreFailed) {
+        AlertDialog(
+            onDismissRequest = { restoreFailed = false },
+            title = { Text(stringResource(R.string.backup_restore_failed_title)) },
+            text = { Text(stringResource(R.string.backup_restore_failed_unchanged)) },
+            confirmButton = {
+                TextButton(onClick = { restoreFailed = false }) {
+                    Text(stringResource(android.R.string.ok))
+                }
+            },
+        )
     }
 
     if (isPortrait) {

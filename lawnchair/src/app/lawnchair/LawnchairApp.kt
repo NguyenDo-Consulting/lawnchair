@@ -18,6 +18,8 @@ package app.lawnchair
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.Application
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -63,6 +65,18 @@ class LawnchairApp : LauncherApplication() {
     private val isAtleastT = Utilities.ATLEAST_T
     internal var accessibilityService: LawnchairAccessibilityService? = null
     val isVibrateOnIconAnimation: Boolean by unsafeLazy { getSystemUiBoolean("config_vibrateOnIconAnimation", false) }
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        // Before content providers are created, which is the first point preferences can load.
+        try {
+            // Only the main process: another one (e.g. :bugReport) can start while the main
+            // process is still extracting the backup.
+            if (isMainProcess()) LawnchairBackup.applyPendingRestore(this)
+        } catch (t: Throwable) {
+            Log.e("LawnchairApp", "failed to apply pending restore", t)
+        }
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -142,6 +156,15 @@ class LawnchairApp : LauncherApplication() {
     }
 
     private fun getJournalFile(file: File): File = File(file.parentFile, "${file.name}-journal")
+
+    private fun isMainProcess(): Boolean {
+        val processName = if (Utilities.ATLEAST_P) {
+            Application.getProcessName()
+        } else {
+            File("/proc/self/cmdline").readText().trimEnd('\u0000')
+        }
+        return processName == packageName
+    }
 
     private fun getSystemUiBoolean(resName: String, fallback: Boolean): Boolean {
         val systemUiPackage = "com.android.systemui"
@@ -275,6 +298,16 @@ class LawnchairApp : LauncherApplication() {
                     },
                 )
             }
+        }
+
+        /** Tells the user when the restore applied on this start failed. */
+        fun Launcher.showRestoreFailureIfNecessary() {
+            val failure = LawnchairBackup.consumeRestoreFailure(this) ?: return
+            AlertDialog.Builder(this)
+                .setTitle(R.string.backup_restore_failed_title)
+                .setMessage(failure.messageRes)
+                .setPositiveButton(android.R.string.ok, null)
+                .show()
         }
 
         fun getUriForFile(context: Context, file: File): Uri {

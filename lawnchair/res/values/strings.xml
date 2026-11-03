@@ -628,6 +628,13 @@
     <string name="what_to_restore">What to restore</string>
     <string name="backup_restore_success">Backup restored</string>
     <string name="backup_restore_error">Failed to restore backup</string>
+    <string name="backup_restore_failed_title">Couldn\'t restore backup</string>
+    <!-- Shown when a backup fails to extract or check, before anything is changed -->
+    <string name="backup_restore_failed_unchanged">The backup file may be damaged or incomplete. Nothing was changed.</string>
+    <!-- Shown on the next start when the launcher closed while a backup was being read -->
+    <string name="backup_restore_failed_not_applied">The launcher closed before the backup was read completely. Nothing was changed.</string>
+    <string name="backup_restore_failed_rolled_back">The backup couldn\'t be applied, so your previous layout and settings were kept.</string>
+    <string name="backup_restore_failed_rollback_failed">The backup couldn\'t be applied, and some of your previous layout and settings couldn\'t be recovered.</string>
     <string name="invalid_backup_file">Invalid backup file</string>
     <string name="restore_nova_backup">Restore Nova backup</string>
     <string name="invalid_nova_backup_file">Invalid Nova backup file</string>

@@ -3,9 +3,13 @@ package app.lawnchair.backup
 import android.annotation.SuppressLint
 import android.app.WallpaperManager
 import android.content.Context
+import android.database.DatabaseUtils
+import android.database.sqlite.SQLiteDatabase
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
+import androidx.annotation.StringRes
 import androidx.core.graphics.drawable.toBitmap
 import app.lawnchair.LawnchairProto.BackupInfo
 import app.lawnchair.util.hasFlag
@@ -18,7 +22,6 @@ import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherFiles
 import com.android.launcher3.R
 import com.android.launcher3.model.DeviceGridState
-import com.android.launcher3.model.ModelDbController
 import com.android.launcher3.provider.RestoreDbTask
 import com.google.protobuf.Timestamp
 import java.io.File
@@ -57,34 +60,67 @@ class LawnchairBackup(
         wallpaper = tmpWallpaper?.scaleDownToDisplaySize(context)
     }
 
+    /**
+     * Extracts the selected contents into a staging dir, and nothing is applied until the whole
+     * backup has been extracted and checked. The wallpaper is then set, and the layout and settings
+     * are left for [applyPendingRestore] to move into place on the next start. The caller must
+     * restart the process afterwards.
+     *
+     * The layout and settings can't be written over the live files: this process holds the current
+     * preferences in memory, and its next write would put them back on disk.
+     */
     suspend fun restore(selectedContents: Int) {
-        val handlers = mutableMapOf<String, suspend (InputStream) -> Unit>()
         val contents = selectedContents and info.contents
-        if (contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)) {
-            handlers.putAll(
-                getFiles(context, forRestore = true).mapValues { entry ->
-                    {
-                        val file = entry.value
-                        file.parentFile?.mkdirs()
-                        file.outputStream().use { out -> it.copyTo(out) }
-                    }
+        val restoreLayout = contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)
+        val restoreWallpaper = contents.hasFlag(INCLUDE_WALLPAPER)
+        val entryNames = buildList {
+            if (restoreLayout) addAll(getFiles(context, forRestore = true).keys)
+            if (restoreWallpaper) add(WALLPAPER_FILE_NAME)
+        }
+        val stagingDir = pendingRestoreDir(context)
+        try {
+            withContext(Dispatchers.IO) {
+                stagingDir.deleteRecursively()
+                stagingDir.mkdirs()
+            }
+            readZip(
+                entryNames.associateWith<String, suspend (InputStream) -> Unit> { name ->
+                    { input -> File(stagingDir, name).outputStream().use { out -> input.copyTo(out) } }
                 },
             )
-        }
-        if (contents.hasFlag(INCLUDE_WALLPAPER)) {
-            handlers[WALLPAPER_FILE_NAME] = {
-                val wallpaperManager = WallpaperManager.getInstance(context)
-                wallpaperManager.setBitmap(BitmapFactory.decodeStream(it))
+            withContext(Dispatchers.IO) {
+                if (restoreLayout) {
+                    verifyStagedLayout(stagingDir)
+                    // applyPendingRestore only applies a staging dir that has it. Written before
+                    // the wallpaper is set, so a failure from here on still changes nothing: the
+                    // catch below deletes the staging dir with it.
+                    File(stagingDir, INFO_FILE_NAME).outputStream().use { info.writeTo(it) }
+                }
+                if (restoreWallpaper) {
+                    val wallpaperFile = File(stagingDir, WALLPAPER_FILE_NAME)
+                    if (wallpaperFile.exists()) {
+                        val bitmap = checkNotNull(BitmapFactory.decodeFile(wallpaperFile.path)) {
+                            "failed to decode $WALLPAPER_FILE_NAME"
+                        }
+                        WallpaperManager.getInstance(context).setBitmap(bitmap)
+                        wallpaperFile.delete()
+                    }
+                }
+                if (!restoreLayout) stagingDir.deleteRecursively()
             }
+        } catch (t: Throwable) {
+            stagingDir.deleteRecursively()
+            throw t
         }
-        context.getDatabasePath(LAUNCHER_DB_FILE_NAME).parentFile?.deleteRecursively()
-        readZip(handlers)
-        // Written after the zip has been extracted: the backed up preferences file is one of
-        // the restored entries, so writing the grid state first would let it be overwritten.
-        DeviceGridState(info.gridState).writeToPrefs(context, true)
+    }
 
-        val dbController = ModelDbController(context)
-        RestoreDbTask.performRestore(context, dbController)
+    private fun verifyStagedLayout(stagingDir: File) {
+        val dbFile = File(stagingDir, LAUNCHER_DB_FILE_NAME)
+        if (!dbFile.exists()) return
+        SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+            val result = DatabaseUtils.stringForQuery(db, "PRAGMA quick_check", null)
+            check(result == "ok") { "$LAUNCHER_DB_FILE_NAME is corrupted: $result" }
+        }
     }
 
     private suspend fun readZip(handlers: Map<String, suspend (InputStream) -> Unit>) {
@@ -116,6 +152,12 @@ class LawnchairBackup(
         const val SCREENSHOT_FILE_NAME = "screenshot.png"
         const val LAUNCHER_DB_FILE_NAME = "launcher.db"
         const val RESTORED_DB_FILE_NAME = "restored.db"
+        private const val PENDING_RESTORE_DIR_NAME = "pending_restore"
+        private const val PENDING_SANITIZE_FILE_NAME = "restored.db.sanitize"
+        private const val ROLLBACK_DIR_NAME = "restore_rollback"
+        private const val MOVED_ASIDE_FILE_NAME = "moved_aside"
+        private const val RESTORE_FAILURE_FILE_NAME = "restore_failure"
+        private const val TAG = "LawnchairBackup"
 
         const val INCLUDE_LAYOUT_AND_SETTINGS = 1 shl 0
         const val INCLUDE_WALLPAPER = 1 shl 1
@@ -190,6 +232,142 @@ class LawnchairBackup(
             }
         }
 
+        /**
+         * Moves a backup staged by [restore] into place. Must run before anything in this process
+         * loads the preferences, so it is called from [android.app.Application.attachBaseContext].
+         *
+         * The current files are moved aside first and put back if any step fails, including when
+         * the process dies partway: a rollback dir left behind is rolled back on the next start.
+         * A failure is recorded for [consumeRestoreFailure].
+         */
+        fun applyPendingRestore(context: Context) {
+            val stagingDir = pendingRestoreDir(context)
+            if (rollbackDir(context).exists()) {
+                Log.w(TAG, "the last restore was interrupted, rolling it back")
+                recordRestoreFailure(context, rollBack(context))
+                stagingDir.deleteRecursively()
+                return
+            }
+            if (!stagingDir.exists()) return
+            try {
+                // No marker means the extraction didn't finish, so the current state is kept.
+                val infoFile = File(stagingDir, INFO_FILE_NAME)
+                if (!infoFile.exists()) {
+                    recordRestoreFailure(context, RestoreFailure.NOT_APPLIED)
+                    return
+                }
+                val info = infoFile.inputStream().use { BackupInfo.parseFrom(it) }
+                try {
+                    moveStagedFilesIntoPlace(context, stagingDir)
+                } catch (t: Throwable) {
+                    Log.e(TAG, "failed to apply the restore, rolling it back", t)
+                    recordRestoreFailure(context, rollBack(context))
+                    return
+                }
+
+                // Not DeviceGridState.writeToPrefs: it goes through the application context,
+                // which isn't set yet during attachBaseContext.
+                val gridState = info.gridState
+                context.getSharedPreferences(LauncherFiles.SHARED_PREFERENCES_KEY, Context.MODE_PRIVATE)
+                    .edit()
+                    .putString(DeviceGridState.KEY_WORKSPACE_SIZE, gridState.gridSize)
+                    .putInt(DeviceGridState.KEY_HOTSEAT_COUNT, gridState.hotseatCount)
+                    .putInt(DeviceGridState.KEY_DEVICE_TYPE, gridState.deviceType)
+                    .commit()
+
+                if (context.getDatabasePath(RESTORED_DB_FILE_NAME).exists()) {
+                    File(context.filesDir, PENDING_SANITIZE_FILE_NAME).createNewFile()
+                }
+            } finally {
+                stagingDir.deleteRecursively()
+            }
+        }
+
+        private fun moveStagedFilesIntoPlace(context: Context, stagingDir: File) {
+            val stagedFiles = getFiles(context, forRestore = true)
+                .mapKeys { File(stagingDir, it.key) }
+                .filterKeys { it.exists() }
+
+            val rollbackDir = rollbackDir(context)
+            rollbackDir.mkdirs()
+            liveFiles(context).forEach { (name, live) ->
+                if (live.exists()) check(live.renameTo(File(rollbackDir, name))) { "failed to move $name aside" }
+            }
+            // From here on, a rollback has to delete what was moved into place before putting the
+            // current files back.
+            check(File(rollbackDir, MOVED_ASIDE_FILE_NAME).createNewFile()) { "failed to mark the rollback" }
+
+            stagedFiles.forEach { (staged, target) ->
+                target.parentFile?.mkdirs()
+                // The staging dir is on the same filesystem, so each file is replaced in one step
+                // instead of being left partly written.
+                check(staged.renameTo(target)) { "failed to move ${staged.name} into place" }
+            }
+            check(rollbackDir.deleteRecursively()) { "failed to delete the rollback" }
+        }
+
+        /** Puts back the files moved aside by [moveStagedFilesIntoPlace]. */
+        private fun rollBack(context: Context): RestoreFailure {
+            val rollbackDir = rollbackDir(context)
+            val liveFiles = liveFiles(context)
+            val movedAsideFile = File(rollbackDir, MOVED_ASIDE_FILE_NAME)
+            if (movedAsideFile.exists()) {
+                liveFiles.values.forEach { it.deleteRecursively() }
+                // A retry on the next start only puts back what is left.
+                movedAsideFile.delete()
+            }
+            var recovered = true
+            liveFiles.forEach { (name, live) ->
+                val aside = File(rollbackDir, name)
+                if (aside.exists() && !aside.renameTo(live)) {
+                    Log.e(TAG, "failed to put back $name")
+                    recovered = false
+                }
+            }
+            if (recovered) rollbackDir.deleteRecursively()
+            return if (recovered) RestoreFailure.ROLLED_BACK else RestoreFailure.ROLLBACK_FAILED
+        }
+
+        /**
+         * The files and dirs a restore replaces, by their name in the rollback dir. The whole
+         * databases dir is included, since a restore clears it.
+         */
+        private fun liveFiles(context: Context): Map<String, File> {
+            val databasesDir = context.getDatabasePath(LAUNCHER_DB_FILE_NAME).parentFile!!
+            val otherFiles = getFiles(context, forRestore = true).values
+                .filter { it.parentFile != databasesDir }
+                // SharedPreferences loads a leftover backup file in place of the real one.
+                .flatMap { listOf(it, File("${it.path}.bak")) }
+            return mapOf(databasesDir.name to databasesDir) + otherFiles.associateBy { it.name }
+        }
+
+        private fun recordRestoreFailure(context: Context, failure: RestoreFailure) {
+            File(context.filesDir, RESTORE_FAILURE_FILE_NAME).writeText(failure.name)
+        }
+
+        /**
+         * Returns the failure recorded by the last [applyPendingRestore], if any, and clears it so
+         * it is reported once.
+         */
+        fun consumeRestoreFailure(context: Context): RestoreFailure? {
+            val file = File(context.filesDir, RESTORE_FAILURE_FILE_NAME)
+            if (!file.exists()) return null
+            val failure = RestoreFailure.entries.firstOrNull { it.name == file.readText() }
+            file.delete()
+            return failure ?: RestoreFailure.ROLLED_BACK
+        }
+
+        /**
+         * Returns whether a restored database is waiting for [RestoreDbTask.performRestore], and
+         * clears the flag so a failing sanitize doesn't run on every start.
+         */
+        @JvmStatic
+        fun consumePendingSanitize(context: Context): Boolean = File(context.filesDir, PENDING_SANITIZE_FILE_NAME).delete()
+
+        private fun pendingRestoreDir(context: Context) = File(context.filesDir, PENDING_RESTORE_DIR_NAME)
+
+        private fun rollbackDir(context: Context) = File(context.filesDir, ROLLBACK_DIR_NAME)
+
         private fun launcherDbFile(context: Context, forRestore: Boolean): File {
             val dbName = if (forRestore) RESTORED_DB_FILE_NAME else LauncherAppState.getIDP(context).dbFile
             return context.getDatabasePath(dbName)
@@ -208,4 +386,12 @@ class LawnchairBackup(
             return File(context.filesDir, "datastore/${PREFS_DATASTORE_FILE_NAME}")
         }
     }
+}
+
+/** How a restore failed on the start after it was staged, for the message shown to the user. */
+enum class RestoreFailure(@StringRes val messageRes: Int) {
+    /** The process died while the backup was being extracted. */
+    NOT_APPLIED(R.string.backup_restore_failed_not_applied),
+    ROLLED_BACK(R.string.backup_restore_failed_rolled_back),
+    ROLLBACK_FAILED(R.string.backup_restore_failed_rollback_failed),
 }
