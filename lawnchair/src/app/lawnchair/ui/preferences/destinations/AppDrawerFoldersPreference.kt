@@ -37,6 +37,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.model.FolderViewModel
+import app.lawnchair.folder.FolderSortMode
+import app.lawnchair.folder.FolderSortOptions
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.ui.ModalBottomSheetContent
@@ -98,6 +100,9 @@ fun AppDrawerFoldersPreference(
         onRenameFolder = { folderId, newTitle ->
             viewModel.renameFolder(folderId, newTitle)
         },
+        onSaveFolder = { folderId, newTitle, sortMode ->
+            viewModel.updateFolder(folderId, newTitle, sortMode)
+        },
         onDeleteFolder = {
             viewModel.deleteFolder(it.id)
         },
@@ -116,6 +121,7 @@ fun AppDrawerFoldersPreference(
     onDeleteFolder: (FolderEntry) -> Unit,
     onOrderChange: (List<Int>) -> Unit,
     modifier: Modifier = Modifier,
+    onSaveFolder: ((Int, String, FolderSortMode) -> Unit)? = null,
 ) {
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(LocalContext.current)
     val bottomSheetHandler = bottomSheetHandler
@@ -188,6 +194,8 @@ fun AppDrawerFoldersPreference(
                                 initialTitle = folderEntry.title,
                                 itemCount = folderEntry.itemComponentKeys.size,
                                 onRename = onRenameFolder,
+                                initialSortMode = folderEntry.sortMode,
+                                onSave = onSaveFolder,
                                 onNavigate = {
                                     onEditFolderItems(it)
                                     bottomSheetHandler.hide()
@@ -225,9 +233,14 @@ fun FolderEditSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     hideAppPicker: Boolean = false,
+    initialSortMode: FolderSortMode = FolderSortMode.FREE,
+    // When set, the sheet also shows sort options and OK saves title and sort mode together
+    // through this instead of [onRename]
+    onSave: ((folderId: Int, title: String, sortMode: FolderSortMode) -> Unit)? = null,
 ) {
     val resources = LocalResources.current
     var textFieldValue by remember { mutableStateOf(TextFieldValue(initialTitle)) }
+    var sortMode by remember { mutableStateOf(initialSortMode) }
 
     ModalBottomSheetContent(
         buttons = {
@@ -240,7 +253,11 @@ fun FolderEditSheet(
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = {
-                    onRename(folderId, textFieldValue.text)
+                    if (onSave != null) {
+                        onSave(folderId, textFieldValue.text, sortMode)
+                    } else {
+                        onRename(folderId, textFieldValue.text)
+                    }
                     onDismiss()
                 },
                 shapes = ButtonDefaults.shapes(),
@@ -277,6 +294,18 @@ fun FolderEditSheet(
                 ) {
                     onNavigate(folderId)
                 }
+            }
+            if (onSave != null) {
+                Text(
+                    text = stringResource(R.string.folder_sort_label),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 24.dp, bottom = 4.dp),
+                )
+                FolderSortOptions(
+                    selected = sortMode,
+                    onSelect = { sortMode = it },
+                )
             }
         }
     }

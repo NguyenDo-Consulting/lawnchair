@@ -37,6 +37,14 @@ interface FolderDao {
     @Query("UPDATE Folders SET title = :title, timestamp = :timestamp WHERE id = :id")
     suspend fun updateFolderTitle(id: Int, title: String, timestamp: Long = System.currentTimeMillis())
 
+    @Query("UPDATE Folders SET title = :title, sortMode = :sortMode, timestamp = :timestamp WHERE id = :id")
+    suspend fun updateFolderTitleAndSortMode(
+        id: Int,
+        title: String,
+        sortMode: Int,
+        timestamp: Long = System.currentTimeMillis(),
+    )
+
     @Transaction
     suspend fun replaceFolderItems(folderId: Int, title: String, items: List<FolderItemEntity>) {
         updateFolderTitle(folderId, title)

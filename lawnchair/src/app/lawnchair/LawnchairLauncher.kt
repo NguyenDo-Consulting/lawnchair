@@ -36,6 +36,7 @@ import app.lawnchair.LawnchairApp.Companion.showRestoreFailureIfNecessary
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
 import app.lawnchair.data.wallpaper.service.WallpaperService
+import app.lawnchair.folder.FolderUsageStats
 import app.lawnchair.gestures.GestureController
 import app.lawnchair.gestures.VerticalSwipeTouchController
 import app.lawnchair.gestures.config.GestureHandlerConfig
@@ -65,6 +66,7 @@ import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.folder.FolderIcon
 import com.android.launcher3.model.data.ItemInfo
+import com.android.launcher3.model.data.WorkspaceItemInfo
 import com.android.launcher3.model.data.PredictedContainerInfo
 import com.android.launcher3.popup.SystemShortcut
 import com.android.launcher3.shortcuts.DeepShortcutView
@@ -158,6 +160,15 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     val gestureController by unsafeLazy { GestureController(this) }
 
+    /** Re-sorts closed "Most used" folders on the home screen and dock when usage counts change. */
+    private val folderUsageListener = Runnable {
+        workspace?.mapOverItems { _, view ->
+            val folder = (view as? FolderIcon)?.folder
+            if (folder != null && !folder.isOpen) folder.applySortMode()
+            false
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         layoutInflater.factory2 = LawnchairLayoutFactory(this)
         super.onCreate(savedInstanceState)
@@ -168,6 +179,7 @@ class LawnchairLauncher : QuickstepLauncher() {
             defaultOverlay.setEnableFeed(enable)
         }.launchIn(scope = lifecycleScope)
         launcher.stateManager.addStateListener(clearSearchStateListener)
+        FolderUsageStats.addListener(folderUsageListener)
 
         if (prefs.autoLaunchRoot.get()) {
             lifecycleScope.launch {
@@ -469,10 +481,24 @@ class LawnchairLauncher : QuickstepLauncher() {
         return ActivityOptionsWrapper(options, callback)
     }
 
+    override fun startActivitySafely(v: View?, intent: Intent, item: ItemInfo?): RunnableList? {
+        // Before resume, Launcher defers the launch and calls this again, so count it only then
+        val countLaunch = hasBeenResumed()
+        val result = super.startActivitySafely(v, intent, item)
+        val shortcutId = (item as? WorkspaceItemInfo)?.deepShortcutId
+        val packageName = item?.targetPackage
+        // A null result means the launch failed
+        if (countLaunch && result != null && shortcutId != null && packageName != null) {
+            FolderUsageStats.onShortcutLaunched(this, packageName, shortcutId)
+        }
+        return result
+    }
+
     override fun onResume() {
         super.onResume()
         restartIfPending()
         refreshPredictionContainersFromModel()
+        FolderUsageStats.refreshIfWanted(this)
 
         dragLayer.viewTreeObserver.addOnDrawListener(
             object : ViewTreeObserver.OnDrawListener {
@@ -501,6 +527,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onDestroy() {
         super.onDestroy()
+        FolderUsageStats.removeListener(folderUsageListener)
         // Only actually closes if required, safe to call if not enabled
         SmartspacerClient.close()
     }

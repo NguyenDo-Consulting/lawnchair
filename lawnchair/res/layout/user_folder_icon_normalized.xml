@@ -63,6 +63,20 @@
             android:elevation="1dp"
             />
 
+        <!-- Lawnchair: per-folder options (sorting), in the footer's end corner -->
+        <ImageButton
+            android:id="@+id/folder_options"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="-8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/folder_options"
+            android:scaleType="center"
+            android:src="@drawable/ic_more_vert_dots"
+            android:tint="?attr/folderTextColor"
+            android:visibility="gone" />
+
     </LinearLayout>
 
 </com.android.launcher3.folder.Folder>

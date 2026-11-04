@@ -501,6 +501,8 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
         int horizontalGravity = getPageCount() > 1
                 ? (mIsRtl ? Gravity.RIGHT : Gravity.LEFT) : Gravity.CENTER_HORIZONTAL;
         mFolder.getFolderName().setGravity(horizontalGravity | Gravity.CENTER_VERTICAL);
+        // Lawnchair: the title's centering padding depends on the page count
+        mFolder.updateFolderOptionsButton();
     }
 
     public int getDesiredWidth() {

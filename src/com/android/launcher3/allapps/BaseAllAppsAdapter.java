@@ -160,7 +160,22 @@ public abstract class BaseAllAppsAdapter<T extends Context & ActivityContext> ex
          * as well. Returning true will prevent redrawing of thee item.
          */
         public boolean isContentSame(AdapterItem other) {
+            // Lawnchair: folders have no itemInfo, so compare the folder itself. Otherwise a
+            // renamed or re-sorted drawer folder keeps showing its old icon and contents.
+            if (viewType == VIEW_TYPE_FOLDER) {
+                return isSameFolder(folderInfo, other.folderInfo);
+            }
             return itemInfo == null && other.itemInfo == null;
+        }
+
+        // Lawnchair: see isContentSame
+        private static boolean isSameFolder(FolderInfo a, FolderInfo b) {
+            return a.id == b.id
+                    && a.options == b.options
+                    && java.util.Objects.equals(
+                            a.title == null ? null : a.title.toString(),
+                            b.title == null ? null : b.title.toString())
+                    && a.getContents().equals(b.getContents());
         }
 
         @Nullable

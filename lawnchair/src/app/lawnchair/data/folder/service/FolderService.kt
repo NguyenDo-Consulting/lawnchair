@@ -6,6 +6,7 @@ import app.lawnchair.data.AppDatabase
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.FolderInfoEntity
 import app.lawnchair.data.folder.FolderItemEntity
+import app.lawnchair.folder.FolderSortMode
 import app.lawnchair.preferences.PreferenceManager
 import com.android.launcher3.dagger.ApplicationContext
 import com.android.launcher3.dagger.LauncherAppComponent
@@ -55,6 +56,10 @@ class FolderService @Inject constructor(
         folderDao.updateFolderTitle(folderId, title)
     }
 
+    suspend fun updateFolder(folderId: Int, title: String, sortMode: FolderSortMode) = withContext(Dispatchers.IO) {
+        folderDao.updateFolderTitleAndSortMode(folderId, title, sortMode.id)
+    }
+
     suspend fun deleteFolderInfo(id: Int) = withContext(Dispatchers.IO) {
         folderDao.deleteFolder(id)
     }
@@ -96,6 +101,7 @@ class FolderService @Inject constructor(
         itemComponentKeys = items
             .sortedBy { it.rank }
             .mapNotNull { it.componentKey },
+        sortMode = FolderSortMode.fromId(folder.sortMode),
     )
 
     override fun close() {

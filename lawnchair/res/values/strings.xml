@@ -159,6 +159,13 @@
     <string name="folders_filter_duplicates">Only show unique apps</string>
     <string name="folder_manage_apps">Manage apps</string>
     <string name="my_folder_label">My folder</string>
+    <string name="folder_options">Folder options</string>
+    <string name="folder_sort_label">Sort apps</string>
+    <string name="folder_sort_free">Free</string>
+    <string name="folder_sort_alphabetical">Alphabetical</string>
+    <string name="folder_sort_most_used">Most used</string>
+    <string name="folder_sort_most_used_needs_access">Needs usage access to count app opens. Until then, only shortcuts opened from Lawnchair are counted.</string>
+    <string name="folder_sort_grant_usage_access">Grant usage access</string>
     <string name="sort_active_items_action">Sort active items</string>
 
     <!-- A11y description -->

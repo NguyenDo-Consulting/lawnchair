@@ -6,6 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.service.FolderService
+import app.lawnchair.folder.FolderSortMode
 import app.lawnchair.preferences2.ReloadHelper
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -55,6 +56,15 @@ class FolderViewModel(
         viewModelScope.launch {
             repository.renameFolderInfo(folderId, title)
             reloadHelper.reloadGrid()
+        }
+    }
+
+    fun updateFolder(folderId: Int, title: String, sortMode: FolderSortMode) {
+        val renamed = folders.value?.find { it.id == folderId }?.title != title
+        viewModelScope.launch {
+            repository.updateFolder(folderId, title, sortMode)
+            // The drawer list watches the folders table, so only a rename needs a grid reload
+            if (renamed) reloadHelper.reloadGrid()
         }
     }
 

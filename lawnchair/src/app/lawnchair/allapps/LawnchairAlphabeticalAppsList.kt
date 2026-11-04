@@ -11,6 +11,9 @@ import app.lawnchair.allapps.filters.DrawerFilter
 import app.lawnchair.allapps.filters.DrawerFilterState
 import app.lawnchair.data.folder.FolderEntry
 import app.lawnchair.data.folder.model.FolderViewModel
+import app.lawnchair.folder.FolderSortMode
+import app.lawnchair.folder.FolderSorter
+import app.lawnchair.folder.FolderUsageStats
 import app.lawnchair.launcher
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.preferences2.PreferenceManager2
@@ -58,7 +61,13 @@ class LawnchairAlphabeticalAppsList<T>(
     private val folderList = mutableListOf<FolderEntry>()
     private val filteredList = mutableListOf<AppInfo>()
 
+    /** Rebuilds the list when new usage counts would reorder a "Most used" folder. */
+    private val folderUsageListener = Runnable {
+        if (folderList.any { it.sortMode == FolderSortMode.MOST_USED }) onAppsUpdated()
+    }
+
     init {
+        FolderUsageStats.addListener(folderUsageListener)
         context.launcher.deviceProfile.inv.addOnChangeListener(this)
         (context as? LifecycleOwner)?.lifecycle?.addObserver(this)
         try {
@@ -110,6 +119,7 @@ class LawnchairAlphabeticalAppsList<T>(
 
     override fun onDestroy(owner: LifecycleOwner) {
         context.launcher.deviceProfile.inv.removeOnChangeListener(this)
+        FolderUsageStats.removeListener(folderUsageListener)
     }
 
     private fun observeFolders() {
@@ -163,10 +173,12 @@ class LawnchairAlphabeticalAppsList<T>(
             }
         } else {
             folderList.forEach { folderEntry ->
-                val resolvedApps = folderEntry.itemComponentKeys.mapNotNull { keyString ->
+                val storedOrder = folderEntry.itemComponentKeys.mapNotNull { keyString ->
                     val componentKey = ComponentKey.fromString(keyString) ?: return@mapNotNull null
                     appsStore.getApp(componentKey) as? AppInfo
                 }
+                val resolvedApps = FolderSorter.sort(context, storedOrder, folderEntry.sortMode)
+                    ?: storedOrder
 
                 if (resolvedApps.size > 1) {
                     val folderInfo = FolderInfo().apply {
@@ -174,6 +186,8 @@ class LawnchairAlphabeticalAppsList<T>(
                         title = folderEntry.title
                         resolvedApps.forEach { add(it) }
                     }
+                    // Lets the long-press edit sheet show the current sort mode
+                    FolderSortMode.set(folderInfo, folderEntry.sortMode, null)
                     mAdapterItems.add(AdapterItem.asFolder(folderInfo))
                     position++
 

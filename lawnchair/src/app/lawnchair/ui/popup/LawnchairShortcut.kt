@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
 import app.lawnchair.data.folder.service.FolderService
+import app.lawnchair.folder.FolderSortMode
 import app.lawnchair.gestures.IconGestureKeys
 import app.lawnchair.override.CustomizeAppDialog
 import app.lawnchair.override.CustomizeShortcutDialog
@@ -120,6 +121,17 @@ class LawnchairShortcut {
                         )
                     },
                     onDismiss = { close(true) },
+                    initialSortMode = FolderSortMode.of(folderInfo),
+                    onSave = { folderId, title, sortMode ->
+                        val renamed = title != folderInfo.title?.toString()
+                        launcher.lifecycleScope.launch {
+                            FolderService.INSTANCE.get(launcher).updateFolder(folderId, title, sortMode)
+                            // The drawer list watches the folders table, so a new sort order shows
+                            // up without a grid reload. Reloading rebinds the whole launcher, and a
+                            // sheet opened during that stops responding to taps.
+                            if (renamed) ReloadHelper(launcher).reloadGrid()
+                        }
+                    },
                 )
             }
         }

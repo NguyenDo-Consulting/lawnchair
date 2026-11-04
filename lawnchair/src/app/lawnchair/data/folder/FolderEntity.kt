@@ -6,6 +6,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import app.lawnchair.folder.FolderSortMode
 
 @Entity(tableName = "Folders")
 data class FolderInfoEntity(
@@ -14,6 +15,8 @@ data class FolderInfoEntity(
     val hide: Boolean = false,
     val rank: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
+    /** [FolderSortMode.id] */
+    @ColumnInfo(defaultValue = "0") val sortMode: Int = 0,
 )
 
 @Entity(
@@ -44,4 +47,5 @@ data class FolderEntry(
     val hide: Boolean = false,
     val rank: Int = 0,
     val itemComponentKeys: List<String> = emptyList(),
+    val sortMode: FolderSortMode = FolderSortMode.FREE,
 )
