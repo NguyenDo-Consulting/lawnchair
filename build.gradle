@@ -1,3 +1,6 @@
+// Modifications copyright 2026, Nguyen-Do Consulting
+// Licensed under the Apache License, Version 2.0. See LICENSE.txt.
+
 import app.cash.licensee.SpdxId
 import com.android.build.gradle.api.AndroidBasePlugin
 import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
@@ -277,7 +280,7 @@ android {
         }
 
         play {
-            applicationId "app.lawnchair.play"
+            applicationId "com.nguyendoconsulting.launcher" // Lawnchair: fork's own Play Store ID (upstream: app.lawnchair.play)
             dimension "channel"
             isDefault true
         }
@@ -334,6 +337,8 @@ android {
 
         lawnWithQuickstepPlay {
             manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
+            // Lawnchair: ND Shades branding (icon). Set on the combined source set so it outranks lawnchair/res.
+            res.srcDirs = ["play/res"]
         }
 
         withQuickstep {
@@ -350,6 +355,16 @@ androidComponents {
         def channel = variant.productFlavors.last().second
         variant.outputs.forEach { output ->
             output.outputFileName.set("Lawnchair.${output.versionName.get()}.$channel.${variant.buildType}.apk")
+        }
+
+        // Lawnchair: the Play build ships as ND Shades. Build types set derived_app_name and outrank
+        // flavors, so it's overridden per variant here.
+        if (channel == "play") {
+            def appName = variant.buildType == "debug" ? "ND Shades (Debug)" : "ND Shades"
+            variant.resValues.put(
+                variant.makeResValueKey("string", "derived_app_name"),
+                new com.android.build.api.variant.ResValue(appName, null)
+            )
         }
 
         // Lawnchair-TODO: A better way to sync proto file to the IDE preventing missing or outdated result. Please remove if this is the best solution we have right now

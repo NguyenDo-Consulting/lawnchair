@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ Copyright 2026, Nguyen-Do Consulting
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
+<!-- ND Shades settings icon foreground: the shades from the app icon, with gear-shaped lens rims
+     and N and D on the lenses. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Bridge -->
+    <path
+        android:pathData="M51.5,50.5Q54,46.5 56.5,50.5"
+        android:strokeWidth="3"
+        android:strokeColor="#FF14171E"
+        android:strokeLineCap="round" />
+    <!-- Gear rims, with the lens openings cut out -->
+    <path
+        android:fillColor="#FF14171E"
+        android:fillType="evenOdd"
+        android:strokeWidth="0.8"
+        android:strokeColor="#FF14171E"
+        android:strokeLineJoin="round"
+        android:pathData="M36.69,43.84L37.35,41.1L40.65,41.1L41.31,43.84A11.4,11.4 0,0 1,45.26,45.47L47.67,44.01L49.99,46.33L48.53,48.74A11.4,11.4 0,0 1,50.16,52.69L52.9,53.35L52.9,56.65L50.16,57.31A11.4,11.4 0,0 1,48.53,61.26L49.99,63.67L47.67,65.99L45.26,64.53A11.4,11.4 0,0 1,41.31,66.16L40.65,68.9L37.35,68.9L36.69,66.16A11.4,11.4 0,0 1,32.74,64.53L30.33,65.99L28.01,63.67L29.47,61.26A11.4,11.4 0,0 1,27.84,57.31L25.1,56.65L25.1,53.35L27.84,52.69A11.4,11.4 0,0 1,29.47,48.74L28.01,46.33L30.33,44.01L32.74,45.47A11.4,11.4 0,0 1,36.69,43.84Z M30.4,55a8.6,8.6 0,1 1,17.2,0a8.6,8.6 0,1 1,-17.2,0Z" />
+    <path
+        android:fillColor="#FF14171E"
+        android:fillType="evenOdd"
+        android:strokeWidth="0.8"
+        android:strokeColor="#FF14171E"
+        android:strokeLineJoin="round"
+        android:pathData="M66.69,43.84L67.35,41.1L70.65,41.1L71.31,43.84A11.4,11.4 0,0 1,75.26,45.47L77.67,44.01L79.99,46.33L78.53,48.74A11.4,11.4 0,0 1,80.16,52.69L82.9,53.35L82.9,56.65L80.16,57.31A11.4,11.4 0,0 1,78.53,61.26L79.99,63.67L77.67,65.99L75.26,64.53A11.4,11.4 0,0 1,71.31,66.16L70.65,68.9L67.35,68.9L66.69,66.16A11.4,11.4 0,0 1,62.74,64.53L60.33,65.99L58.01,63.67L59.47,61.26A11.4,11.4 0,0 1,57.84,57.31L55.1,56.65L55.1,53.35L57.84,52.69A11.4,11.4 0,0 1,59.47,48.74L58.01,46.33L60.33,44.01L62.74,45.47A11.4,11.4 0,0 1,66.69,43.84Z M60.4,55a8.6,8.6 0,1 1,17.2,0a8.6,8.6 0,1 1,-17.2,0Z" />
+    <!-- Lenses -->
+    <path android:pathData="M30.4,55a8.6,8.6 0,1 1,17.2,0a8.6,8.6 0,1 1,-17.2,0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="39"
+                android:startY="46.4"
+                android:endX="39"
+                android:endY="63.6"
+                android:startColor="#FF3B4559"
+                android:endColor="#FF1C222E" />
+        </aapt:attr>
+    </path>
+    <path android:pathData="M60.4,55a8.6,8.6 0,1 1,17.2,0a8.6,8.6 0,1 1,-17.2,0Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="69"
+                android:startY="46.4"
+                android:endX="69"
+                android:endY="63.6"
+                android:startColor="#FF3B4559"
+                android:endColor="#FF1C222E" />
+        </aapt:attr>
+    </path>
+    <!-- Brow bar and hinge studs -->
+    <path
+        android:fillColor="#FF14171E"
+        android:pathData="M28.5,38.5H79.5A2.25,2.25 0,0 1,79.5 43H28.5A2.25,2.25 0,0 1,28.5 38.5Z" />
+    <path
+        android:fillColor="#FFA7AFBA"
+        android:pathData="M28.65,40.75a0.85,0.85 0,1 1,1.7,0a0.85,0.85 0,1 1,-1.7,0Z M77.65,40.75a0.85,0.85 0,1 1,1.7,0a0.85,0.85 0,1 1,-1.7,0Z" />
+    <!-- N on the left lens, D on the right lens -->
+    <path
+        android:pathData="M35.6,59.2V50.8L42.4,59.2V50.8M65.8,50.8V59.2H68.4A4.2,4.2 0,0 0,68.4 50.8Z"
+        android:strokeWidth="2.6"
+        android:strokeColor="#FF9AA6B6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

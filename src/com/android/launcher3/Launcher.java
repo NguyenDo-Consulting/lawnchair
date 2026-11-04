@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * Modifications copyright 2025, Lawnchair
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3;
