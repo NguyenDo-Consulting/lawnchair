@@ -47,6 +47,7 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.firstCached
 import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
+import app.lawnchair.shortcuts.ConvertedShortcuts
 import app.lawnchair.theme.ThemeProvider
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
@@ -61,6 +62,7 @@ import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_ALL_APPS_PREDICTION
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_HOTSEAT_PREDICTION
 import com.android.launcher3.LauncherSettings.Favorites.CONTAINER_WIDGETS_PREDICTION
+import com.android.launcher3.LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT
 import com.android.launcher3.LauncherState
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
@@ -299,7 +301,27 @@ class LawnchairLauncher : QuickstepLauncher() {
             Stream.of(LawnchairShortcut.UNINSTALL, LawnchairShortcut.CUSTOMIZE, LawnchairShortcut.OPEN_IN_STORE),
             Stream.of(LawnchairShortcut.PAUSE_APPS),
         ),
-    )
+    ).map { hideForPinnedShortcuts(it) }
+
+    /**
+     * A pinned shortcut isn't an app, so the options about its app (App info, Widgets and
+     * Uninstall) are left out of its menu. Lawnchair publishes the legacy shortcuts it converts,
+     * like contacts imported from Nova, so those only keep Remove and Customize.
+     */
+    private fun hideForPinnedShortcuts(factory: SystemShortcut.Factory<*>): SystemShortcut.Factory<*> {
+        if (factory === SystemShortcut.REMOVE || factory === LawnchairShortcut.CUSTOMIZE) return factory
+        val isAppOption = factory === SystemShortcut.APP_INFO ||
+            factory === SystemShortcut.WIDGETS ||
+            factory === SystemShortcut.UNINSTALL_APP ||
+            factory === LawnchairShortcut.UNINSTALL
+        @Suppress("UNCHECKED_CAST")
+        val activityFactory = factory as SystemShortcut.Factory<ActivityContext>
+        return SystemShortcut.Factory<ActivityContext> { context, itemInfo, originalView ->
+            val hidden = ConvertedShortcuts.isConverted(this@LawnchairLauncher, itemInfo) ||
+                (isAppOption && itemInfo.itemType == ITEM_TYPE_DEEP_SHORTCUT)
+            if (hidden) null else activityFactory.getShortcut(context, itemInfo, originalView)
+        }
+    }
 
     fun updateTheme() {
         if (themeProvider.colorScheme != colorScheme) {

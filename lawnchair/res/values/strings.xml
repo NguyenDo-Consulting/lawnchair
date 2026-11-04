@@ -642,6 +642,12 @@
     <string name="backup_restore_failed_not_applied">The launcher closed before the backup was read completely. Nothing was changed.</string>
     <string name="backup_restore_failed_rolled_back">The backup couldn\'t be applied, so your previous layout and settings were kept.</string>
     <string name="backup_restore_failed_rollback_failed">The backup couldn\'t be applied, and some of your previous layout and settings couldn\'t be recovered.</string>
+    <!-- Shown on the next start when shortcuts Lawnchair made, e.g. from a Nova Launcher import, couldn't be added back -->
+    <string name="backup_restore_shortcuts_title">Some shortcuts weren\'t restored</string>
+    <plurals name="backup_restore_shortcuts_message">
+        <item quantity="one">%1$d shortcut from the backup couldn\'t be added back. Set Lawnchair as your default home app, then restore the backup again.</item>
+        <item quantity="other">%1$d shortcuts from the backup couldn\'t be added back. Set Lawnchair as your default home app, then restore the backup again.</item>
+    </plurals>
     <string name="invalid_backup_file">Invalid backup file</string>
     <string name="restore_nova_backup">Restore Nova backup</string>
     <string name="invalid_nova_backup_file">Invalid Nova backup file</string>

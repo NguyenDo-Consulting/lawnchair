@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import com.android.launcher3.BubbleTextView;
 import com.android.launcher3.Launcher;
 import com.android.launcher3.R;
+import com.android.launcher3.LauncherSettings;
 import com.android.launcher3.model.data.ItemInfo;
 
 /**
@@ -46,6 +47,11 @@ public class LauncherPopupLiveUpdateHandler extends PopupLiveUpdateHandler<Launc
     @Override
     public void onWidgetsBound() {
         BubbleTextView originalIcon = mPopupContainerWithArrow.getOriginalIcon();
+        // Lawnchair: a pinned shortcut's menu has no Widgets option, see LawnchairLauncher.
+        if (((ItemInfo) originalIcon.getTag()).itemType
+                == LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT) {
+            return;
+        }
         SystemShortcut widgetInfo = SystemShortcut.WIDGETS.getShortcut(mContext,
                 (ItemInfo) originalIcon.getTag(), originalIcon);
         View widgetsView = getWidgetsView(mPopupContainerWithArrow);

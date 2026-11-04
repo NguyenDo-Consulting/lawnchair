@@ -12,6 +12,7 @@ import android.util.Log
 import androidx.annotation.StringRes
 import androidx.core.graphics.drawable.toBitmap
 import app.lawnchair.LawnchairProto.BackupInfo
+import app.lawnchair.shortcuts.ConvertedShortcuts
 import app.lawnchair.util.hasFlag
 import app.lawnchair.util.scaleDownTo
 import app.lawnchair.util.scaleDownToDisplaySize
@@ -91,6 +92,7 @@ class LawnchairBackup(
             withContext(Dispatchers.IO) {
                 if (restoreLayout) {
                     verifyStagedLayout(stagingDir)
+                    republishConvertedShortcuts(stagingDir)
                     // applyPendingRestore only applies a staging dir that has it. Written before
                     // the wallpaper is set, so a failure from here on still changes nothing: the
                     // catch below deletes the staging dir with it.
@@ -121,6 +123,25 @@ class LawnchairBackup(
             val result = DatabaseUtils.stringForQuery(db, "PRAGMA quick_check", null)
             check(result == "ok") { "$LAUNCHER_DB_FILE_NAME is corrupted: $result" }
         }
+    }
+
+    /**
+     * Pinned shortcuts aren't in a backup, so the legacy shortcuts Lawnchair converted to its own
+     * pinned shortcuts are published again from the backup's layout. Without that, they'd be
+     * deleted on a new device. The ones that can't be are counted for
+     * [consumeUnrestoredShortcutCount].
+     */
+    private fun republishConvertedShortcuts(stagingDir: File) {
+        val dbFile = File(stagingDir, LAUNCHER_DB_FILE_NAME)
+        val countFile = File(context.filesDir, UNRESTORED_SHORTCUTS_FILE_NAME)
+        val unrestored = if (dbFile.exists()) {
+            SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY).use {
+                ConvertedShortcuts.republish(context, it)
+            }
+        } else {
+            0
+        }
+        if (unrestored > 0) countFile.writeText(unrestored.toString()) else countFile.delete()
     }
 
     private suspend fun readZip(handlers: Map<String, suspend (InputStream) -> Unit>) {
@@ -157,6 +178,7 @@ class LawnchairBackup(
         private const val ROLLBACK_DIR_NAME = "restore_rollback"
         private const val MOVED_ASIDE_FILE_NAME = "moved_aside"
         private const val RESTORE_FAILURE_FILE_NAME = "restore_failure"
+        private const val UNRESTORED_SHORTCUTS_FILE_NAME = "restore_unrestored_shortcuts"
         private const val TAG = "LawnchairBackup"
 
         const val INCLUDE_LAYOUT_AND_SETTINGS = 1 shl 0
@@ -355,6 +377,18 @@ class LawnchairBackup(
             val failure = RestoreFailure.entries.firstOrNull { it.name == file.readText() }
             file.delete()
             return failure ?: RestoreFailure.ROLLED_BACK
+        }
+
+        /**
+         * Returns how many of the backup's shortcuts the last restore couldn't publish again, and
+         * clears it so it is reported once.
+         */
+        fun consumeUnrestoredShortcutCount(context: Context): Int {
+            val file = File(context.filesDir, UNRESTORED_SHORTCUTS_FILE_NAME)
+            if (!file.exists()) return 0
+            val count = file.readText().toIntOrNull() ?: 0
+            file.delete()
+            return count
         }
 
         /**

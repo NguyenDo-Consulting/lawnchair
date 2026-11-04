@@ -1,6 +1,7 @@
 package app.lawnchair.gestures.config
 
 import android.content.Context
+import android.content.Intent
 import android.content.pm.LauncherApps
 import android.graphics.Canvas
 import android.graphics.drawable.Icon
@@ -14,12 +15,14 @@ import app.lawnchair.gestures.handlers.OpenAppGestureHandler
 import app.lawnchair.gestures.handlers.OpenAppSearchGestureHandler
 import app.lawnchair.gestures.handlers.OpenAppTarget
 import app.lawnchair.gestures.handlers.OpenAssistantHandler
+import app.lawnchair.gestures.handlers.OpenIntentGestureHandler
 import app.lawnchair.gestures.handlers.OpenNotificationsHandler
 import app.lawnchair.gestures.handlers.OpenQuickSettingsHandler
 import app.lawnchair.gestures.handlers.OpenSearchGestureHandler
 import app.lawnchair.gestures.handlers.RecentsGestureHandler
 import app.lawnchair.gestures.handlers.SleepGestureHandler
 import app.lawnchair.theme.color.tokens.ColorTokens
+import app.lawnchair.util.IntentSerializer
 import app.lawnchair.util.kotlinxJson
 import com.android.launcher3.AppFilter
 import com.android.launcher3.LauncherAppState
@@ -199,6 +202,23 @@ sealed class GestureHandlerConfig {
         companion object {
             const val SERIAL_NAME = "openShortcut"
         }
+    }
+
+    /**
+     * Starts an intent that isn't an app or a pinned shortcut, e.g. texting a contact. These come
+     * from imported launcher backups. The intent is kept in the config, so it survives a backup.
+     */
+    @Serializable
+    @SerialName("openIntent")
+    data class OpenIntent(
+        val label: String,
+        @Serializable(IntentSerializer::class) val intent: Intent,
+    ) : GestureHandlerConfig() {
+        override fun getIcon(context: Context): Icon = Icon.createWithResource(context, iconRes)
+
+        override fun getDisplayLabel(context: Context) = label
+        override fun getLabel(context: Context) = context.getString(R.string.gesture_handler_open_app_config, label)
+        override fun createHandler(context: Context) = OpenIntentGestureHandler(context, intent)
     }
 
     companion object {

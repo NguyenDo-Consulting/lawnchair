@@ -300,14 +300,34 @@ class LawnchairApp : LauncherApplication() {
             }
         }
 
-        /** Tells the user when the restore applied on this start failed. */
+        /**
+         * Tells the user when the restore applied on this start failed, or when some of its
+         * shortcuts couldn't be brought back.
+         */
         fun Launcher.showRestoreFailureIfNecessary() {
-            val failure = LawnchairBackup.consumeRestoreFailure(this) ?: return
-            AlertDialog.Builder(this)
-                .setTitle(R.string.backup_restore_failed_title)
-                .setMessage(failure.messageRes)
-                .setPositiveButton(android.R.string.ok, null)
-                .show()
+            val unrestoredShortcuts = LawnchairBackup.consumeUnrestoredShortcutCount(this)
+            val failure = LawnchairBackup.consumeRestoreFailure(this)
+            if (failure != null) {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.backup_restore_failed_title)
+                    .setMessage(failure.messageRes)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+                return
+            }
+            if (unrestoredShortcuts > 0) {
+                AlertDialog.Builder(this)
+                    .setTitle(R.string.backup_restore_shortcuts_title)
+                    .setMessage(
+                        resources.getQuantityString(
+                            R.plurals.backup_restore_shortcuts_message,
+                            unrestoredShortcuts,
+                            unrestoredShortcuts,
+                        ),
+                    )
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
         }
 
         fun getUriForFile(context: Context, file: File): Uri {
