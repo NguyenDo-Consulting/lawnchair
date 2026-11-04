@@ -327,18 +327,21 @@ android {
             res.srcDirs = ["nightly/res"]
         }
 
+        // Lawnchair: every build has the ND Shades branding (icons, splash, About logo) from
+        // ndshades/res. It's set on the combined source sets so it outranks lawnchair/res and nightly/res.
         lawnWithQuickstepGithub {
             manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
+            res.srcDirs = ["ndshades/res"]
         }
 
         lawnWithQuickstepNightly {
             manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
+            res.srcDirs = ["ndshades/res"]
         }
 
         lawnWithQuickstepPlay {
             manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
-            // Lawnchair: ND Shades branding (icon). Set on the combined source set so it outranks lawnchair/res.
-            res.srcDirs = ["play/res"]
+            res.srcDirs = ["ndshades/res"]
         }
 
         withQuickstep {
@@ -354,18 +357,17 @@ androidComponents {
     onVariants(selector().all()) { variant ->
         def channel = variant.productFlavors.last().second
         variant.outputs.forEach { output ->
-            output.outputFileName.set("Lawnchair.${output.versionName.get()}.$channel.${variant.buildType}.apk")
+            // Lawnchair: named after ND Shades (upstream: Lawnchair.<version>...apk)
+            output.outputFileName.set("NDShades.${output.versionName.get()}.$channel.${variant.buildType}.apk")
         }
 
-        // Lawnchair: the Play build ships as ND Shades. Build types set derived_app_name and outrank
+        // Lawnchair: every build ships as ND Shades. Build types set derived_app_name and outrank
         // flavors, so it's overridden per variant here.
-        if (channel == "play") {
-            def appName = variant.buildType == "debug" ? "ND Shades (Debug)" : "ND Shades"
-            variant.resValues.put(
-                variant.makeResValueKey("string", "derived_app_name"),
-                new com.android.build.api.variant.ResValue(appName, null)
-            )
-        }
+        def appName = variant.buildType == "debug" ? "ND Shades (Debug)" : "ND Shades"
+        variant.resValues.put(
+            variant.makeResValueKey("string", "derived_app_name"),
+            new com.android.build.api.variant.ResValue(appName, null)
+        )
 
         // Lawnchair-TODO: A better way to sync proto file to the IDE preventing missing or outdated result. Please remove if this is the best solution we have right now
         def capitalizedVariantName = variant.name.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + variant.name.substring(1)
@@ -391,6 +393,9 @@ composeCompiler {
 }
 
 addFrameworkJar('framework-16.jar')
+
+// Lawnchair: ND Shades branding (app name and strings) for every build.
+apply from: 'ndshades.gradle'
 
 dependencies {
     implementation projects.iconloaderlib

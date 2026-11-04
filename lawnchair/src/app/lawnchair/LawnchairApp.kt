@@ -325,6 +325,7 @@ class LawnchairApp : LauncherApplication() {
                             R.plurals.backup_restore_shortcuts_message,
                             unrestoredShortcuts,
                             unrestoredShortcuts,
+                            getString(R.string.derived_app_name),
                         ),
                     )
                     .setPositiveButton(android.R.string.ok, null)
