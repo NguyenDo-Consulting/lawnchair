@@ -927,9 +927,12 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
 
         initializeIconShape(iconShape.firstCached(this))
+        // Lawnchair: each preference flow emits again on every DataStore write, e.g. an icon
+        // gesture. Repeats are dropped before the current value is skipped; the other way round,
+        // the first write after start went through as a change and recreated the launcher.
         iconShape.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach { shape ->
                 initializeIconShape(shape)
                 L3ThemeManager.INSTANCE.get(context)
@@ -938,14 +941,14 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
 
         hotseatMode.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach { reloadHelper.restart() }
             .launchIn(scope)
 
         isHotseatEnabled.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach {
                 reloadHelper.recreate()
                 reloadHelper.reloadGrid()
@@ -953,20 +956,20 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
 
         hotseatQsbProvider.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach { reloadHelper.recreate() }
             .launchIn(scope)
 
         enableLabelInDock.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach { reloadHelper.reloadGrid() }
             .launchIn(scope)
 
         dockSearchBarAboveIcons.get()
-            .drop(1)
             .distinctUntilChanged()
+            .drop(1)
             .onEach { reloadHelper.reloadGrid() }
             .launchIn(scope)
     }

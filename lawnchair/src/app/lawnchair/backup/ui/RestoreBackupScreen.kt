@@ -16,8 +16,10 @@
 
 package app.lawnchair.backup.ui
 
+import android.Manifest
 import android.app.Activity
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.util.Log
 import android.widget.Toast
@@ -44,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +68,7 @@ import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.DummyLauncherBox
 import app.lawnchair.ui.preferences.components.controls.FlagSwitchPreference
+import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.RestoreBackup
@@ -147,12 +151,27 @@ fun ColumnScope.RestoreBackupOptions(
         BackHandler {}
     }
 
+    // Lawnchair: recreating contact shortcuts needs contacts access, asked for when it's turned on.
+    val restoreLayout = contents.hasFlag(LawnchairBackup.INCLUDE_LAYOUT_AND_SETTINGS)
+    var recreateShortcuts by rememberSaveable { mutableStateOf(false) }
+    val contactsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        recreateShortcuts = it
+    }
+    fun setRecreateShortcuts(recreate: Boolean) {
+        val granted = context.checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED
+        if (recreate && !granted) {
+            contactsPermission.launch(Manifest.permission.READ_CONTACTS)
+        } else {
+            recreateShortcuts = recreate
+        }
+    }
+
     fun restoreBackup() {
         if (restoringBackup) return
         scope.launch {
             restoringBackup = true
             try {
-                backup.restore(contents)
+                backup.restore(contents, recreateShortcuts = restoreLayout && recreateShortcuts)
                 Toast.makeText(context, R.string.backup_restore_success, Toast.LENGTH_SHORT).show()
                 restartLauncher(context)
             } catch (t: Throwable) {
@@ -223,6 +242,13 @@ fun ColumnScope.RestoreBackupOptions(
             mask = LawnchairBackup.INCLUDE_WALLPAPER,
             label = stringResource(id = R.string.backup_content_wallpaper),
             enabled = backupContents.hasFlag(LawnchairBackup.INCLUDE_WALLPAPER),
+        )
+        SwitchPreference(
+            checked = restoreLayout && recreateShortcuts,
+            onCheckedChange = ::setRecreateShortcuts,
+            label = stringResource(id = R.string.backup_recreate_shortcuts_label),
+            description = stringResource(id = R.string.backup_recreate_shortcuts_description),
+            enabled = restoreLayout,
         )
     }
     Box(

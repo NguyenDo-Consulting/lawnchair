@@ -27,6 +27,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.annotation.StringRes
 import androidx.core.graphics.drawable.toBitmap
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import app.lawnchair.LawnchairProto.BackupInfo
 import app.lawnchair.shortcuts.ConvertedShortcuts
 import app.lawnchair.util.hasFlag
@@ -37,6 +38,7 @@ import app.lawnchair.wallpaper.WallpaperManagerCompat
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.LauncherFiles
+import com.android.launcher3.LauncherSettings
 import com.android.launcher3.R
 import com.android.launcher3.model.DeviceGridState
 import com.android.launcher3.provider.RestoreDbTask
@@ -51,7 +53,10 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlin.math.max
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 
 class LawnchairBackup(
@@ -85,8 +90,11 @@ class LawnchairBackup(
      *
      * The layout and settings can't be written over the live files: this process holds the current
      * preferences in memory, and its next write would put them back on disk.
+     *
+     * @param recreateShortcuts whether the shortcuts that can't be pinned again are recreated
+     * when possible, see [ShortcutRecreator]
      */
-    suspend fun restore(selectedContents: Int) {
+    suspend fun restore(selectedContents: Int, recreateShortcuts: Boolean = false) {
         val contents = selectedContents and info.contents
         val restoreLayout = contents.hasFlag(INCLUDE_LAYOUT_AND_SETTINGS)
         val restoreWallpaper = contents.hasFlag(INCLUDE_WALLPAPER)
@@ -108,7 +116,7 @@ class LawnchairBackup(
             withContext(Dispatchers.IO) {
                 if (restoreLayout) {
                     verifyStagedLayout(stagingDir)
-                    republishConvertedShortcuts(stagingDir)
+                    restoreShortcuts(stagingDir, recreateShortcuts)
                     // applyPendingRestore only applies a staging dir that has it. Written before
                     // the wallpaper is set, so a failure from here on still changes nothing: the
                     // catch below deletes the staging dir with it.
@@ -142,22 +150,50 @@ class LawnchairBackup(
     }
 
     /**
-     * Pinned shortcuts aren't in a backup, so the legacy shortcuts Lawnchair converted to its own
-     * pinned shortcuts are published again from the backup's layout. Without that, they'd be
-     * deleted on a new device. The ones that can't be are counted for
+     * Pinned shortcuts aren't in a backup, and are pinned per launcher package, so the backup's
+     * shortcuts are pinned again for this package. Without that, they'd be deleted on a new device
+     * or in a launcher with another package. The legacy shortcuts Lawnchair converted to its own
+     * pinned shortcuts are published again from the backup's layout, and other apps' shortcuts
+     * are pinned by [BackupShortcutPins]. With [recreate], the ones that can't be pinned are
+     * recreated by [ShortcutRecreator] when possible. The rest are counted for
      * [consumeUnrestoredShortcutCount].
      */
-    private fun republishConvertedShortcuts(stagingDir: File) {
+    private suspend fun restoreShortcuts(stagingDir: File, recreate: Boolean) {
         val dbFile = File(stagingDir, LAUNCHER_DB_FILE_NAME)
         val countFile = File(context.filesDir, UNRESTORED_SHORTCUTS_FILE_NAME)
-        val unrestored = if (dbFile.exists()) {
+        val unrestoredConverted = if (dbFile.exists()) {
             SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY).use {
                 ConvertedShortcuts.republish(context, it)
             }
         } else {
             0
         }
+        val prefsFile = File(stagingDir, PREFS_DATASTORE_FILE_NAME)
+        // One DataStore for the staged file, closed with its scope: a file can only have one.
+        val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+        val unrestoredOther = try {
+            val prefs = if (prefsFile.exists()) PreferenceDataStoreFactory.create(scope = scope) { prefsFile } else null
+            val unpinned = BackupShortcutPins(context).pin(dbFile, prefs)
+            val recreated = if (recreate) ShortcutRecreator(context).recreate(unpinned, dbFile, prefs) else emptySet()
+            Log.i(TAG, "Shortcuts: ${unpinned.size} not pinned, ${recreated.size} recreated, ${countOwnShortcuts(dbFile)} of this app's in the staged layout")
+            (unpinned - recreated).size
+        } finally {
+            scope.cancel()
+        }
+        val unrestored = unrestoredConverted + unrestoredOther
         if (unrestored > 0) countFile.writeText(unrestored.toString()) else countFile.delete()
+    }
+
+    /** The staged layout's shortcuts of this app, read back to check that recreated ones were saved. */
+    private fun countOwnShortcuts(dbFile: File): Int {
+        if (!dbFile.exists()) return 0
+        return SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
+            DatabaseUtils.longForQuery(
+                db,
+                "SELECT COUNT(*) FROM favorites WHERE itemType = ? AND intent LIKE ?",
+                arrayOf(LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT.toString(), "%package=${context.packageName};%"),
+            ).toInt()
+        }
     }
 
     private suspend fun readZip(handlers: Map<String, suspend (InputStream) -> Unit>) {

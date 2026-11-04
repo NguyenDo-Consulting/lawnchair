@@ -644,7 +644,10 @@
     <string name="backup_restore_failed_not_applied">The launcher closed before the backup was read completely. Nothing was changed.</string>
     <string name="backup_restore_failed_rolled_back">The backup couldn\'t be applied, so your previous layout and settings were kept.</string>
     <string name="backup_restore_failed_rollback_failed">The backup couldn\'t be applied, and some of your previous layout and settings couldn\'t be recovered.</string>
-    <!-- Shown on the next start when shortcuts Lawnchair made, e.g. from a Nova Launcher import, couldn't be added back -->
+    <!-- Restore screen switch. Contacts' call and message shortcuts can only be kept by the launcher that added them, so Lawnchair makes its own from the contact -->
+    <string name="backup_recreate_shortcuts_label">Recreate contact shortcuts</string>
+    <string name="backup_recreate_shortcuts_description">Call and message shortcuts made by another launcher can\'t be moved to Lawnchair. Lawnchair can make them again from your contacts. Call shortcuts open the dialer with the number filled in.</string>
+    <!-- Shown on the next start when shortcuts from a restored backup couldn't be pinned again -->
     <string name="backup_restore_shortcuts_title">Some shortcuts weren\'t restored</string>
     <plurals name="backup_restore_shortcuts_message">
         <item quantity="one">%1$d shortcut from the backup couldn\'t be added back. Set <xliff:g id="app_name" example="Lawnchair">%2$s</xliff:g> as your default home app, then restore the backup again.</item>

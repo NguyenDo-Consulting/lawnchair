@@ -109,6 +109,10 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
 
     private boolean mCanAnnouncePageDescription;
     private boolean mDisallowPagedViewInterceptForIconSwipe; // Lawnchair: Icon swipe gesture feature
+    // Lawnchair: the touch started on an icon with only a vertical swipe gesture, at this point.
+    private boolean mTouchOnIconWithVerticalSwipe;
+    private float mIconSwipeDownX;
+    private float mIconSwipeDownY;
 
     public FolderPagedView(Context context, AttributeSet attrs) {
         this(
@@ -188,13 +192,25 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
                     resetTouchState();
                     return true;
                 }
+                // A vertical swipe always drifts sideways a little, and paging takes any
+                // sideways move past the touch slop. While the move is mostly vertical, it's left
+                // to the icon's gesture; a mostly sideways one still turns the page.
+                mTouchOnIconWithVerticalSwipe = isTouchOnIconWithVerticalSwipeGesture(
+                        ev.getX(), ev.getY());
+                mIconSwipeDownX = ev.getX();
+                mIconSwipeDownY = ev.getY();
                 return false;
 
             case MotionEvent.ACTION_MOVE:
+                if (mTouchOnIconWithVerticalSwipe) {
+                    return Math.abs(ev.getY() - mIconSwipeDownY)
+                            >= Math.abs(ev.getX() - mIconSwipeDownX);
+                }
                 return mDisallowPagedViewInterceptForIconSwipe;
 
             case MotionEvent.ACTION_UP:
             case MotionEvent.ACTION_CANCEL:
+                mTouchOnIconWithVerticalSwipe = false;
                 boolean shouldSkip = mDisallowPagedViewInterceptForIconSwipe;
                 mDisallowPagedViewInterceptForIconSwipe = false;
                 if (shouldSkip) {
@@ -211,6 +227,23 @@ public class FolderPagedView extends PagedView<PageIndicatorDots> implements Cli
     private boolean isTouchOnIconWithHorizontalSwipeGesture(float x, float y) {
         BubbleTextView touchedIcon = findIconAtPosition(x, y);
         return touchedIcon != null && touchedIcon.hasConfiguredHorizontalIconSwipeGesture();
+    }
+
+    // Lawnchair: Icon swipe gesture feature
+    private boolean isTouchOnIconWithVerticalSwipeGesture(float x, float y) {
+        BubbleTextView touchedIcon = findIconAtPosition(x, y);
+        return touchedIcon != null && touchedIcon.hasConfiguredVerticalIconSwipeGesture();
+    }
+
+    /**
+     * Lawnchair: Icon swipe gesture feature. Returns whether the point, in this view's
+     * coordinates, is on an icon with a vertical or horizontal swipe gesture configured, so that
+     * launcher touch controllers like the notification pull-down leave it to the icon.
+     */
+    public boolean isTouchOnIconWithSwipeGesture(float x, float y, boolean vertical) {
+        return vertical
+                ? isTouchOnIconWithVerticalSwipeGesture(x, y)
+                : isTouchOnIconWithHorizontalSwipeGesture(x, y);
     }
 
     /** Lawnchair: Find icon at specific position */

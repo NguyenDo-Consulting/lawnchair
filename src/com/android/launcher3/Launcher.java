@@ -192,6 +192,7 @@ import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.LauncherDragController;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
+import com.android.launcher3.folder.FolderPagedView;
 import com.android.launcher3.keyboard.ViewGroupFocusHelper;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo;
@@ -2927,6 +2928,15 @@ public class Launcher extends StatefulActivity<LauncherState>
     public boolean isTouchOnIconWithSwipeGesture(MotionEvent ev, boolean vertical) {
         if (mDragLayer == null) {
             return false;
+        }
+        // An open folder is on top, so its icons get the touch.
+        Folder openFolder = Folder.getOpen(this);
+        if (openFolder != null && mDragLayer.isEventOverView(openFolder, ev)) {
+            FolderPagedView content = openFolder.getContent();
+            float[] coord = new float[]{ev.getX(), ev.getY()};
+            mDragLayer.mapCoordInSelfToDescendant(openFolder, coord);
+            return content.isTouchOnIconWithSwipeGesture(
+                    coord[0] - content.getLeft(), coord[1] - content.getTop(), vertical);
         }
         if (mWorkspace != null) {
             float[] coord = new float[]{ev.getX(), ev.getY()};

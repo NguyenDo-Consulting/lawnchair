@@ -18,6 +18,7 @@ package app.lawnchair.gestures
 
 import android.content.Context
 import android.os.UserHandle
+import androidx.datastore.preferences.core.Preferences
 import app.lawnchair.gestures.config.GestureHandlerConfig
 import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.util.kotlinxJson
@@ -43,16 +44,20 @@ object GestureShortcutPins {
 
     @JvmStatic
     fun getShortcutKeys(context: Context, user: UserHandle): List<ShortcutKey> {
-        val savedKeys = PreferenceManager2.getInstance(context).getCachedPreferences().asMap().values
-            .asSequence()
-            .filterIsInstance<String>()
-            .filter { it.contains(GestureHandlerConfig.OpenShortcut.SERIAL_NAME) }
-            .mapNotNull { runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }.getOrNull() }
-            .filterIsInstance<GestureHandlerConfig.OpenShortcut>()
-            .map { it.target }
-            .filter { it.user == user }
-            .map { ShortcutKey(it.packageName, it.user, it.id) }
+        val savedKeys = getSavedShortcutKeys(PreferenceManager2.getInstance(context).getCachedPreferences(), user)
         val pending = synchronized(pendingKeys) { pendingKeys.filter { it.user == user } }
-        return (savedKeys + pending).distinct().toList()
+        return (savedKeys + pending).distinct()
     }
+
+    /** Returns the shortcuts that the gestures saved in [prefs] open, e.g. a backup's. */
+    fun getSavedShortcutKeys(prefs: Preferences, user: UserHandle): List<ShortcutKey> = prefs.asMap().values
+        .asSequence()
+        .filterIsInstance<String>()
+        .filter { it.contains(GestureHandlerConfig.OpenShortcut.SERIAL_NAME) }
+        .mapNotNull { runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }.getOrNull() }
+        .filterIsInstance<GestureHandlerConfig.OpenShortcut>()
+        .map { it.target }
+        .filter { it.user == user }
+        .map { ShortcutKey(it.packageName, it.user, it.id) }
+        .toList()
 }
