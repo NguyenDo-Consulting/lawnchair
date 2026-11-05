@@ -133,7 +133,7 @@ fun GestureHandlerPreference(
  */
 @Composable
 fun AppGesturePreference(
-    iconKey: String,
+    iconKey: String, // NDShades: IconGestureKeys key (upstream: cmp: ComponentKey)
     gestureType: GestureType,
     label: String,
     modifier: Modifier = Modifier,
@@ -144,7 +144,7 @@ fun AppGesturePreference(
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(context)
 
     val currentConfig by produceState<GestureHandlerConfig>(initialValue = GestureHandlerConfig.NoOp) {
-        prefs.getGestureForIcon(iconKey, gestureType).collect { value = it }
+        prefs.getGestureForIcon(iconKey, gestureType).collect { value = it } // NDShades
     }
 
     val resultReceiver = remember {
@@ -155,7 +155,7 @@ fun AppGesturePreference(
                     if (handlerString != null) {
                         val config = GestureHandlerConfig.fromString(handlerString)
                         scope.launch {
-                            prefs.setGestureForIcon(iconKey, gestureType, config)
+                            prefs.setGestureForIcon(iconKey, gestureType, config) // NDShades
                         }
                     }
                 }

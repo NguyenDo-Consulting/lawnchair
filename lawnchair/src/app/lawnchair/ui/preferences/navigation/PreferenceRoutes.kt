@@ -192,6 +192,7 @@ data object AppDrawerFolder : PreferenceRoute, PreferenceDeepLink {
 @Serializable
 data class AppDrawerAppListToFolder(val id: Int) : PreferenceRoute
 
+// NDShades: app drawer filters
 @Serializable
 data object AppDrawerFilters : PreferenceRoute, PreferenceDeepLink {
     override val deepLink = "$URI/app-drawer-filters"
@@ -216,6 +217,7 @@ data object SmartspaceWidget : PreferenceRoute
 @Serializable
 data object GesturesPickApp : PreferenceRoute
 
+// NDShades: pick a shortcut for a swipe gesture
 @Serializable
 data object GesturesPickShortcut : PreferenceRoute
 

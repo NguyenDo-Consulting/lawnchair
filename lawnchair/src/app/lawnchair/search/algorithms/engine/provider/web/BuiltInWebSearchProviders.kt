@@ -233,7 +233,7 @@ object StartPageWebSearchProvider : WebSearchProvider {
         @GET("suggestions")
         suspend fun getSuggestions(
             @Query("q") query: String,
-            // Lawnchair: Lawnchair's segment and partner tags are left out.
+            // NDShades: Lawnchair's segment and partner tags are left out.
             // TODO: get ND Shades' own partner segment from Startpage and add it here.
             @Query("format") format: String = "opensearch",
         ): Response<String>
@@ -312,7 +312,7 @@ object StartPageEUWebSearchProvider : WebSearchProvider {
         @GET("suggestions")
         suspend fun getSuggestions(
             @Query("q") query: String,
-            // Lawnchair: Lawnchair's segment and partner tags are left out.
+            // NDShades: Lawnchair's segment and partner tags are left out.
             // TODO: get ND Shades' own partner segment from Startpage and add it here.
             @Query("format") format: String = "opensearch",
         ): Response<String>

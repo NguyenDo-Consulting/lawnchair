@@ -50,6 +50,7 @@ class OpenAppGestureHandler(
                 )
             }
 
+            // NDShades: starts the pinned shortcut (upstream: did nothing)
             is OpenAppTarget.Shortcut -> {
                 try {
                     launcher.getSystemService<LauncherApps>()?.startShortcut(
@@ -70,13 +71,13 @@ class OpenAppGestureHandler(
         }
     }
 
-    // The shortcut was removed by its app, or its app was uninstalled.
+    // NDShades: The shortcut was removed by its app, or its app was uninstalled.
     private fun onShortcutUnavailable(launcher: LawnchairLauncher, e: Exception) {
         Log.w(TAG, "Can't start shortcut", e)
         Toast.makeText(launcher, R.string.shortcut_not_available, Toast.LENGTH_SHORT).show()
     }
 
-    companion object {
+    companion object { // NDShades
         private const val TAG = "OpenAppGestureHandler"
     }
 }

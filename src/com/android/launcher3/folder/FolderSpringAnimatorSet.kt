@@ -24,8 +24,6 @@ import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Color
-import android.graphics.RenderEffect
-import android.graphics.Shader
 import android.graphics.drawable.GradientDrawable
 import android.util.FloatProperty
 import android.view.View
@@ -42,14 +40,13 @@ import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_X
 import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Y
 import com.android.launcher3.LauncherAnimUtils.VIEW_TRANSLATE_Z
 import com.android.launcher3.LauncherAnimUtils.WORKSPACE_SCALE_PROPERTY_FACTORY
-import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.folder.FolderBlur
 import com.android.launcher3.LauncherState
 import com.android.launcher3.R
 import com.android.launcher3.Utilities
 import com.android.launcher3.Utilities.isDarkTheme
 import com.android.launcher3.anim.AnimatedFloat
 import com.android.launcher3.anim.SpringAnimationBuilder
-import com.patrykmichalik.opto.core.firstBlocking
 import com.android.launcher3.apppairs.AppPairIcon
 import com.android.launcher3.folder.ClippedFolderIconLayoutRule.MAX_NUM_ITEMS_IN_PREVIEW
 import com.android.launcher3.util.MultiPropertyFactory
@@ -73,28 +70,6 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
         private const val STIFFNESS_LAUNCHER_SCRIM = 380f
         private const val DAMPING_LAUNCHER_SCRIM = 0.98f
         private const val WALLPAPER_ZOOM = 0.125f
-
-        /** LC: Blurs a view by a fraction of the max depth blur radius. */
-        @JvmField
-        val VIEW_BLUR_FRACTION =
-            object : FloatProperty<View>("blurFraction") {
-                override fun setValue(view: View, value: Float) {
-                    view.setTag(R.id.folder_blur_fraction, value)
-                    if (!Utilities.ATLEAST_S) return
-                    if (value <= 0f) {
-                        view.setRenderEffect(null)
-                        return
-                    }
-                    val radius = value *
-                        view.resources.getDimensionPixelSize(R.dimen.max_depth_blur_radius_enhanced)
-                    view.setRenderEffect(
-                        RenderEffect.createBlurEffect(radius, radius, Shader.TileMode.CLAMP)
-                    )
-                }
-
-                override fun get(view: View): Float =
-                    view.getTag(R.id.folder_blur_fraction) as? Float ?: 0f
-            }
 
         /**
          * Factory method to take data calculated from [FolderAnimationSpringBuilderManager], and
@@ -121,6 +96,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             launcherDelegate.launcher?.depthController?.folderZoom?.let {
                 addWallpaperZoomAnimator(folder.context, animatorSet, folderAnimData.isOpening, it)
             }
+            // NDShades: optional blur behind open folders
             addFolderBlurAnimator(folder.context, animatorSet, folderAnimData.isOpening, launcherDelegate)
             iconAnimData.forEach { addContentIconAnimators(folder.context, animatorSet, it) }
             return FolderSpringAnimatorSet(animatorSet)
@@ -289,7 +265,10 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             )
         }
 
-        /** LC: Blurs the home screen behind the folder when the user turned it on. */
+        /**
+         * NDShades: Blurs the home screen behind the folder when the user turned it on, see
+         * [FolderBlur]. It stays here because it uses this file's private spring helper.
+         */
         private fun addFolderBlurAnimator(
             context: Context,
             animatorSet: AnimatorSet,
@@ -297,7 +276,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
             launcherDelegate: LauncherDelegate,
         ) {
             val launcher = launcherDelegate.launcher ?: return
-            if (!PreferenceManager2.getInstance(context).folderBackgroundBlur.firstBlocking()) return
+            if (!FolderBlur.isEnabled(context)) return
             if (launcher.isInState(LauncherState.ALL_APPS)) {
                 // What's behind the drawer is already blurred, so blur the drawer itself.
                 if (!Utilities.ATLEAST_S) return
@@ -311,7 +290,7 @@ class FolderSpringAnimatorSet(val animatorSet: AnimatorSet) {
                     startValue = 0f,
                     endValue = 1f,
                     minVisibleChange = MIN_VISIBLE_CHANGE_ALPHA,
-                    property = VIEW_BLUR_FRACTION,
+                    property = FolderBlur.VIEW_BLUR_FRACTION,
                     view = launcher.appsView,
                 )
                 return

@@ -131,7 +131,8 @@ class LawnchairShortcutActivity : ComponentActivity() {
             val value = context.packageName == si.`package` &&
                 si.id.startsWith(GESTURE_SHORTCUT_ID_PREFIX)
 
-            // A converted legacy shortcut, e.g. a contact, would show Lawnchair's icon as badge.
+            // NDShades: A converted legacy shortcut, e.g. a contact, would show Lawnchair's icon as
+            // badge.
             return value || ConvertedShortcuts.isConverted(context, si)
         }
     }

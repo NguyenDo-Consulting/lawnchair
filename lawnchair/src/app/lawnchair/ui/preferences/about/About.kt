@@ -138,7 +138,7 @@ fun About(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
-                // Lawnchair: no long press to open the commit, ND Shades' repository is private
+                // NDShades: no long press to open the commit, ND Shades' repository is private
                 Text(
                     text = if (prefs.hideVersionInfo.get()) {
                         prefs.pseudonymVersion.get() + " (pseudonym)"
@@ -177,7 +177,7 @@ fun About(
         item {
             Spacer(modifier = Modifier.requiredHeight(16.dp))
         }
-        // Lawnchair: ND Shades' developer in place of Lawnchair's links, team and community.
+        // NDShades: ND Shades' developer in place of Lawnchair's links, team and community.
         // Lawnchair is credited under Legal.
         item {
             PreferenceGroupHeading(
@@ -218,7 +218,7 @@ fun About(
                 cutTop = true,
                 cutBottom = false,
             ) {
-                // Lawnchair: credit to the Lawnchair project, in place of its privacy policy
+                // NDShades: credit to the Lawnchair project, in place of its privacy policy
                 ClickablePreference(
                     label = stringResource(id = R.string.about_based_on_lawnchair),
                     subtitle = stringResource(id = R.string.about_based_on_lawnchair_description),
@@ -235,4 +235,5 @@ fun About(
     }
 }
 
+// NDShades: Lawnchair credit link (upstream: PRIVACY_POLICY)
 private const val LAWNCHAIR_PROJECT = "https://github.com/LawnchairLauncher/lawnchair"

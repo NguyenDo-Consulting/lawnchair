@@ -353,7 +353,7 @@ public class DeviceProfile {
     private float widgetPaddingFactor;
     private float drawerPaddingTopFactor;
     private PreferenceManager2 preferenceManager2 = null;
-    // Lawnchair: the user put the dock search bar above the dock icons
+    // NDShades: the user put the dock search bar above the dock icons
     private boolean mDockSearchBarAboveIcons;
 
     /** TODO: Once we fully migrate to staged split, remove "isMultiWindowMode" */
@@ -367,6 +367,7 @@ public class DeviceProfile {
         mTextFactors = DeviceProfileOverrides.INSTANCE.get(context).getTextFactors();
 
         preferenceManager2 = PreferenceManager2.INSTANCE.get(context);
+        // NDShades: dock search bar above the dock icons
         mDockSearchBarAboveIcons = PreferenceCacheExtensionsKt
                 .firstCached(preferenceManager2.getDockSearchBarAboveIcons())
                 && PreferenceCacheExtensionsKt.firstCached(preferenceManager2.getHotseatMode())
@@ -1362,7 +1363,7 @@ public class DeviceProfile {
                 // with vertical bar layout or multi-window mode since the issue is handled
                 // separately with their calls to {@link #adjustToHideWorkspaceLabels}.
                 cellHeightPx -= (iconDrawablePaddingPx - cellPaddingY);
-                // LC-Note: A grid with more rows than fit the icons has a negative cellPaddingY,
+                // NDShades: A grid with more rows than fit the icons has a negative cellPaddingY,
                 // which would draw labels over their icons. Dock icons share this padding, and
                 // have room for their labels.
                 iconDrawablePaddingPx = Math.max(0, cellPaddingY);
@@ -1966,7 +1967,7 @@ public class DeviceProfile {
             int iconExtraSpacePx = iconSizePx - getIconVisibleSizePx(iconSizePx);
             int sideSpacing = (mDeviceProperties.getAvailableWidthPx() - (hotseatQsbWidth + iconExtraSpacePx)) / 2;
             hotseatBarPadding.set(sideSpacing,
-                    getPhoneHotseatTopPadding(),
+                    getPhoneHotseatTopPadding(), // NDShades: upstream 0
                     sideSpacing,
                     getHotseatBarBottomPadding());
         } else {
@@ -1980,7 +1981,7 @@ public class DeviceProfile {
             hotseatBarPadding.set(
                     hotseatAdjustment + workspacePadding.left + cellLayoutPaddingPx.left
                             + mInsets.left,
-                    getPhoneHotseatTopPadding(),
+                    getPhoneHotseatTopPadding(), // NDShades: upstream 0
                     hotseatAdjustment + workspacePadding.right + cellLayoutPaddingPx.right
                             + mInsets.right,
                     getHotseatBarBottomPadding());
@@ -2043,7 +2044,7 @@ public class DeviceProfile {
     }
 
     /**
-     * LC-Note: The user put the dock search bar above the icons, in the phone layout. Unlike
+     * NDShades: The user put the dock search bar above the icons, in the phone layout. Unlike
      * {@link #isQsbOnTop()}, the dock keeps its phone size and spacing, only the icons and the
      * search bar swap places.
      */
@@ -2052,7 +2053,7 @@ public class DeviceProfile {
                 && !isVerticalBarLayout() && !inv.isFixedLandscape;
     }
 
-    /** LC-Note: Space above the dock icons in the phone layout, where the search bar can be. */
+    /** NDShades: Space above the dock icons in the phone layout, where the search bar can be. */
     private int getPhoneHotseatTopPadding() {
         if (!isQsbAboveIconsOnPhone()) {
             return 0;
@@ -2069,7 +2070,7 @@ public class DeviceProfile {
             return getHotseatBarBottomPadding()
                     - ((getHotseatProfile().getQsbHeight() - hotseatCellHeightPx) / 2);
         } else if (isQsbOnTop() || (mDeviceProperties.isLandscape() && isQsbInline)
-                || isQsbAboveIconsOnPhone()) { // LC-Note: isQsbOnTop, isQsbAboveIconsOnPhone
+                || isQsbAboveIconsOnPhone()) { // LC-Note: isQsbOnTop. NDShades: isQsbAboveIconsOnPhone
             return hotseatBarSizePx - getHotseatProfile().getQsbHeight()
                     + getHotseatProfile().getQsbShadowHeight();
         } else {
@@ -2084,7 +2085,7 @@ public class DeviceProfile {
         if (isQsbOnTop() || isQsbInline) { // LC-Note: isQsbOnTop
             return hotseatBarBottomSpacePx - (Math.abs(hotseatCellHeightPx - iconSizePx) / 2);
         } else if (isQsbAboveIconsOnPhone()) {
-            // LC-Note: The icons take the bottom space that the search bar has otherwise.
+            // NDShades: The icons take the bottom space that the search bar has otherwise.
             return hotseatBarBottomSpacePx;
         } else {
             return hotseatBarSizePx - hotseatCellHeightPx * numHotseatRows;

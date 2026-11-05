@@ -54,6 +54,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import app.lawnchair.LawnchairAppKt;
 import app.lawnchair.LawnchairLauncher;
+import app.lawnchair.gestures.IconSwipeHitTest;
 import app.lawnchair.gestures.config.GestureHandlerConfig;
 import app.lawnchair.util.CompatibilityKt;
 
@@ -220,8 +221,9 @@ public class StatusBarTouchController implements TouchController {
 
     private boolean canInterceptTouch(MotionEvent ev) {
         // Lawnchair: Icon Swipe Gestures (For vertical down gestures)
+        // NDShades: IconSwipeHitTest also checks dock icons and open folders
         if (mLauncher instanceof Launcher launcher
-                && launcher.isTouchOnIconWithSwipeGesture(ev, true)) {
+                && IconSwipeHitTest.isTouchOnIconWithSwipeGesture(launcher, ev, true)) {
             return false;
         }
         if (isTrackpadScroll(ev) || !mIsEnabledCheck.get()

@@ -71,7 +71,7 @@ fun SelectAppsForDrawerFolder(
     val apps by appsState()
     val folderEntry by viewModel.getFolderFlowForId(folderInfoId).collectAsStateWithLifecycle(null)
     val allFolderPackages by viewModel.allFolderPackages.collectAsStateWithLifecycle()
-    // Apps already sorted into a drawer filter count as taken too
+    // NDShades: Apps already sorted into a drawer filter count as taken too
     val drawerFilters = preferenceManager2().drawerFilters.getAdapter().state.value
     val takenPackages = remember(allFolderPackages, drawerFilters) {
         allFolderPackages?.let { folderPackages ->
@@ -82,7 +82,7 @@ fun SelectAppsForDrawerFolder(
     SelectAppsForDrawerFolder(
         folderEntry = folderEntry,
         apps = apps,
-        allFolderPackages = takenPackages,
+        allFolderPackages = takenPackages, // NDShades: upstream allFolderPackages
         onUpdate = { title, componentKeys ->
             viewModel.updateFolderItems(folderInfoId, title, componentKeys)
         },
@@ -97,10 +97,11 @@ fun SelectAppsForDrawerFolder(
     allFolderPackages: Set<String>?,
     onUpdate: (title: String, componentKeys: List<String>) -> Unit,
     modifier: Modifier = Modifier,
-    // Filtering out apps of other folders doesn't apply when picking apps for a drawer filter.
+    // NDShades: Filtering out apps of other folders doesn't apply when picking apps for a drawer
+    // filter.
     showDuplicatesFilter: Boolean = true,
 ) {
-    var filterNonUniqueItems by remember { mutableStateOf(showDuplicatesFilter) }
+    var filterNonUniqueItems by remember { mutableStateOf(showDuplicatesFilter) } // NDShades
 
     val activeIds = remember(folderEntry) {
         folderEntry?.itemComponentKeys ?: emptyList()
@@ -150,6 +151,7 @@ fun SelectAppsForDrawerFolder(
                 PositionalListOverflowMenu(
                     state = state,
                 ) { hideMenu ->
+                    // NDShades: hidden when picking apps for a drawer filter
                     if (showDuplicatesFilter) {
                         DropdownMenuItem(
                             onClick = {

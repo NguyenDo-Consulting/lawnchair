@@ -146,12 +146,12 @@ fun ColumnScope.RestoreBackupOptions(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var restoringBackup by remember { mutableStateOf(false) }
-    var restoreFailed by remember { mutableStateOf(false) }
+    var restoreFailed by remember { mutableStateOf(false) } // NDShades: failure dialog
     if (restoringBackup) {
         BackHandler {}
     }
 
-    // Lawnchair: recreating contact shortcuts needs contacts access, asked for when it's turned on.
+    // NDShades: recreating contact shortcuts needs contacts access, asked for when it's turned on.
     val restoreLayout = contents.hasFlag(LawnchairBackup.INCLUDE_LAYOUT_AND_SETTINGS)
     var recreateShortcuts by rememberSaveable { mutableStateOf(false) }
     val contactsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -171,17 +171,19 @@ fun ColumnScope.RestoreBackupOptions(
         scope.launch {
             restoringBackup = true
             try {
+                // NDShades: recreateShortcuts
                 backup.restore(contents, recreateShortcuts = restoreLayout && recreateShortcuts)
                 Toast.makeText(context, R.string.backup_restore_success, Toast.LENGTH_SHORT).show()
                 restartLauncher(context)
             } catch (t: Throwable) {
                 Log.e("RestoreBackupScreen", "failed to restore backup", t)
-                restoreFailed = true
+                restoreFailed = true // NDShades: a dialog (upstream: a toast)
             }
             restoringBackup = false
         }
     }
 
+    // NDShades: a failed restore leaves everything unchanged, and says so
     if (restoreFailed) {
         AlertDialog(
             onDismissRequest = { restoreFailed = false },
@@ -243,6 +245,7 @@ fun ColumnScope.RestoreBackupOptions(
             label = stringResource(id = R.string.backup_content_wallpaper),
             enabled = backupContents.hasFlag(LawnchairBackup.INCLUDE_WALLPAPER),
         )
+        // NDShades: recreate shortcuts that can't be pinned again
         SwitchPreference(
             checked = restoreLayout && recreateShortcuts,
             onCheckedChange = ::setRecreateShortcuts,

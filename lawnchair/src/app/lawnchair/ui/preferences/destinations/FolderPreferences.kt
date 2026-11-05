@@ -77,6 +77,7 @@ fun FolderPreferences(
                 valueRange = 0F..1F,
                 showAsPercentage = true,
             )
+            // NDShades: optional blur behind open folders
             SwitchPreference(
                 adapter = prefs2.folderBackgroundBlur.getAdapter(),
                 label = stringResource(id = R.string.folder_bg_blur_label),

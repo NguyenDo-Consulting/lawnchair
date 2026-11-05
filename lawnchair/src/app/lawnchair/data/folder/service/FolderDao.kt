@@ -53,6 +53,7 @@ interface FolderDao {
     @Query("UPDATE Folders SET title = :title, timestamp = :timestamp WHERE id = :id")
     suspend fun updateFolderTitle(id: Int, title: String, timestamp: Long = System.currentTimeMillis())
 
+    // NDShades: per-folder sorting
     @Query("UPDATE Folders SET title = :title, sortMode = :sortMode, timestamp = :timestamp WHERE id = :id")
     suspend fun updateFolderTitleAndSortMode(
         id: Int,

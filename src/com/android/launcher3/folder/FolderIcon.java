@@ -101,7 +101,7 @@ import java.util.function.Predicate;
  */
 public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion,
         DraggableView, Reorderable,
-        IconSwipeTarget /* Lawnchair: folder swipe gestures */ {
+        IconSwipeTarget /* NDShades: folder swipe gestures */ {
 
     private final MultiTranslateDelegate mTranslateDelegate = new MultiTranslateDelegate(this);
     @Thunk ActivityContext mActivity;
@@ -109,7 +109,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public FolderInfo mInfo;
 
     private CheckLongPressHelper mLongPressHelper;
-    // Lawnchair: folder swipe gestures, null outside the launcher (e.g. in the taskbar)
+    // NDShades: folder swipe gestures, null outside the launcher (e.g. in the taskbar)
     @Nullable private FolderIconSwipeGestures mSwipeGestures;
 
     static final int DROP_IN_ANIMATION_DURATION = 400;
@@ -228,7 +228,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         icon.setOnClickListener(activity.getItemOnClickListener());
         icon.mInfo = folderInfo;
         icon.mActivity = activity;
-        // Lawnchair: folder swipe gestures
+        // NDShades: folder swipe gestures
         if (activity instanceof Launcher launcher) {
             icon.mSwipeGestures = new FolderIconSwipeGestures(icon, launcher);
         }
@@ -719,7 +719,7 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             return false;
         }
 
-        // Lawnchair: a swipe that triggered a folder gesture cancels the click and long press
+        // NDShades: a swipe that triggered a folder gesture cancels the click and long press
         if (mSwipeGestures != null && mSwipeGestures.onTouchEvent(event)) {
             cancelLongPress();
             MotionEvent cancelEvent = MotionEvent.obtain(event);
@@ -738,13 +738,13 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         return true;
     }
 
-    /** Lawnchair: folder swipe gestures */
+    /** NDShades: folder swipe gestures */
     @Override
     public boolean hasConfiguredHorizontalIconSwipeGesture() {
         return mSwipeGestures != null && mSwipeGestures.hasHorizontalGesture();
     }
 
-    /** Lawnchair: folder swipe gestures */
+    /** NDShades: folder swipe gestures */
     @Override
     public boolean hasConfiguredVerticalIconSwipeGesture() {
         return mSwipeGestures != null && mSwipeGestures.hasVerticalGesture();

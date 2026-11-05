@@ -436,7 +436,7 @@ public class ModelWriter {
                 mModel.getModelDbController().delete(itemIdMatch(item.id), null);
             }
             mBgDataModel.removeItem(mContext, items, mOwner);
-            FolderGestures.onItemsDeleted(mContext, items); // Lawnchair: folder swipe gestures
+            FolderGestures.onItemsDeleted(mContext, items); // NDShades: folder swipe gestures
             verifier.verifyModel();
         }));
     }
@@ -458,7 +458,7 @@ public class ModelWriter {
             List<ItemInfo> itemsToDelete = new ArrayList<>(info.getContents());
             itemsToDelete.add(info);
             mBgDataModel.removeItem(mContext, itemsToDelete, mOwner);
-            FolderGestures.onItemsDeleted(mContext, itemsToDelete); // Lawnchair: folder swipe gestures
+            FolderGestures.onItemsDeleted(mContext, itemsToDelete); // NDShades: folder swipe gestures
             verifier.verifyModel();
         }));
     }

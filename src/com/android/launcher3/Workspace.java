@@ -1236,7 +1236,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     // Lawnchair: Icon swipe gesture feature
     public boolean isTouchOnIconWithSwipeGesture(float x, float y, boolean vertical) {
         boolean hasConfiguredIconSwipeGesture = false;
-        IconSwipeTarget touchedIcon = findIconAtPosition(x, y);
+        IconSwipeTarget touchedIcon = findIconAtPosition(x, y); // NDShades: was BubbleTextView
         if (touchedIcon != null) {
             if (vertical) {
                 hasConfiguredIconSwipeGesture = touchedIcon.hasConfiguredVerticalIconSwipeGesture();
@@ -1248,6 +1248,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     }
 
     // Lawnchair: Icon swipe gesture feature
+    // NDShades: returns IconSwipeTarget (upstream BubbleTextView), so folders are found too
     private IconSwipeTarget findIconAtPosition(float x, float y) {
         for (int i = getChildCount() - 1; i >= 0; i--) {
             View child = getChildAt(i);
@@ -1259,7 +1260,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             if (!Utilities.pointInView(cellLayout, localX, localY, 0)) {
                 continue;
             }
-            IconSwipeTarget foundView = findIconInCellLayout(cellLayout, localX, localY);
+            IconSwipeTarget foundView = findIconInCellLayout(cellLayout, localX, localY); // NDShades
             if (foundView != null) {
                 return foundView;
             }
@@ -1267,8 +1268,8 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         return null;
     }
 
-    // Lawnchair: Icon swipe gesture feature, also used for the dock pages. Finds app, shortcut
-    // and folder icons.
+    // Lawnchair: Icon swipe gesture feature
+    // NDShades: public static, also used for the dock pages. Finds app, shortcut and folder icons.
     public static IconSwipeTarget findIconInCellLayout(CellLayout cellLayout, float x, float y) {
         ShortcutAndWidgetContainer container = cellLayout.getShortcutsAndWidgets();
         float containerX = x - container.getLeft();

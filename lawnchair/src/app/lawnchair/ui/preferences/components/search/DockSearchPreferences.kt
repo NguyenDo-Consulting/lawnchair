@@ -106,6 +106,7 @@ fun DockSearchPreference(
                             strokeWidth = qsbHotseatStrokeWidth.state.value,
                             strokeColor = strokeColorStyleAdapter.state.value,
                         )
+                        // NDShades: dock search bar above the dock icons
                         PreferenceGroup {
                             SwitchPreference(
                                 adapter = prefs2.dockSearchBarAboveIcons.getAdapter(),

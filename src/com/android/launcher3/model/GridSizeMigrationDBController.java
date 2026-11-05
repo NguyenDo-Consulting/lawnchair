@@ -347,7 +347,7 @@ public class GridSizeMigrationDBController {
             String srcTableName, String destTableName, List<Integer> idsInUse) {
         int id = copyEntryAndUpdate(helper, entry, srcTableName, destTableName, idsInUse);
         if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
-            // Lawnchair: folder swipe gestures follow the folder to its new id
+            // NDShades: folder swipe gestures follow the folder to its new id
             FolderGestures.onFolderIdChanged(entry.id, id);
         }
         if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER

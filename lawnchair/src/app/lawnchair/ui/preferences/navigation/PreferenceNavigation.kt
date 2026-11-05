@@ -195,6 +195,7 @@ fun PreferenceNavigation(
         composable<AppDrawerFolder>(
             deepLinks = getDeepLink(AppDrawerFolder),
         ) { AppDrawerFoldersPreference() }
+        // NDShades: app drawer filters
         composable<AppDrawerFilters>(
             deepLinks = getDeepLink(AppDrawerFilters),
         ) { AppDrawerFiltersPreference() }
@@ -223,7 +224,7 @@ fun PreferenceNavigation(
             deepLinks = getDeepLink(Gestures),
         ) { GesturePreferences() }
         composable<GesturesPickApp> { PickAppForGesture() }
-        composable<GesturesPickShortcut> { PickShortcutForGesture() }
+        composable<GesturesPickShortcut> { PickShortcutForGesture() } // NDShades
 
         composable<Quickstep>(
             deepLinks = getDeepLink(Quickstep),

@@ -116,6 +116,7 @@ fun AppDrawerFoldersPreference(
         onRenameFolder = { folderId, newTitle ->
             viewModel.renameFolder(folderId, newTitle)
         },
+        // NDShades: saves the title and per-folder sort mode together
         onSaveFolder = { folderId, newTitle, sortMode ->
             viewModel.updateFolder(folderId, newTitle, sortMode)
         },
@@ -137,7 +138,7 @@ fun AppDrawerFoldersPreference(
     onDeleteFolder: (FolderEntry) -> Unit,
     onOrderChange: (List<Int>) -> Unit,
     modifier: Modifier = Modifier,
-    onSaveFolder: ((Int, String, FolderSortMode) -> Unit)? = null,
+    onSaveFolder: ((Int, String, FolderSortMode) -> Unit)? = null, // NDShades: folder sorting
 ) {
     val mMSDLPlayerWrapper = MSDLPlayerWrapper.INSTANCE.get(LocalContext.current)
     val bottomSheetHandler = bottomSheetHandler
@@ -210,6 +211,7 @@ fun AppDrawerFoldersPreference(
                                 initialTitle = folderEntry.title,
                                 itemCount = folderEntry.itemComponentKeys.size,
                                 onRename = onRenameFolder,
+                                // NDShades: per-folder sorting
                                 initialSortMode = folderEntry.sortMode,
                                 onSave = onSaveFolder,
                                 onNavigate = {
@@ -249,14 +251,14 @@ fun FolderEditSheet(
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
     hideAppPicker: Boolean = false,
-    initialSortMode: FolderSortMode = FolderSortMode.FREE,
-    // When set, the sheet also shows sort options and OK saves title and sort mode together
-    // through this instead of [onRename]
+    initialSortMode: FolderSortMode = FolderSortMode.FREE, // NDShades: per-folder sorting
+    // NDShades: When set, the sheet also shows sort options and OK saves title and sort mode
+    // together through this instead of [onRename]
     onSave: ((folderId: Int, title: String, sortMode: FolderSortMode) -> Unit)? = null,
 ) {
     val resources = LocalResources.current
     var textFieldValue by remember { mutableStateOf(TextFieldValue(initialTitle)) }
-    var sortMode by remember { mutableStateOf(initialSortMode) }
+    var sortMode by remember { mutableStateOf(initialSortMode) } // NDShades
 
     ModalBottomSheetContent(
         buttons = {
@@ -269,6 +271,7 @@ fun FolderEditSheet(
             Spacer(Modifier.width(8.dp))
             Button(
                 onClick = {
+                    // NDShades: onSave (title and sort mode) when given, else upstream onRename
                     if (onSave != null) {
                         onSave(folderId, textFieldValue.text, sortMode)
                     } else {
@@ -311,6 +314,7 @@ fun FolderEditSheet(
                     onNavigate(folderId)
                 }
             }
+            // NDShades: sort options
             if (onSave != null) {
                 Text(
                     text = stringResource(R.string.folder_sort_label),

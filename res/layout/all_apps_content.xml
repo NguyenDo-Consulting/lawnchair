@@ -41,7 +41,7 @@
         android:paddingBottom="@dimen/all_apps_header_bottom_padding"
         android:orientation="vertical" >
 
-        <!-- Lawnchair: app drawer filter chips -->
+        <!-- NDShades: app drawer filter chips -->
         <app.lawnchair.allapps.filters.DrawerFilterChipsRow
             android:id="@+id/drawer_filter_chips"
             android:layout_width="match_parent"

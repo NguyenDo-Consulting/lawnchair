@@ -59,7 +59,7 @@ class AboutViewModel(
                     BuildConfig.VERSION_NAME
                 },
                 commitHash = BuildConfig.COMMIT_HASH,
-                // Lawnchair: ND Shades doesn't show Lawnchair's team and links, or look up which
+                // NDShades: ND Shades doesn't show Lawnchair's team and links, or look up which
                 // of them are active on Lawnchair's GitHub. The About screen credits Lawnchair.
             )
         }

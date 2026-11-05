@@ -324,7 +324,7 @@ public class FolderInfo extends CollectionInfo {
         return itemType == ITEM_TYPE_APPLICATION
                 || itemType == ITEM_TYPE_DEEP_SHORTCUT
                 || itemType == ITEM_TYPE_APP_PAIR
-                // Lawnchair: LoaderCursor puts legacy shortcuts into folders too.
+                // NDShades: LoaderCursor puts legacy shortcuts into folders too.
                 || itemType == LauncherSettings.Favorites.ITEM_TYPE_SHORTCUT;
     }
 }

@@ -123,7 +123,8 @@ class VerticalSwipeTouchController(
             return false
         }
         // LC: Icon Swipe Gestures (For vertical gestures)
-        if (launcher.isTouchOnIconWithSwipeGesture(ev, true)) {
+        // NDShades: IconSwipeHitTest also checks dock icons and open folders
+        if (IconSwipeHitTest.isTouchOnIconWithSwipeGesture(launcher, ev, true)) {
             return false
         }
         return AbstractFloatingView.getTopOpenView(launcher) == null &&

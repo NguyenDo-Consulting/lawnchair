@@ -49,7 +49,7 @@ public class LauncherPopupLiveUpdateHandler extends PopupLiveUpdateHandler<Launc
     @Override
     public void onWidgetsBound() {
         BubbleTextView originalIcon = mPopupContainerWithArrow.getOriginalIcon();
-        // Lawnchair: a pinned shortcut's menu has no Widgets option, see LawnchairLauncher.
+        // NDShades: a pinned shortcut's menu has no Widgets option, see LawnchairLauncher.
         if (((ItemInfo) originalIcon.getTag()).itemType
                 == LauncherSettings.Favorites.ITEM_TYPE_DEEP_SHORTCUT) {
             return;

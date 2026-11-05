@@ -14,7 +14,6 @@
  * limitations under the License.
  *
  * Modifications copyright 2025, Lawnchair
- * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3;
@@ -192,7 +191,6 @@ import com.android.launcher3.dragndrop.DragView;
 import com.android.launcher3.dragndrop.LauncherDragController;
 import com.android.launcher3.folder.Folder;
 import com.android.launcher3.folder.FolderIcon;
-import com.android.launcher3.folder.FolderPagedView;
 import com.android.launcher3.keyboard.ViewGroupFocusHelper;
 import com.android.launcher3.logger.LauncherAtom;
 import com.android.launcher3.logger.LauncherAtom.ContainerInfo;
@@ -2919,38 +2917,6 @@ public class Launcher extends StatefulActivity<LauncherState>
 
     public Hotseat getHotseat() {
         return mHotseat;
-    }
-
-    /**
-     * Lawnchair: Icon swipe gesture feature. Returns whether the event, in drag layer
-     * coordinates, is on a workspace or dock icon with a swipe gesture configured.
-     */
-    public boolean isTouchOnIconWithSwipeGesture(MotionEvent ev, boolean vertical) {
-        if (mDragLayer == null) {
-            return false;
-        }
-        // An open folder is on top, so its icons get the touch.
-        Folder openFolder = Folder.getOpen(this);
-        if (openFolder != null && mDragLayer.isEventOverView(openFolder, ev)) {
-            FolderPagedView content = openFolder.getContent();
-            float[] coord = new float[]{ev.getX(), ev.getY()};
-            mDragLayer.mapCoordInSelfToDescendant(openFolder, coord);
-            return content.isTouchOnIconWithSwipeGesture(
-                    coord[0] - content.getLeft(), coord[1] - content.getTop(), vertical);
-        }
-        if (mWorkspace != null) {
-            float[] coord = new float[]{ev.getX(), ev.getY()};
-            mDragLayer.mapCoordInSelfToDescendant(mWorkspace, coord);
-            if (mWorkspace.isTouchOnIconWithSwipeGesture(coord[0], coord[1], vertical)) {
-                return true;
-            }
-        }
-        if (mHotseat != null && mDragLayer.isEventOverView(mHotseat, ev)) {
-            float[] coord = new float[]{ev.getX(), ev.getY()};
-            mDragLayer.mapCoordInSelfToDescendant(mHotseat, coord);
-            return mHotseat.isTouchOnIconWithSwipeGesture(coord[0], coord[1], vertical);
-        }
-        return false;
     }
 
     public <T extends View> T getOverviewPanel() {

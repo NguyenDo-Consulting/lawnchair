@@ -83,6 +83,8 @@ class LawnchairBackup(
     }
 
     /**
+     * NDShades: an all-or-nothing restore (upstream wrote over the live files directly).
+     *
      * Extracts the selected contents into a staging dir, and nothing is applied until the whole
      * backup has been extracted and checked. The wallpaper is then set, and the layout and settings
      * are left for [applyPendingRestore] to move into place on the next start. The caller must
@@ -140,6 +142,7 @@ class LawnchairBackup(
         }
     }
 
+    // NDShades: a corrupted backup database fails the restore before anything is applied
     private fun verifyStagedLayout(stagingDir: File) {
         val dbFile = File(stagingDir, LAUNCHER_DB_FILE_NAME)
         if (!dbFile.exists()) return
@@ -150,6 +153,8 @@ class LawnchairBackup(
     }
 
     /**
+     * NDShades: restore pinned shortcuts across packages.
+     *
      * Pinned shortcuts aren't in a backup, and are pinned per launcher package, so the backup's
      * shortcuts are pinned again for this package. Without that, they'd be deleted on a new device
      * or in a launcher with another package. The legacy shortcuts Lawnchair converted to its own
@@ -184,7 +189,10 @@ class LawnchairBackup(
         if (unrestored > 0) countFile.writeText(unrestored.toString()) else countFile.delete()
     }
 
-    /** The staged layout's shortcuts of this app, read back to check that recreated ones were saved. */
+    /**
+     * NDShades: The staged layout's shortcuts of this app, read back to check that recreated ones
+     * were saved.
+     */
     private fun countOwnShortcuts(dbFile: File): Int {
         if (!dbFile.exists()) return 0
         return SQLiteDatabase.openDatabase(dbFile.path, null, SQLiteDatabase.OPEN_READONLY).use { db ->
@@ -225,6 +233,7 @@ class LawnchairBackup(
         const val SCREENSHOT_FILE_NAME = "screenshot.png"
         const val LAUNCHER_DB_FILE_NAME = "launcher.db"
         const val RESTORED_DB_FILE_NAME = "restored.db"
+        // NDShades: files of the all-or-nothing restore
         private const val PENDING_RESTORE_DIR_NAME = "pending_restore"
         private const val PENDING_SANITIZE_FILE_NAME = "restored.db.sanitize"
         private const val ROLLBACK_DIR_NAME = "restore_rollback"
@@ -245,7 +254,7 @@ class LawnchairBackup(
         )
 
         /**
-         * Lawnchair: named for ND Shades. Restoring goes by file type, not name, so Lawnchair's
+         * NDShades: named for ND Shades. Restoring goes by file type, not name, so Lawnchair's
          * .lawnchairbackup files still restore.
          */
         fun generateBackupFileName(): String {
@@ -311,6 +320,8 @@ class LawnchairBackup(
         }
 
         /**
+         * NDShades: all-or-nothing restore.
+         *
          * Moves a backup staged by [restore] into place. Must run before anything in this process
          * loads the preferences, so it is called from [android.app.Application.attachBaseContext].
          *
@@ -361,6 +372,7 @@ class LawnchairBackup(
             }
         }
 
+        // NDShades: see applyPendingRestore
         private fun moveStagedFilesIntoPlace(context: Context, stagingDir: File) {
             val stagedFiles = getFiles(context, forRestore = true)
                 .mapKeys { File(stagingDir, it.key) }
@@ -384,7 +396,7 @@ class LawnchairBackup(
             check(rollbackDir.deleteRecursively()) { "failed to delete the rollback" }
         }
 
-        /** Puts back the files moved aside by [moveStagedFilesIntoPlace]. */
+        /** NDShades: Puts back the files moved aside by [moveStagedFilesIntoPlace]. */
         private fun rollBack(context: Context): RestoreFailure {
             val rollbackDir = rollbackDir(context)
             val liveFiles = liveFiles(context)
@@ -407,6 +419,8 @@ class LawnchairBackup(
         }
 
         /**
+         * NDShades: all-or-nothing restore.
+         *
          * The files and dirs a restore replaces, by their name in the rollback dir. The whole
          * databases dir is included, since a restore clears it.
          */
@@ -419,13 +433,14 @@ class LawnchairBackup(
             return mapOf(databasesDir.name to databasesDir) + otherFiles.associateBy { it.name }
         }
 
+        // NDShades: see consumeRestoreFailure
         private fun recordRestoreFailure(context: Context, failure: RestoreFailure) {
             File(context.filesDir, RESTORE_FAILURE_FILE_NAME).writeText(failure.name)
         }
 
         /**
-         * Returns the failure recorded by the last [applyPendingRestore], if any, and clears it so
-         * it is reported once.
+         * NDShades: Returns the failure recorded by the last [applyPendingRestore], if any, and
+         * clears it so it is reported once.
          */
         fun consumeRestoreFailure(context: Context): RestoreFailure? {
             val file = File(context.filesDir, RESTORE_FAILURE_FILE_NAME)
@@ -436,8 +451,8 @@ class LawnchairBackup(
         }
 
         /**
-         * Returns how many of the backup's shortcuts the last restore couldn't publish again, and
-         * clears it so it is reported once.
+         * NDShades: Returns how many of the backup's shortcuts the last restore couldn't publish
+         * again, and clears it so it is reported once.
          */
         fun consumeUnrestoredShortcutCount(context: Context): Int {
             val file = File(context.filesDir, UNRESTORED_SHORTCUTS_FILE_NAME)
@@ -448,12 +463,13 @@ class LawnchairBackup(
         }
 
         /**
-         * Returns whether a restored database is waiting for [RestoreDbTask.performRestore], and
-         * clears the flag so a failing sanitize doesn't run on every start.
+         * NDShades: Returns whether a restored database is waiting for
+         * [RestoreDbTask.performRestore], and clears the flag so a failing sanitize doesn't run on every start.
          */
         @JvmStatic
         fun consumePendingSanitize(context: Context): Boolean = File(context.filesDir, PENDING_SANITIZE_FILE_NAME).delete()
 
+        // NDShades: all-or-nothing restore
         private fun pendingRestoreDir(context: Context) = File(context.filesDir, PENDING_RESTORE_DIR_NAME)
 
         private fun rollbackDir(context: Context) = File(context.filesDir, ROLLBACK_DIR_NAME)
@@ -479,6 +495,7 @@ class LawnchairBackup(
 }
 
 /** How a restore failed on the start after it was staged, for the message shown to the user. */
+// NDShades: why the last restore wasn't applied, shown by showRestoreFailureIfNecessary
 enum class RestoreFailure(@StringRes val messageRes: Int) {
     /** The process died while the backup was being extracted. */
     NOT_APPLIED(R.string.backup_restore_failed_not_applied),

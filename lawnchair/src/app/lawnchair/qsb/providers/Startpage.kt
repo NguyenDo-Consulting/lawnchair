@@ -26,7 +26,7 @@ data object Startpage : QsbSearchProvider(
     themingMethod = ThemingMethod.TINT,
     packageName = "com.startpage.app",
     className = "org.chromium.chrome.browser.searchwidget.SearchActivity",
-    // Lawnchair: Lawnchair's partner segment is left out.
+    // NDShades: Lawnchair's partner segment is left out.
     // TODO: get ND Shades' own partner segment from Startpage and add it here.
     website = "https://startpage.com/",
     sponsored = false,

@@ -104,6 +104,7 @@ class LawnchairShortcut {
                         R.drawable.ic_edit,
                         StatsLogManager.LauncherEvent.IGNORE,
                     ) {
+                        // NDShades: edit sheet (upstream: straight to the folder's app list)
                         showAppDrawerFolderEditSheet(launcher, folderIcon.mInfo)
                         true
                     },
@@ -113,7 +114,8 @@ class LawnchairShortcut {
         }
 
         /**
-         * The open drawer folder hides its title, so renaming happens in this sheet instead.
+         * NDShades: The open drawer folder hides its title, so renaming happens in this sheet
+         * instead.
          */
         private fun showAppDrawerFolderEditSheet(launcher: LawnchairLauncher, folderInfo: FolderInfo) {
             ComposeBottomSheet.show(launcher) {
@@ -157,6 +159,7 @@ class LawnchairShortcut {
                 val prefs2 = PreferenceManager2.getInstance(activity)
                 if (prefs2.lockHomeScreen.firstCached()) {
                     null
+                    // NDShades: pinned shortcuts get their own customize sheet
                 } else if (itemInfo is WorkspaceItemInfo && itemInfo.itemType == ITEM_TYPE_DEEP_SHORTCUT) {
                     CustomizeShortcut(activity, itemInfo, originalView)
                 } else {
@@ -303,7 +306,7 @@ class LawnchairShortcut {
         }
     }
 
-    /** Customize a pinned shortcut, which only has its own swipe gestures to set. */
+    /** NDShades: Customize a pinned shortcut, which only has its own swipe gestures to set. */
     class CustomizeShortcut(
         private val launcher: LawnchairLauncher,
         private val shortcutInfo: WorkspaceItemInfo,

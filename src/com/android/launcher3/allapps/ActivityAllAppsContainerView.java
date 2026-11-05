@@ -181,7 +181,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private final int mHeaderProtectionColor;
     private final int mPrivateSpaceBottomExtraSpace;
     private final Path mTmpPath = new Path();
-    // Lawnchair: app drawer filter chips
+    // NDShades: app drawer filter chips
     private final DrawerFilterSwipeHelper mFilterSwipeHelper = new DrawerFilterSwipeHelper(this);
     private final RectF mTmpRectF = new RectF();
     protected AllAppsPagedView mViewPager;
@@ -1289,7 +1289,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mTouchHandler != null) {
             return mTouchHandler.handleTouchEvent(ev, mFastScrollerOffset);
         }
-        // Lawnchair: swipe between drawer filter chips, before the personal/work pager can
+        // NDShades: swipe between drawer filter chips, before the personal/work pager can
         return mFilterSwipeHelper.onInterceptTouchEvent(ev);
     }
 
@@ -1298,7 +1298,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (!isInAllApps()) {
             return false;
         }
-        // Lawnchair: rest of a swipe that switched drawer filter chips
+        // NDShades: rest of a swipe that switched drawer filter chips
         if (mFilterSwipeHelper.onTouchEvent(ev)) {
             return true;
         }

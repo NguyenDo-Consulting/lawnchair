@@ -108,7 +108,7 @@ public class BaseDepthControllerImpl implements BaseDepthController {
     private float mDepth;
     // Used just for animating wallpaper zoom without affecting blur.
     private final AnimatedFloat mWallpaperZoomOnly = new AnimatedFloat(this::applyDepthAndBlur);
-    // LC: Used just for blurring behind an open folder, without zooming the wallpaper.
+    // NDShades: Used just for blurring behind an open folder, without zooming the wallpaper.
     private final AnimatedFloat mFolderBlur = new AnimatedFloat(this::applyDepthAndBlur);
 
     protected SurfaceControl mBaseSurface;
@@ -188,6 +188,7 @@ public class BaseDepthControllerImpl implements BaseDepthController {
         return folderZoom;
     }
 
+    // NDShades: optional blur behind open folders, see FolderBlur
     @Override
     public AnimatedFloat getFolderBlur() {
         return mFolderBlur;
@@ -270,7 +271,7 @@ public class BaseDepthControllerImpl implements BaseDepthController {
         } else {
             blurAmount = depth;
         }
-        blurAmount = Math.max(blurAmount, mFolderBlur.value);
+        blurAmount = Math.max(blurAmount, mFolderBlur.value); // NDShades: folder blur
 
         int previousBlur = mCurrentBlur;
         int newBlur = BlurUtils.supportsBlursOnWindows() && mCrossWindowBlursEnabled
@@ -388,7 +389,7 @@ public class BaseDepthControllerImpl implements BaseDepthController {
         if (!Utilities.ATLEAST_S) {
             return false;
         }
-        // LC: An open folder blurs the workspace and hotseat behind it.
+        // NDShades: An open folder blurs the workspace and hotseat behind it.
         if (mFolderBlur.value > 0f && mCurrentBlur > 0) {
             RenderEffect blurEffect = RenderEffect.createBlurEffect(
                     mCurrentBlur, mCurrentBlur, Shader.TileMode.DECAL);

@@ -66,7 +66,7 @@ class LawnchairAlphabeticalAppsList<T>(
     private val prefs2 = PreferenceManager2.getInstance(context)
     private val prefs = PreferenceManager.getInstance(context)
 
-    // Drawer filter chips, see [DrawerFilter]
+    // NDShades: Drawer filter chips, see [DrawerFilter]
     private var drawerFilters: List<DrawerFilter> = emptyList()
     private var hideFilteredAppsFromAll = false
     private var activeFilterId: String? = null
@@ -77,13 +77,13 @@ class LawnchairAlphabeticalAppsList<T>(
     private val folderList = mutableListOf<FolderEntry>()
     private val filteredList = mutableListOf<AppInfo>()
 
-    /** Rebuilds the list when new usage counts would reorder a "Most used" folder. */
+    /** NDShades: Rebuilds the list when new usage counts would reorder a "Most used" folder. */
     private val folderUsageListener = Runnable {
         if (folderList.any { it.sortMode == FolderSortMode.MOST_USED }) onAppsUpdated()
     }
 
     init {
-        FolderUsageStats.addListener(folderUsageListener)
+        FolderUsageStats.addListener(folderUsageListener) // NDShades: per-folder sorting
         context.launcher.deviceProfile.inv.addOnChangeListener(this)
         (context as? LifecycleOwner)?.lifecycle?.addObserver(this)
         try {
@@ -95,9 +95,10 @@ class LawnchairAlphabeticalAppsList<T>(
             Log.w(TAG, "Failed to initialize hidden apps", t)
         }
         observeFolders()
-        observeDrawerFilters()
+        observeDrawerFilters() // NDShades: app drawer filters
     }
 
+    // NDShades: app drawer filters
     private fun observeDrawerFilters() {
         val scope = context.launcher.lifecycleScope
         prefs2.drawerFilters.onEach(launchIn = scope) {
@@ -116,12 +117,13 @@ class LawnchairAlphabeticalAppsList<T>(
             .launchIn(scope)
     }
 
+    // NDShades: the selected drawer filter chip, if any
     private val activeFilter: DrawerFilter?
         get() = activeFilterId?.let { id -> drawerFilters.firstOrNull { it.id == id } }
 
     /**
-     * Whether an app is shown under the selected filter chip. Filters only apply to the personal
-     * profile, so work and private space apps are always shown.
+     * NDShades: Whether an app is shown under the selected filter chip. Filters only apply to the
+     * personal profile, so work and private space apps are always shown.
      */
     private fun matchesDrawerFilter(info: AppInfo, componentKey: String): Boolean {
         if (info.user != Process.myUserHandle()) return true
@@ -135,7 +137,7 @@ class LawnchairAlphabeticalAppsList<T>(
 
     override fun onDestroy(owner: LifecycleOwner) {
         context.launcher.deviceProfile.inv.removeOnChangeListener(this)
-        FolderUsageStats.removeListener(folderUsageListener)
+        FolderUsageStats.removeListener(folderUsageListener) // NDShades: per-folder sorting
     }
 
     private fun observeFolders() {
@@ -154,7 +156,7 @@ class LawnchairAlphabeticalAppsList<T>(
             val componentKey = info.toComponentKey().toString()
             (itemFilter?.test(info) != false) &&
                 !hiddenApps.contains(componentKey) &&
-                matchesDrawerFilter(info, componentKey)
+                matchesDrawerFilter(info, componentKey) // NDShades: app drawer filters
         }
         onAppsUpdated()
     }
@@ -168,7 +170,8 @@ class LawnchairAlphabeticalAppsList<T>(
         // Show app drawer folders only on main profile, to prevent state complexity
         if (isWorkOrPrivateSpace(appList)) return super.addAppsWithSections(appList, position)
 
-        // A filter chip shows its apps as a plain list, without drawer folders or categories
+        // NDShades: A filter chip shows its apps as a plain list, without drawer folders or
+        // categories
         if (activeFilter != null) return super.addAppsWithSections(appList, position)
 
         if (!drawerListDefault) {
@@ -189,6 +192,7 @@ class LawnchairAlphabeticalAppsList<T>(
             }
         } else {
             folderList.forEach { folderEntry ->
+                // NDShades: sorted by the folder's sort mode (upstream: resolvedApps directly)
                 val storedOrder = folderEntry.itemComponentKeys.mapNotNull { keyString ->
                     val componentKey = ComponentKey.fromString(keyString) ?: return@mapNotNull null
                     appsStore.getApp(componentKey) as? AppInfo
@@ -202,7 +206,7 @@ class LawnchairAlphabeticalAppsList<T>(
                         title = folderEntry.title
                         resolvedApps.forEach { add(it) }
                     }
-                    // Lets the long-press edit sheet show the current sort mode
+                    // NDShades: Lets the long-press edit sheet show the current sort mode
                     FolderSortMode.set(folderInfo, folderEntry.sortMode, null)
                     mAdapterItems.add(AdapterItem.asFolder(folderInfo))
                     position++

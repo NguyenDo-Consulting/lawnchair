@@ -203,8 +203,8 @@ sealed class GestureHandlerConfig {
     }
 
     /**
-     * Opens a pinned shortcut, created by an app's shortcut config activity (e.g. a direct dial
-     * shortcut of Contacts). [label] is shown in settings, e.g. "Mai (Direct dial)".
+     * NDShades: Opens a pinned shortcut, created by an app's shortcut config activity (e.g. a
+     * direct dial shortcut of Contacts). [label] is shown in settings, e.g. "Mai (Direct dial)".
      */
     @Serializable
     @SerialName(OpenShortcut.SERIAL_NAME)
@@ -221,8 +221,9 @@ sealed class GestureHandlerConfig {
     }
 
     /**
-     * Starts an intent that isn't an app or a pinned shortcut, e.g. texting a contact. These come
-     * from imported launcher backups. The intent is kept in the config, so it survives a backup.
+     * NDShades: Starts an intent that isn't an app or a pinned shortcut, e.g. texting a contact.
+     * These come from imported launcher backups. The intent is kept in the config, so it survives
+     * a backup.
      */
     @Serializable
     @SerialName("openIntent")

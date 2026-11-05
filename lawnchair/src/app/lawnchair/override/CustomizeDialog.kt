@@ -218,6 +218,7 @@ fun CustomizeAppDialog(
             )
         }
         if (context.launcher.stateManager.state != LauncherState.ALL_APPS) {
+            // NDShades: shared with shortcuts and folders (upstream: the group was inline here)
             IconGesturesGroup(iconKey = componentKey.toString())
         }
     }
@@ -227,6 +228,7 @@ fun CustomizeAppDialog(
  * Customize dialog of a pinned shortcut (e.g. a conversation or a direct dial shortcut). A
  * shortcut can't be renamed or re-iconed here, but it has its own swipe gestures.
  */
+/** NDShades: Customize sheet of a pinned shortcut: its icon, title and swipe gestures. */
 @Composable
 fun CustomizeShortcutDialog(
     icon: Drawable,
@@ -262,6 +264,7 @@ fun CustomizeShortcutDialog(
  * Swipe up, down, left and right of one icon, see [app.lawnchair.gestures.IconGestureKeys] for
  * [iconKey]. Also shown in the options sheet of an open folder.
  */
+/** NDShades: Swipe gesture settings of an app, shortcut or folder, by icon key. */
 @Composable
 fun IconGesturesGroup(iconKey: String, modifier: Modifier = Modifier) {
     PreferenceGroup(heading = stringResource(R.string.gestures_label), modifier = modifier) {

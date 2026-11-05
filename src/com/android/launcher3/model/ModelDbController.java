@@ -130,7 +130,7 @@ public class ModelDbController {
                 dbFile = mIdp.dbFile;
             }
             mOpenHelper = createDatabaseHelper(false /* forMigration */, dbFile);
-            // LC-Note: A Lawnchair backup is sanitized here, in the process that starts after the
+            // NDShades: A Lawnchair backup is sanitized here, in the process that starts after the
             // restore, so it uses the restored grid and profile ids.
             if (!(mContext instanceof SandboxContext)
                     && LawnchairBackup.consumePendingSanitize(mContext)) {

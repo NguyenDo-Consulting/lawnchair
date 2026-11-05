@@ -164,7 +164,10 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     val gestureController by unsafeLazy { GestureController(this) }
 
-    /** Re-sorts closed "Most used" folders on the home screen and dock when usage counts change. */
+    /**
+     * NDShades: Re-sorts closed "Most used" folders on the home screen and dock when usage
+     * counts change.
+     */
     private val folderUsageListener = Runnable {
         workspace?.mapOverItems { _, view ->
             val folder = (view as? FolderIcon)?.folder
@@ -183,7 +186,7 @@ class LawnchairLauncher : QuickstepLauncher() {
             defaultOverlay.setEnableFeed(enable)
         }.launchIn(scope = lifecycleScope)
         launcher.stateManager.addStateListener(clearSearchStateListener)
-        FolderUsageStats.addListener(folderUsageListener)
+        FolderUsageStats.addListener(folderUsageListener) // NDShades: per-folder sorting
 
         if (prefs.autoLaunchRoot.get()) {
             lifecycleScope.launch {
@@ -263,7 +266,7 @@ class LawnchairLauncher : QuickstepLauncher() {
         colorScheme = themeProvider.colorScheme
 
         showQuickstepWarningIfNecessary()
-        showRestoreFailureIfNecessary()
+        showRestoreFailureIfNecessary() // NDShades: all-or-nothing backup restore
 
         reloadIconsIfNeeded()
 
@@ -303,10 +306,10 @@ class LawnchairLauncher : QuickstepLauncher() {
             Stream.of(LawnchairShortcut.UNINSTALL, LawnchairShortcut.CUSTOMIZE, LawnchairShortcut.OPEN_IN_STORE),
             Stream.of(LawnchairShortcut.PAUSE_APPS),
         ),
-    ).map { hideForPinnedShortcuts(it) }
+    ).map { hideForPinnedShortcuts(it) } // NDShades: see hideForPinnedShortcuts
 
     /**
-     * A pinned shortcut isn't an app, so the options about its app (App info, Widgets and
+     * NDShades: A pinned shortcut isn't an app, so the options about its app (App info, Widgets and
      * Uninstall) are left out of its menu. Lawnchair publishes the legacy shortcuts it converts,
      * like contacts imported from Nova, so those only keep Remove and Customize.
      */
@@ -506,7 +509,8 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
 
     override fun startActivitySafely(v: View?, intent: Intent, item: ItemInfo?): RunnableList? {
-        // Before resume, Launcher defers the launch and calls this again, so count it only then
+        // NDShades: counts shortcut launches for "Most used" folder sorting. Before resume,
+        // Launcher defers the launch and calls this again, so count it only then
         val countLaunch = hasBeenResumed()
         val result = super.startActivitySafely(v, intent, item)
         val shortcutId = (item as? WorkspaceItemInfo)?.deepShortcutId
@@ -522,7 +526,7 @@ class LawnchairLauncher : QuickstepLauncher() {
         super.onResume()
         restartIfPending()
         refreshPredictionContainersFromModel()
-        FolderUsageStats.refreshIfWanted(this)
+        FolderUsageStats.refreshIfWanted(this) // NDShades: per-folder sorting
 
         dragLayer.viewTreeObserver.addOnDrawListener(
             object : ViewTreeObserver.OnDrawListener {
@@ -551,7 +555,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onDestroy() {
         super.onDestroy()
-        FolderUsageStats.removeListener(folderUsageListener)
+        FolderUsageStats.removeListener(folderUsageListener) // NDShades: per-folder sorting
         // Only actually closes if required, safe to call if not enabled
         SmartspacerClient.close()
     }

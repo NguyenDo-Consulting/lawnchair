@@ -50,7 +50,7 @@ class HotseatPagedView @JvmOverloads constructor(
 
     private var onDockPageChangeListener: OnDockPageChangeListener? = null
 
-    private var touchOnIconSwipe = false
+    private var touchOnIconSwipe = false // NDShades: icon swipe gestures on the dock
 
     init {
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
@@ -131,7 +131,7 @@ class HotseatPagedView @JvmOverloads constructor(
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
         if (!isPagingEnabled) return false
-        // LC: a touch that starts on an icon with a left/right swipe gesture belongs to the icon.
+        // NDShades: a touch starting on an icon with a left/right swipe gesture belongs to it.
         if (ev.actionMasked == MotionEvent.ACTION_DOWN) {
             touchOnIconSwipe = isTouchOnIconWithSwipeGesture(ev.x, ev.y, false)
         }
@@ -140,8 +140,8 @@ class HotseatPagedView @JvmOverloads constructor(
     }
 
     /**
-     * Returns whether the given point, in this view's coordinates, is on an icon with a swipe
-     * gesture configured. [vertical] picks up/down gestures, otherwise left/right.
+     * NDShades: Returns whether the given point, in this view's coordinates, is on an icon with
+     * a swipe gesture configured. [vertical] picks up/down gestures, otherwise left/right.
      */
     fun isTouchOnIconWithSwipeGesture(x: Float, y: Float, vertical: Boolean): Boolean {
         val page = findPageAtLocalX(x) ?: return false

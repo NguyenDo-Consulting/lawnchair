@@ -156,7 +156,7 @@
     <bool name="config_default_smartspace_show_date">true</bool>
     <bool name="config_default_smartspace_show_time">false</bool>
     <bool name="config_default_perform_wide_search">true</bool>
-    <!-- Lawnchair: off for ND Shades. The endpoint is Lawnchair's, with its announcements -->
+    <!-- NDShades: off for ND Shades. The endpoint is Lawnchair's, with its announcements -->
     <bool name="config_default_live_information_enabled">false</bool>
     <bool name="config_default_live_information_show_announcements">true</bool>
     <bool name="config_default_enable_dot_pagination">true</bool>

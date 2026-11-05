@@ -65,7 +65,7 @@
             android:elevation="1dp"
             />
 
-        <!-- Lawnchair: per-folder options (sorting), in the footer's end corner -->
+        <!-- NDShades: per-folder options (sorting), in the footer's end corner -->
         <ImageButton
             android:id="@+id/folder_options"
             android:layout_width="36dp"

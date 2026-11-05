@@ -244,7 +244,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     protected LinearLayout mFooter;
     private int mFooterHeight;
-    // Lawnchair: opens the folder's sort options
+    // NDShades: opens the folder's sort options
     @Nullable
     private View mOptionsButton;
 
@@ -372,7 +372,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
                 | InputType.TYPE_TEXT_FLAG_CAP_WORDS);
         mFolderName.forceDisableSuggestions(true);
 
-        // Lawnchair: per-folder sort options
+        // NDShades: per-folder sort options
         mOptionsButton = findViewById(R.id.folder_options);
         if (mOptionsButton != null) {
             mOptionsButton.setOnClickListener(v -> FolderSortSheet.show(this));
@@ -707,7 +707,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             setLayoutParams(lp);
         }
         reapplyItemInfo();
-        // Lawnchair: per-folder sorting
+        // NDShades: per-folder sorting
         updateFolderOptionsButton();
         // Posted so the icon is linked to this folder before its preview updates
         mFolderIcon.post(this::applySortMode);
@@ -863,7 +863,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         Folder openFolder = getOpen(mActivityContext);
         closeOpenFolder(openFolder);
 
-        // Lawnchair: usage counts may have changed since the folder was last sorted
+        // NDShades: usage counts may have changed since the folder was last sorted
         applySortMode();
         mContent.bindItems(items);
         mContent.setCanAnnouncePageDescriptionForFolder(true);
@@ -1183,7 +1183,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     OnAlarmListener mReorderAlarmListener = new OnAlarmListener() {
         public void onAlarm(Alarm alarm) {
-            // Lawnchair: a sorted folder decides the order itself, so dragging doesn't shuffle
+            // NDShades: a sorted folder decides the order itself, so dragging doesn't shuffle
             // icons. Apps can still be dragged out, and a drop lands in its sorted place.
             if (FolderSortMode.of(mInfo) != FolderSortMode.FREE) {
                 return;
@@ -1375,7 +1375,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             mInfo.setOption(FolderInfo.FLAG_MULTI_PAGE_ANIMATION, false,
                     getModelWriter());
         }
-        // Lawnchair: a sorted folder puts a reordered item back in its sorted place
+        // NDShades: a sorted folder puts a reordered item back in its sorted place
         applySortMode();
     }
 
@@ -1481,7 +1481,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     @VisibleForTesting
     int getFooterHeight() {
-        // Lawnchair: Drawer folders hide their title, so with no page indicator either the footer
+        // NDShades: Drawer folders hide their title, so with no page indicator either the footer
         // only needs to mirror the top padding
         if (isInAppDrawer() && mContent.getPageCount() <= 1) {
             return mActivityContext.getDeviceProfile().folderContentPaddingTop;
@@ -1500,6 +1500,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         mContent.measure(contentAreaWidthSpec, contentAreaHeightSpec);
 
         mFooter.measure(contentAreaWidthSpec,
+                // NDShades: getFooterHeight() (upstream mFooterHeight), smaller in drawer folders
                 MeasureSpec.makeMeasureSpec(getFooterHeight(), MeasureSpec.EXACTLY));
 
         int folderWidth = getPaddingLeft() + getPaddingRight() + contentWidth;
@@ -1519,7 +1520,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         int minTitleWidth = getResources().getDimensionPixelSize(R.dimen.folder_title_min_width);
-        // Lawnchair: App drawer folders already show their name under the folder icon
+        // NDShades: App drawer folders already show their name under the folder icon
         if (isInAppDrawer()
                 || (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth)) {
             ((MarginLayoutParams) mFolderName.getLayoutParams()).setMarginEnd(0);
@@ -1530,7 +1531,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     /**
-     * Lawnchair: Reorders the folder to match its sort mode (alphabetical or most used) and saves
+     * NDShades: Reorders the folder to match its sort mode (alphabetical or most used) and saves
      * the new ranks. Does nothing for free-sorted folders. App drawer folders are sorted when the
      * drawer list is built instead.
      */
@@ -1557,23 +1558,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         }
     }
 
-    /**
-     * Lawnchair: Shows the options button for home screen and dock folders. While the title is
-     * centered (single page), it gets matching start padding so it stays centered.
-     */
+    /** NDShades: per-folder options button, see FolderSortSheet */
     void updateFolderOptionsButton() {
-        if (mOptionsButton == null || mInfo == null) {
-            return;
-        }
-        boolean show = !isInAppDrawer() && FolderSortSheet.isSupported(getContext());
-        mOptionsButton.setVisibility(show ? VISIBLE : GONE);
-        int startPadding = 0;
-        if (show && mContent.getPageCount() <= 1) {
-            MarginLayoutParams lp = (MarginLayoutParams) mOptionsButton.getLayoutParams();
-            startPadding = lp.width + lp.getMarginStart() + lp.getMarginEnd();
-        }
-        mFolderName.setPaddingRelative(startPadding, mFolderName.getPaddingTop(),
-                mFolderName.getPaddingEnd(), mFolderName.getPaddingBottom());
+        FolderSortSheet.updateOptionsButton(this, mOptionsButton, mFolderName);
     }
 
     /**
@@ -1724,7 +1711,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
         // Clear the drag info, as it is no longer being dragged.
         mIsDragInProgress = false;
-        // Lawnchair: a sorted folder moves the dropped item to its sorted place
+        // NDShades: a sorted folder moves the dropped item to its sorted place
         applySortMode();
 
         if (mContent.getPageCount() > 1) {
@@ -1789,7 +1776,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             }
             mItemsInvalidated = true;
             updateTextViewFocus();
-            // Lawnchair: a sorted folder puts the new item in its sorted place
+            // NDShades: a sorted folder puts the new item in its sorted place
             applySortMode();
         }
 

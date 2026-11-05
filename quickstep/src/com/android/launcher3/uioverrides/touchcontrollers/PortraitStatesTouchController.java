@@ -44,6 +44,8 @@ import com.android.quickstep.views.RecentsView;
 import com.android.systemui.contextualeducation.GestureType;
 import com.android.systemui.shared.system.InteractionJankMonitorWrapper;
 
+import app.lawnchair.gestures.IconSwipeHitTest;
+
 /**
  * Touch controller for handling various state transitions in portrait UI.
  */
@@ -61,7 +63,8 @@ public class PortraitStatesTouchController extends AbstractStateChangeTouchContr
     @Override
     protected boolean canInterceptTouch(MotionEvent ev) {
         // Lawnchair: Icon Swipe Gestures (For vertical up gestures)
-        if (mLauncher.isTouchOnIconWithSwipeGesture(ev, true)) {
+        // NDShades: IconSwipeHitTest also checks dock icons and open folders
+        if (IconSwipeHitTest.isTouchOnIconWithSwipeGesture(mLauncher, ev, true)) {
             return false;
         }
         // If we are swiping to all apps instead of overview, allow it from anywhere.

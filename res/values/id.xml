@@ -13,13 +13,9 @@
     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
     See the License for the specific language governing permissions and
     limitations under the License.
-
-    Modifications copyright 2026, Nguyen-Do Consulting
 -->
 <resources>
     <item type="id" name="apps_list_view_work" />
-    <!-- LC: Blur fraction of the app drawer while a folder is open over it -->
-    <item type="id" name="folder_blur_fraction" />
     <item type="id" name="view_type_widgets_space" />
     <item type="id" name="view_type_widgets_list" />
     <item type="id" name="view_type_widgets_header" />

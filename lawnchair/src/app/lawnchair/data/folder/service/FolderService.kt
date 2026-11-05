@@ -72,6 +72,7 @@ class FolderService @Inject constructor(
         folderDao.updateFolderTitle(folderId, title)
     }
 
+    // NDShades: per-folder sorting
     suspend fun updateFolder(folderId: Int, title: String, sortMode: FolderSortMode) = withContext(Dispatchers.IO) {
         folderDao.updateFolderTitleAndSortMode(folderId, title, sortMode.id)
     }
@@ -117,7 +118,7 @@ class FolderService @Inject constructor(
         itemComponentKeys = items
             .sortedBy { it.rank }
             .mapNotNull { it.componentKey },
-        sortMode = FolderSortMode.fromId(folder.sortMode),
+        sortMode = FolderSortMode.fromId(folder.sortMode), // NDShades: per-folder sorting
     )
 
     override fun close() {

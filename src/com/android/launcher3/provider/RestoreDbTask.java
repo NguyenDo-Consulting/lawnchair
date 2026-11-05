@@ -262,7 +262,7 @@ public class RestoreDbTask {
             long oldManagedProfileId = oldManagedProfileIds.keyAt(i);
             UserHandle user = getUserForAncestralSerialNumber(backupManager, oldManagedProfileId);
             if (user == null) {
-                // Lawnchair: a backup file restored on the same phone keeps its profile numbers
+                // NDShades: a backup file restored on the same phone keeps its profile numbers
                 user = RestoreProfiles.findProfileOnThisDevice(context, oldManagedProfileId);
             }
             if (user != null) {
@@ -340,7 +340,7 @@ public class RestoreDbTask {
         }
 
         // If restored from a single display backup, remove gaps between screenIds.
-        // Lawnchair: unless the backup has a saved page order. That order keeps the user's empty
+        // NDShades: unless the backup has a saved page order. That order keeps the user's empty
         // pages (e.g. a first page with only At a Glance), and closing the gaps would move the
         // next page's items onto it.
         if (LauncherPrefs.get(context).get(RESTORE_DEVICE) != TYPE_MULTI_DISPLAY

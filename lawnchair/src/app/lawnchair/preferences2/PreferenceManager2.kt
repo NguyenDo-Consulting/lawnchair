@@ -340,13 +340,13 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = setOf(),
     )
 
-    /** User-made app drawer filters, in chip order. */
+    /** NDShades: User-made app drawer filters, in chip order. */
     val drawerFilters = serializablePreference<List<DrawerFilter>>(
         key = stringPreferencesKey(name = "drawer_filters"),
         defaultValue = emptyList(),
     )
 
-    /** Whether the "All" chip leaves out apps that are in any drawer filter. */
+    /** NDShades: Whether the "All" chip leaves out apps that are in any drawer filter. */
     val hideFilteredAppsFromAll = preference(
         key = booleanPreferencesKey(name = "drawer_filters_hide_from_all"),
         defaultValue = false,
@@ -529,6 +529,7 @@ class PreferenceManager2 @Inject constructor(
         onSet = { reloadHelper.reloadGrid() },
     )
 
+    // NDShades: optional blur behind open folders, see FolderBlur
     val folderBackgroundBlur = preference(
         key = booleanPreferencesKey(name = "folder_background_blur"),
         defaultValue = false,
@@ -846,7 +847,7 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = false,
     )
 
-    /** Puts the dock search bar above the dock icons instead of below them, on phones. */
+    /** NDShades: Puts the dock search bar above the dock icons instead of below, on phones. */
     val dockSearchBarAboveIcons = preference(
         key = booleanPreferencesKey(name = "dock_search_bar_above_icons"),
         defaultValue = false,
@@ -927,7 +928,7 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
 
         initializeIconShape(iconShape.firstCached(this))
-        // Lawnchair: each preference flow emits again on every DataStore write, e.g. an icon
+        // NDShades: each preference flow emits again on every DataStore write, e.g. an icon
         // gesture. Repeats are dropped before the current value is skipped; the other way round,
         // the first write after start went through as a change and recreated the launcher.
         iconShape.get()
@@ -942,13 +943,13 @@ class PreferenceManager2 @Inject constructor(
 
         hotseatMode.get()
             .distinctUntilChanged()
-            .drop(1)
+            .drop(1) // NDShades: after distinctUntilChanged, see iconShape
             .onEach { reloadHelper.restart() }
             .launchIn(scope)
 
         isHotseatEnabled.get()
             .distinctUntilChanged()
-            .drop(1)
+            .drop(1) // NDShades: after distinctUntilChanged, see iconShape
             .onEach {
                 reloadHelper.recreate()
                 reloadHelper.reloadGrid()
@@ -957,16 +958,17 @@ class PreferenceManager2 @Inject constructor(
 
         hotseatQsbProvider.get()
             .distinctUntilChanged()
-            .drop(1)
+            .drop(1) // NDShades: after distinctUntilChanged, see iconShape
             .onEach { reloadHelper.recreate() }
             .launchIn(scope)
 
         enableLabelInDock.get()
             .distinctUntilChanged()
-            .drop(1)
+            .drop(1) // NDShades: after distinctUntilChanged, see iconShape
             .onEach { reloadHelper.reloadGrid() }
             .launchIn(scope)
 
+        // NDShades: dock search bar above the dock icons
         dockSearchBarAboveIcons.get()
             .distinctUntilChanged()
             .drop(1)
@@ -974,6 +976,8 @@ class PreferenceManager2 @Inject constructor(
             .launchIn(scope)
     }
 
+    // NDShades: the app gesture functions below now go through the icon key ones, so pinned
+    // shortcuts and folders can have gestures too
     suspend fun setGestureForApp(
         key: ComponentKey,
         gestureType: GestureType,
@@ -987,7 +991,7 @@ class PreferenceManager2 @Inject constructor(
         getGestureForIconCached(Converters().fromComponentKey(key)!!, gestureType)
 
     /**
-     * Icon gestures are stored per icon key: an app's [ComponentKey] string, or
+     * NDShades: Icon gestures are stored per icon key: an app's [ComponentKey] string, or
      * [app.lawnchair.gestures.IconGestureKeys.forShortcut] for a pinned shortcut.
      */
     suspend fun setGestureForIcon(
@@ -1001,6 +1005,7 @@ class PreferenceManager2 @Inject constructor(
         }
     }
 
+    // NDShades: gesture lookups by icon key
     fun getGestureForIcon(iconKey: String, gestureType: GestureType): Flow<GestureHandlerConfig> {
         val key = stringPreferencesKey("$iconKey:${gestureType.name}")
         return preferencesDataStore.data.map { prefs -> decodeGesture(prefs[key]) }
@@ -1011,7 +1016,7 @@ class PreferenceManager2 @Inject constructor(
         return decodeGesture(getCachedPreferences()[key])
     }
 
-    /** Copies all swipe gestures of one icon to another, replacing what the other one had. */
+    /** NDShades: Copies all swipe gestures of one icon to another, replacing what the other one had. */
     suspend fun copyGesturesForIcon(fromIconKey: String, toIconKey: String) {
         preferencesDataStore.edit { prefs ->
             GestureType.entries.forEach { type ->
@@ -1022,7 +1027,7 @@ class PreferenceManager2 @Inject constructor(
         }
     }
 
-    /** Removes the swipe gestures of every icon whose key [matches]. */
+    /** NDShades: Removes the swipe gestures of every icon whose key [matches]. */
     suspend fun removeGesturesForIcons(matches: (iconKey: String) -> Boolean) {
         val suffixes = GestureType.entries.map { ":${it.name}" }
         preferencesDataStore.edit { prefs ->
@@ -1035,6 +1040,7 @@ class PreferenceManager2 @Inject constructor(
         }
     }
 
+    // NDShades: shared by the gesture getters above
     private fun decodeGesture(value: String?): GestureHandlerConfig = value?.let {
         runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }
             .getOrDefault(GestureHandlerConfig.NoOp)
@@ -1050,7 +1056,7 @@ class PreferenceManager2 @Inject constructor(
         scope.cancel()
     }
 
-    // Lawnchair: a copy saved before live information was turned off is ignored too
+    // NDShades: a copy saved before live information was turned off is ignored too
     private fun getRemoteDefault(key: String): String? = liveInformationManager.liveInformation
         .firstBlocking()
         .features[key]

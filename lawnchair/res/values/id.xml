@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ~ Copyright 2021, Lawnchair
+  ~ Modifications copyright 2026, Nguyen-Do Consulting
   ~
   ~ Licensed under the Apache License, Version 2.0 (the "License");
   ~ you may not use this file except in compliance with the License.
@@ -27,4 +28,7 @@
     <item type="id" name="qsbIconTintSecondary" />
     <item type="id" name="qsbIconTintTertiary" />
     <item type="id" name="qsbIconTintQuaternary" />
+
+    <!-- NDShades: Blur fraction of the app drawer while a folder is open over it, see FolderBlur -->
+    <item type="id" name="folder_blur_fraction" />
 </resources>

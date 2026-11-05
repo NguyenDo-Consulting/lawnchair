@@ -20,6 +20,7 @@ package com.android.launcher3.folder
 import android.animation.AnimatorSet
 import android.graphics.Color
 import android.view.View
+import app.lawnchair.folder.FolderBlur
 import com.android.launcher3.BubbleTextView
 import com.android.launcher3.LauncherAnimUtils.HOTSEAT_SCALE_PROPERTY_FACTORY
 import com.android.launcher3.LauncherAnimUtils.SCALE_INDEX_FOLDER_ANIM
@@ -83,8 +84,7 @@ class FolderAnimationSpringBuilderManager(
             val launcher = launcherDelegate.launcher ?: return
             val scrim = launcher.scrimView
             launcherDelegate.launcher?.depthController?.folderZoom?.value = 0f
-            launcherDelegate.launcher?.depthController?.folderBlur?.updateValue(0f)
-            FolderSpringAnimatorSet.VIEW_BLUR_FRACTION.set(launcher.appsView, 0f)
+            FolderBlur.reset(launcher) // NDShades: optional blur behind open folders
             if (!launcher.isInState(LauncherState.ALL_APPS)) {
                 scrim.alpha = 1f
                 scrim.setBackgroundColor(Color.TRANSPARENT)

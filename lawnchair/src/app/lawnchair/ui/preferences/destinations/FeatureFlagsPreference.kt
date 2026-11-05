@@ -96,7 +96,8 @@ fun FeatureFlagsPreference(modifier: Modifier = Modifier) {
 
         preferenceCategory(
             "Workspace grid layout",
-            "To share your current workspace, use ND Shade's backup and restore system.",
+            // NDShades: ND Shades branding (upstream: Lawnchair's)
+            "To share your current workspace, use ND Shades' backup and restore system.",
         )
         item(key = "open_backup_system") {
             val navController = LocalNavController.current

@@ -70,7 +70,8 @@ class LawnchairApp : LauncherApplication() {
 
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
-        // Before content providers are created, which is the first point preferences can load.
+        // NDShades: apply a pending backup restore before content providers are created, which
+        // is the first point preferences can load.
         try {
             // Only the main process: another one (e.g. :bugReport) can start while the main
             // process is still extracting the backup.
@@ -159,6 +160,7 @@ class LawnchairApp : LauncherApplication() {
 
     private fun getJournalFile(file: File): File = File(file.parentFile, "${file.name}-journal")
 
+    // NDShades: used by attachBaseContext to restore backups only in the main process
     private fun isMainProcess(): Boolean {
         val processName = if (Utilities.ATLEAST_P) {
             Application.getProcessName()
@@ -303,8 +305,8 @@ class LawnchairApp : LauncherApplication() {
         }
 
         /**
-         * Tells the user when the restore applied on this start failed, or when some of its
-         * shortcuts couldn't be brought back.
+         * NDShades: Tells the user when the restore applied on this start failed, or when some
+         * of its shortcuts couldn't be brought back.
          */
         fun Launcher.showRestoreFailureIfNecessary() {
             val unrestoredShortcuts = LawnchairBackup.consumeUnrestoredShortcutCount(this)

@@ -280,7 +280,7 @@ android {
         }
 
         play {
-            applicationId "com.nguyendoconsulting.launcher" // Lawnchair: fork's own Play Store ID (upstream: app.lawnchair.play)
+            applicationId "com.nguyendoconsulting.launcher" // NDShades: fork's own Play Store ID (upstream: app.lawnchair.play)
             dimension "channel"
             isDefault true
         }
@@ -327,7 +327,7 @@ android {
             res.srcDirs = ["nightly/res"]
         }
 
-        // Lawnchair: every build has the ND Shades branding (icons, splash, About logo) from
+        // NDShades: every build has the ND Shades branding (icons, splash, About logo) from
         // ndshades/res. It's set on the combined source sets so it outranks lawnchair/res and nightly/res.
         lawnWithQuickstepGithub {
             manifest.srcFile "quickstep/AndroidManifest-launcher.xml"
@@ -357,11 +357,11 @@ androidComponents {
     onVariants(selector().all()) { variant ->
         def channel = variant.productFlavors.last().second
         variant.outputs.forEach { output ->
-            // Lawnchair: named after ND Shades (upstream: Lawnchair.<version>...apk)
+            // NDShades: named after ND Shades (upstream: Lawnchair.<version>...apk)
             output.outputFileName.set("NDShades.${output.versionName.get()}.$channel.${variant.buildType}.apk")
         }
 
-        // Lawnchair: every build ships as ND Shades. Build types set derived_app_name and outrank
+        // NDShades: every build ships as ND Shades. Build types set derived_app_name and outrank
         // flavors, so it's overridden per variant here.
         def appName = variant.buildType == "debug" ? "ND Shades (Debug)" : "ND Shades"
         variant.resValues.put(
@@ -394,7 +394,7 @@ composeCompiler {
 
 addFrameworkJar('framework-16.jar')
 
-// Lawnchair: ND Shades branding (app name and strings) for every build.
+// NDShades: ND Shades branding (app name and strings) for every build.
 apply from: 'ndshades.gradle'
 
 dependencies {

@@ -80,12 +80,14 @@ class NovaBackupConverter(
         private const val NOVA_TABLE_FAVORITES = "favorites"
         private const val NOVA_XML_TAG_STRING = "string"
         private const val NOVA_XML_TAG_INT = "int"
-        private const val NOVA_XML_TAG_BOOLEAN = "boolean"
+        private const val NOVA_XML_TAG_BOOLEAN = "boolean" // NDShades: more Nova settings
         private const val NOVA_XML_ATTR_NAME = "name"
         private const val NOVA_XML_ATTR_VALUE = "value"
         private const val NOVA_XML_KEY_DESKTOP_GRID = "desktop_grid"
         private const val NOVA_XML_KEY_ICON_PACK = "theme_icon_pack"
         private const val NOVA_XML_KEY_DOCK_COLS = "dock_grid_cols"
+        // NDShades: Nova drawer, icon size, gesture and drawer group settings, through
+        // NOVA_GROUP_TYPE_TAB
         private const val NOVA_XML_KEY_DRAWER_COLS = "drawer_app_grid_cols"
         private const val NOVA_XML_KEY_DRAWER_SMART_FOLDERS = "drawer_smart_folders"
         private const val NOVA_XML_KEY_DESKTOP_CELLSPECS = "desktop_cellspecs"
@@ -138,6 +140,7 @@ class NovaBackupConverter(
         private const val NOVA_COL_SPAN_Y = "spanY"
         private const val NOVA_COL_ICON = "icon"
         private const val NOVA_COL_APP_WIDGET_PROVIDER = "appWidgetProvider"
+        // NDShades: icon swipe gestures
         private const val NOVA_COL_FLING_UP_INTENT = "flingUpIntent"
         private const val NOVA_COL_FLING_DOWN_INTENT = "flingDownIntent"
         private const val NOVA_SMART_FOLDER_MARKER = "FOLDER%3A-"
@@ -155,6 +158,7 @@ class NovaBackupConverter(
         val shortcutCount: Int,
         val iconPackPackage: String?,
         val iconPackLabel: String?,
+        // NDShades: drawer columns and smart folders, icon sizes and gestures
         val drawerColumns: Int? = null,
         val drawerSmartFolders: Boolean = false,
         /** Nova's icon size, where 1.0 is its default size. */
@@ -169,6 +173,7 @@ class NovaBackupConverter(
         val rows: Int?,
         val dockCols: Int?,
         val iconPackPackage: String?,
+        // NDShades: drawer columns and smart folders, icon sizes and gestures
         val drawerColumns: Int?,
         val drawerSmartFolders: Boolean,
         val homeIconScale: Float?,
@@ -176,6 +181,7 @@ class NovaBackupConverter(
         val gestures: Map<String, String>,
     )
 
+    // NDShades: what createRestoredDb imported, for shortcut pinning and icon gestures
     private data class RestoredDb(
         /** Other apps' pinned shortcuts to pin, by package. */
         val deepShortcuts: Map<String, Set<String>>,
@@ -185,14 +191,14 @@ class NovaBackupConverter(
         val folderIds: Set<Int>,
     )
 
-    /** A swipe action on an icon, with the Nova gesture setting it came from. */
+    /** NDShades: A swipe action on an icon, with the Nova gesture setting it came from. */
     private data class NovaIconGesture(
         val iconKey: String,
         val gestureType: GestureType,
         val novaGesture: String,
     )
 
-    /** A Nova app drawer folder or tab, with the apps in it as [ComponentKey] strings. */
+    /** NDShades: A Nova app drawer folder or tab, with its apps as [ComponentKey] strings. */
     private data class NovaDrawerGroup(
         val title: String,
         val isTab: Boolean,
@@ -240,6 +246,7 @@ class NovaBackupConverter(
                 iconPackLabel = novaConfig.iconPackPackage?.let { packageName ->
                     resolveIconPackLabel(packageName)
                 },
+                // NDShades: more Nova settings
                 drawerColumns = novaConfig.drawerColumns,
                 drawerSmartFolders = novaConfig.drawerSmartFolders,
                 homeIconScale = novaConfig.homeIconScale,
@@ -261,6 +268,7 @@ class NovaBackupConverter(
             val novaDbFile = File(tempDir, NOVA_DB)
             require(novaDbFile.exists()) { "Missing $NOVA_DB" }
 
+            // NDShades: restoredDb (upstream: only the deep shortcuts), drawer groups and gestures
             val prefs2 = PreferenceManager2.getInstance(context)
             val stagedDbFile = File(tempDir, NOVA_WORKSPACE_DB)
             val restoredDb = createRestoredDb(
@@ -299,6 +307,7 @@ class NovaBackupConverter(
             restoredDbFile.parentFile?.mkdirs()
             stagedDbFile.copyTo(restoredDbFile, overwrite = true)
 
+            // NDShades: clear the saved page order.
             // The saved page order belongs to the replaced home screen. Nova's pages are ordered
             // by their screen numbers, and the restore closes the gaps between them.
             LauncherPrefs.get(context).putSync(LauncherPrefs.WORKSPACE_SCREEN_ORDER.to(""))
@@ -306,6 +315,7 @@ class NovaBackupConverter(
             RestoreDbTask.performRestore(context, dbController)
 
             pinImportedDeepShortcuts(restoredDb.deepShortcuts)
+            // NDShades: drawer groups, drawer columns, icon sizes and gestures
             importDrawerGroups(drawerGroups, prefs2)
             val idp = InvariantDeviceProfile.INSTANCE.get(context)
             info.drawerColumns?.let { columns ->
@@ -351,6 +361,7 @@ class NovaBackupConverter(
         var rows: Int? = null
         var dockCols: Int? = null
         var iconPackPackage: String? = null
+        // NDShades: icon sizes and gestures
         var homeIconScale: Float? = null
         var drawerIconScale: Float? = null
         val gestures = mutableMapOf<String, String>()
@@ -372,27 +383,28 @@ class NovaBackupConverter(
                     if (parts.size >= NOVA_ICON_PACK_MIN_PARTS) iconPackPackage = parts[NOVA_ICON_PACK_PACKAGE_INDEX]
                 }
 
-                // e.g. "1.0:false:12.0:#ffffffff:...", which starts with the icon size.
+                // NDShades: e.g. "1.0:false:12.0:#ffffffff:...", which starts with the icon size.
                 NOVA_XML_KEY_DESKTOP_CELLSPECS -> homeIconScale = parseCellSpecsIconScale(text)
 
                 NOVA_XML_KEY_DRAWER_CELLSPECS -> drawerIconScale = parseCellSpecsIconScale(text)
 
-                in NOVA_GESTURE_KEYS -> gestures[name] = text
+                in NOVA_GESTURE_KEYS -> gestures[name] = text // NDShades
             }
         }
 
-        var drawerColumns: Int? = null
+        var drawerColumns: Int? = null // NDShades
         val intNodes = root.getElementsByTagName(NOVA_XML_TAG_INT)
         for (i in 0 until intNodes.length) {
             val node = intNodes.item(i)
             val name = node.attributes.getNamedItem(NOVA_XML_ATTR_NAME)?.nodeValue ?: continue
             val value = node.attributes.getNamedItem(NOVA_XML_ATTR_VALUE)?.nodeValue?.toIntOrNull() ?: continue
-            when (name) {
+            when (name) { // NDShades: also the drawer columns
                 NOVA_XML_KEY_DOCK_COLS -> dockCols = value
                 NOVA_XML_KEY_DRAWER_COLS -> drawerColumns = value
             }
         }
 
+        // NDShades: drawer smart folders setting, and the new NovaConfig fields
         var drawerSmartFolders = false
         val booleanNodes = root.getElementsByTagName(NOVA_XML_TAG_BOOLEAN)
         for (i in 0 until booleanNodes.length) {
@@ -416,6 +428,7 @@ class NovaBackupConverter(
         )
     }
 
+    // NDShades: Nova icon size from its cell specs
     private fun parseCellSpecsIconScale(cellSpecs: String): Float? = cellSpecs.substringBefore(':').toFloatOrNull()?.takeIf { it > 0f }
 
     private fun countItems(dbFile: File): ItemCounts {
@@ -453,12 +466,14 @@ class NovaBackupConverter(
     private fun createRestoredDb(
         novaDbFile: File,
         targetDbFile: File,
+        // NDShades: info and keepFirstRowFree, returns RestoredDb
         info: NovaBackupInfo,
         keepFirstRowFree: Boolean,
     ): RestoredDb {
         val profileId = UserCache.INSTANCE.get(context)
             .getSerialNumberForUser(Process.myUserHandle())
         val importedDeepShortcuts = mutableMapOf<String, MutableSet<String>>()
+        // NDShades: converted legacy shortcuts and imported folders
         val legacyShortcuts = mutableListOf<Pair<Int, ConvertedShortcuts.Spec>>()
         var convertedShortcutIds = emptyMap<Int, String>()
         var folderIds = emptySet<Int>()
@@ -476,6 +491,8 @@ class NovaBackupConverter(
             novaDb.use { src ->
                 db.beginTransaction()
                 try {
+                    // NDShades: hotseatCount and legacyShortcuts, then convert shortcuts and keep
+                    // the first row free for At a Glance
                     insertNovaItems(src, db, profileId, info.hotseatCount, importedDeepShortcuts, legacyShortcuts)
                     convertedShortcutIds = convertLegacyShortcuts(db, legacyShortcuts)
                     val columns = info.columns
@@ -488,6 +505,7 @@ class NovaBackupConverter(
                     db.endTransaction()
                 }
             }
+            // NDShades: imported folder ids, for their swipe gestures
             folderIds = db.rawQuery(
                 "SELECT _id FROM favorites WHERE itemType = ${Favorites.ITEM_TYPE_FOLDER}",
                 null,
@@ -501,6 +519,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: legacy shortcuts as pinned shortcuts.
+     *
      * Converts the legacy shortcuts, like Nova's direct dial contacts, to pinned shortcuts that
      * Lawnchair publishes, so they get gestures and the long-press menu. The ones that can't be
      * pinned, e.g. when Lawnchair isn't the default home app, stay legacy shortcuts.
@@ -529,11 +549,12 @@ class NovaBackupConverter(
         src: SQLiteDatabase,
         db: SQLiteDatabase,
         profileId: Long,
-        hotseatCount: Int?,
+        hotseatCount: Int?, // NDShades
         importedDeepShortcuts: MutableMap<String, MutableSet<String>>,
-        legacyShortcuts: MutableList<Pair<Int, ConvertedShortcuts.Spec>>,
+        legacyShortcuts: MutableList<Pair<Int, ConvertedShortcuts.Spec>>, // NDShades
     ) {
         val smartFolderMap = buildSmartFolderMap(src)
+        // NDShades: skip hidden dock items.
         // Nova can keep stale dock entries past the last dock column, which it doesn't show.
         val hiddenDockIds = hotseatCount?.let { findDockItemsPastColumn(src, it) }.orEmpty()
 
@@ -554,6 +575,7 @@ class NovaBackupConverter(
                 val isSmartFolderChild = novaContainer in smartFolderMap
 
                 if (!isDesktop && !isHotseat && !isFolderChild && !isSmartFolderChild) continue
+                // NDShades: skip hidden dock items and their folder contents
                 if (novaId in hiddenDockIds || novaContainer in hiddenDockIds) continue
                 if (isSmartFolderChild && smartFolderMap.getValue(novaContainer) in hiddenDockIds) continue
 
@@ -581,6 +603,7 @@ class NovaBackupConverter(
                 } else {
                     null
                 }
+                // NDShades: legacy shortcuts dial instead of call
                 val intent = when {
                     importedDeepShortcut != null -> importedDeepShortcut.toLauncherIntentUri()
                     itemType == Favorites.ITEM_TYPE_SHORTCUT -> dialInsteadOfCall(rawIntent)
@@ -592,6 +615,7 @@ class NovaBackupConverter(
                 val spanX = cursor.getDouble(cursor.getColumnIndexOrThrow(NOVA_COL_SPAN_X)).toInt().coerceAtLeast(1)
                 val spanY = cursor.getDouble(cursor.getColumnIndexOrThrow(NOVA_COL_SPAN_Y)).toInt().coerceAtLeast(1)
                 val icon = getBlobOrNull(cursor, NOVA_COL_ICON)
+                // NDShades: collect legacy shortcuts for convertLegacyShortcuts
                 if (itemType == Favorites.ITEM_TYPE_SHORTCUT && intent != null) {
                     runCatching { Intent.parseUri(intent, 0) }.getOrNull()?.let { parsedIntent ->
                         val bitmap = icon?.let { BitmapFactory.decodeByteArray(it, 0, it.size) }
@@ -634,6 +658,7 @@ class NovaBackupConverter(
         }
     }
 
+    // NDShades: Nova dock items it doesn't show, see insertNovaItems
     private fun findDockItemsPastColumn(src: SQLiteDatabase, hotseatCount: Int): Set<Int> {
         val cursor = src.rawQuery(
             """SELECT $NOVA_COL_ID FROM $NOVA_TABLE_FAVORITES
@@ -645,7 +670,7 @@ class NovaBackupConverter(
     }
 
     /**
-     * Nova's direct dial shortcuts place the call themselves, which needs the CALL_PHONE
+     * NDShades: Nova's direct dial shortcuts place the call themselves, which needs the CALL_PHONE
      * permission that Lawnchair doesn't have. Opens the dialer with the number filled in instead.
      */
     private fun dialInsteadOfCall(intentUri: String?): String? {
@@ -660,6 +685,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: keep the first row free for At a Glance.
+     *
      * Lawnchair keeps the top row of the first home screen page for At a Glance, while Nova's
      * search bar doesn't take a grid row. Moves items that start in that row to the first free
      * spot on the page, or onto new pages after the last one when it's full, so the loader
@@ -723,6 +750,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: Nova drawer groups.
+     *
      * Reads Nova's app drawer folders and tabs, with their apps that are installed here. Nova's
      * automatic category folders are only read when its drawer smart folders setting is on.
      */
@@ -759,6 +788,7 @@ class NovaBackupConverter(
         }
     }
 
+    // NDShades: the installed apps of a Nova drawer group
     private fun readGroupApps(
         db: SQLiteDatabase,
         groupId: Int,
@@ -784,6 +814,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: Nova drawer groups.
+     *
      * Adds Nova's drawer folders as Lawnchair drawer folders, and its drawer tabs as drawer
      * filters. Skips any whose title is already used, so importing twice doesn't add copies.
      */
@@ -816,6 +848,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: Nova home screen gestures.
+     *
      * Sets Lawnchair's home screen gestures from Nova's. Gestures whose Nova action has no match
      * here keep their Lawnchair setting.
      */
@@ -839,7 +873,7 @@ class NovaBackupConverter(
     }
 
     /**
-     * Converts a Nova gesture setting, a label and an intent such as
+     * NDShades: Converts a Nova gesture setting, a label and an intent such as
      * "App drawer$#Intent;...;S.LAUNCHER_ACTION=APP_DRAWER;end", to a Lawnchair gesture action.
      * Returns null for Nova actions Lawnchair doesn't have and apps that aren't installed.
      */
@@ -883,6 +917,8 @@ class NovaBackupConverter(
     }
 
     /**
+     * NDShades: Nova icon swipe gestures.
+     *
      * Reads the swipe up and down actions on app icons, on the legacy shortcuts converted to
      * Lawnchair's pinned shortcuts, and on folders, e.g. a dock folder that opens Phone on swipe
      * up. Lawnchair keeps app icon gestures per app, so an app's actions apply to all its icons.
@@ -933,6 +969,7 @@ class NovaBackupConverter(
         }
     }
 
+    // NDShades: sets the icon swipe gestures read by readIconGestures
     private suspend fun importIconGestures(gestures: List<NovaIconGesture>, prefs2: PreferenceManager2) {
         gestures.distinctBy { it.iconKey to it.gestureType }.forEach { gesture ->
             val config = toGestureHandlerConfig(gesture.novaGesture)
@@ -944,6 +981,7 @@ class NovaBackupConverter(
         }
     }
 
+    // NDShades: older Nova backups have no drawer group tables
     private fun SQLiteDatabase.hasTable(name: String): Boolean = rawQuery(
         "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?",
         arrayOf(name),
@@ -1015,13 +1053,14 @@ class NovaBackupConverter(
 
     /**
      * Get smart folder header rows from favorites table and builds a mapping from the smart folder
-     * container ID (-20X) to the folder row's _id. Smart folders can be on the home screen or in
-     * the dock.
+     * container ID (-20X) to the folder row's _id. NDShades: Smart folders can be on the home
+     * screen or in the dock.
      *
      * X being category ID that are defined in drawer_group table
      */
     private fun buildSmartFolderMap(src: SQLiteDatabase): Map<Int, Int> {
         val map = mutableMapOf<Int, Int>()
+        // NDShades: dock smart folders too (upstream: home screen only)
         src.rawQuery(
             """SELECT $NOVA_COL_ID, $NOVA_COL_INTENT FROM $NOVA_TABLE_FAVORITES
                 WHERE $NOVA_COL_ITEM_TYPE = ${Favorites.ITEM_TYPE_FOLDER}

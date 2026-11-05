@@ -85,13 +85,14 @@ fun AppDrawerPreferences(
             }
         }
         val hiddenApps = prefs2.hiddenApps.getAdapter().state.value
-        val drawerFilters = prefs2.drawerFilters.getAdapter().state.value
+        val drawerFilters = prefs2.drawerFilters.getAdapter().state.value // NDShades
         PreferenceGroup(heading = stringResource(id = R.string.general_label)) {
             NavigationActionPreference(
                 label = stringResource(id = R.string.hidden_apps_label),
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
             )
+            // NDShades: app drawer filters
             NavigationActionPreference(
                 label = stringResource(id = R.string.drawer_filters_label),
                 destination = AppDrawerFilters,

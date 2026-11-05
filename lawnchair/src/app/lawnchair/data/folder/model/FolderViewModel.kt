@@ -75,6 +75,7 @@ class FolderViewModel(
         }
     }
 
+    // NDShades: rename and sort a drawer folder from its long-press menu
     fun updateFolder(folderId: Int, title: String, sortMode: FolderSortMode) {
         val renamed = folders.value?.find { it.id == folderId }?.title != title
         viewModelScope.launch {

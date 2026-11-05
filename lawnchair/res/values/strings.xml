@@ -161,6 +161,7 @@
     <string name="folders_filter_duplicates">Only show unique apps</string>
     <string name="folder_manage_apps">Manage apps</string>
     <string name="my_folder_label">My folder</string>
+    <!-- NDShades: per-folder options and sorting -->
     <string name="folder_options">Folder options</string>
     <string name="folder_sort_label">Sort apps</string>
     <string name="folder_sort_free">Free</string>
@@ -610,7 +611,7 @@
     <string name="legal">Legal</string>
     <string name="acknowledgements">Acknowledgements</string>
     <string name="privacy_policy">Privacy policy</string>
-    <!-- About screen: who makes ND Shades, and credit to the project it's built on -->
+    <!-- NDShades: About screen: who makes ND Shades, and credit to the project it's built on -->
     <string name="about_developer">Developer</string>
     <string name="about_developer_name" translatable="false">Nguyen-Do Consulting</string>
     <string name="about_based_on_lawnchair">Based on Lawnchair</string>
@@ -642,6 +643,7 @@
     <string name="what_to_restore">What to restore</string>
     <string name="backup_restore_success">Backup restored</string>
     <string name="backup_restore_error">Failed to restore backup</string>
+    <!-- NDShades: all-or-nothing restore, contact shortcut recreation and shortcut restore -->
     <string name="backup_restore_failed_title">Couldn\'t restore backup</string>
     <!-- Shown when a backup fails to extract or check, before anything is changed -->
     <string name="backup_restore_failed_unchanged">The backup file may be damaged or incomplete. Nothing was changed.</string>
@@ -702,6 +704,7 @@
     <string name="gesture_handler_open_assistant">Open assistant</string>
 
     <string name="pick_app_for_gesture">Pick app</string>
+    <!-- NDShades: dock search bar position, folder blur, drawer filters, shortcut gestures -->
     <string name="dock_search_bar_above_icons_label">Search bar above icons</string>
     <string name="dock_search_bar_above_icons_description">Tablets and foldables always show it above the icons.</string>
     <string name="folder_bg_blur_label">Blur behind open folders</string>

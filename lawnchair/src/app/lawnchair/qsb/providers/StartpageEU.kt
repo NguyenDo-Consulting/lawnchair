@@ -28,7 +28,7 @@ data object StartpageEU : QsbSearchProvider(
     icon = R.drawable.ic_startpage,
     themingMethod = ThemingMethod.TINT,
     packageName = "",
-    // Lawnchair: Lawnchair's partner segment is left out.
+    // NDShades: Lawnchair's partner segment is left out.
     // TODO: get ND Shades' own partner segment from Startpage and add it here.
     website = "https://eu.startpage.com/",
     type = QsbSearchProviderType.LOCAL,

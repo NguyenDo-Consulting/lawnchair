@@ -31,7 +31,7 @@ data class FolderInfoEntity(
     val hide: Boolean = false,
     val rank: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
-    /** [FolderSortMode.id] */
+    /** NDShades: [FolderSortMode.id] */
     @ColumnInfo(defaultValue = "0") val sortMode: Int = 0,
 )
 
@@ -63,5 +63,5 @@ data class FolderEntry(
     val hide: Boolean = false,
     val rank: Int = 0,
     val itemComponentKeys: List<String> = emptyList(),
-    val sortMode: FolderSortMode = FolderSortMode.FREE,
+    val sortMode: FolderSortMode = FolderSortMode.FREE, // NDShades: per-folder sorting
 )

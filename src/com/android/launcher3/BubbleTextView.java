@@ -129,7 +129,7 @@ import app.lawnchair.animation.PhysicsAnimator;
  */
 public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         FloatingIconViewCompanion, DraggableView, Reorderable,
-        IconSwipeTarget /* Lawnchair: Icon swipe gesture feature */ {
+        IconSwipeTarget /* NDShades: swipe gestures on dock and folder icons */ {
 
     public static final String TAG = "BubbleTextView";
 
@@ -510,6 +510,8 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
         setTag(itemInfo);
         // Lawnchair: Icon swipe gesture feature
         mGestureListener = shouldSupportIconSwipeGestures()
+                // NDShades: IconGestureKeys.forItem (upstream: itemInfo.getComponentKey()), so
+                // pinned shortcuts have their own gestures
                 ? new IconGestureListener(this, pref2, IconGestureKeys.forItem(itemInfo))
                 : null;
     }
@@ -788,7 +790,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     /** Lawnchair: Check if icon swipe feature is enabled, 
      * and has a horizontal gesture configured for it */
-    @Override
+    @Override // NDShades: IconSwipeTarget
     public boolean hasConfiguredHorizontalIconSwipeGesture() {
         return mGestureListener != null
                 && isIconSwipeGestureEnabledForCurrentState()
@@ -797,7 +799,7 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
 
     /** Lawnchair: Check if icon swipe feature is enabled, 
      * and has a vertical gesture configured for it */
-    @Override
+    @Override // NDShades: IconSwipeTarget
     public boolean hasConfiguredVerticalIconSwipeGesture() {
         return mGestureListener != null
             && isIconSwipeGestureEnabledForCurrentState()

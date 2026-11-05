@@ -21,6 +21,8 @@ import android.content.ContextWrapper
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
@@ -107,6 +109,23 @@ object FolderSortSheet {
                 }
             }
         }
+    }
+
+    /**
+     * Shows the options button for home screen and dock folders. While the folder's title is
+     * centered (single page), it gets matching start padding so it stays centered.
+     */
+    @JvmStatic
+    fun updateOptionsButton(folder: Folder, button: View?, title: View) {
+        if (button == null || folder.info == null) return
+        val show = !folder.isInAppDrawer && isSupported(folder.context)
+        button.visibility = if (show) View.VISIBLE else View.GONE
+        var startPadding = 0
+        if (show && folder.content.pageCount <= 1) {
+            val lp = button.layoutParams as ViewGroup.MarginLayoutParams
+            startPadding = lp.width + lp.marginStart + lp.marginEnd
+        }
+        title.setPaddingRelative(startPadding, title.paddingTop, title.paddingEnd, title.paddingBottom)
     }
 
     /** Folders also open in the taskbar, which has no launcher model to save the sort mode to. */

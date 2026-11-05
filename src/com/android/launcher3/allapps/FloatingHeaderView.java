@@ -278,7 +278,7 @@ public class FloatingHeaderView extends LinearLayout implements
         mCurrentRV.addOnScrollListener(mOnScrollListener);
         maybeSetTabVisibility(rvType == AdapterHolder.SEARCH ? GONE : VISIBLE);
 
-        // Lawnchair: drawer filter chips only apply to personal apps
+        // NDShades: drawer filter chips only apply to personal apps
         DrawerFilterChipsRow filterChips = findFixedRowByType(DrawerFilterChipsRow.class);
         if (filterChips != null && rvType != AdapterHolder.SEARCH) {
             filterChips.setWorkTabActive(rvType == AdapterHolder.WORK);

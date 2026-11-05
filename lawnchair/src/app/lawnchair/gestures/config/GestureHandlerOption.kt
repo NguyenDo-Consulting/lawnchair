@@ -62,6 +62,7 @@ sealed class GestureHandlerOption(
         }
     }
 
+    // NDShades: "Open shortcut" gesture action, picks a pinned shortcut
     data object OpenShortcut : GestureHandlerOption(
         R.string.gesture_handler_open_shortcut_option,
         R.drawable.ic_launcher_home,

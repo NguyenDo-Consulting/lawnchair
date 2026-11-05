@@ -103,7 +103,7 @@ public class Hotseat extends FrameLayout implements Insettable {
     private Workspace<?> mWorkspace;
     private boolean mSendTouchToWorkspace;
     private boolean mSendTouchToPager;
-    private boolean mTouchOnIconSwipe; // Lawnchair: Icon swipe gesture feature
+    private boolean mTouchOnIconSwipe; // NDShades: Icon swipe gestures on the dock
     private final MultiValueAlpha mIconsAlphaChannels;
     private final MultiValueAlpha mQsbAlphaChannels;
 
@@ -448,7 +448,7 @@ public class Hotseat extends FrameLayout implements Insettable {
     }
 
     /**
-     * Lawnchair: Icon swipe gesture feature. Returns whether the given point, in this view's
+     * NDShades: Icon swipe gestures on the dock. Returns whether the given point, in this view's
      * coordinates, is on a dock icon with a swipe gesture configured.
      */
     public boolean isTouchOnIconWithSwipeGesture(float x, float y, boolean vertical) {
@@ -482,7 +482,7 @@ public class Hotseat extends FrameLayout implements Insettable {
             return mSendTouchToPager;
         }
 
-        // Lawnchair: Icon swipe gesture feature, keep left/right swipes on such an icon
+        // NDShades: Icon swipe gestures on the dock, keep left/right swipes on such an icon
         if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
             mTouchOnIconSwipe = isTouchOnIconWithSwipeGesture(ev.getX(), ev.getY(), false);
         }

@@ -35,12 +35,12 @@ import kotlin.math.abs
 import kotlinx.coroutines.launch
 
 /**
- * Swipe gestures of a home screen icon: an app or shortcut icon, or a folder icon.
+ * NDShades: Swipe gestures of a home screen icon: an app or shortcut icon, or a folder icon.
  */
 class IconGestureListener(
-    private val view: View,
+    private val view: View, // NDShades: any view (upstream: BubbleTextView), for folder icons
     private val prefs: PreferenceManager2,
-    private val iconKey: String?,
+    private val iconKey: String?, // NDShades: IconGestureKeys key (upstream: ComponentKey)
 ) : DirectionalGestureListener(view.context) {
 
     private val context get() = view.context
@@ -170,7 +170,7 @@ class IconGestureListener(
             .start()
     }
 
-    /** Get gesture handler for this icon (an app, or a pinned shortcut)
+    /** NDShades: Get gesture handler for this icon (an app, or a pinned shortcut)
      * @param gestureType The type of gesture to resolve for the current icon */
     private fun resolveGesture(gestureType: GestureType): GestureHandlerConfig? {
         val currentIconKey = iconKey ?: return null

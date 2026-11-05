@@ -33,6 +33,7 @@ import app.lawnchair.data.wallpaper.service.WallpaperDao
 import app.lawnchair.util.MainThreadInitializedObject
 import kotlinx.coroutines.runBlocking
 
+// NDShades: version 4 (upstream 3) adds Folders.sortMode
 @Database(entities = [IconOverride::class, Wallpaper::class, FolderInfoEntity::class, FolderItemEntity::class], version = 4)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -105,7 +106,7 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
-        /** Per-folder sorting for app drawer folders. */
+        /** NDShades: Per-folder sorting for app drawer folders. */
         val MIGRATION_3_4 = object : Migration(3, 4) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE `Folders` ADD COLUMN `sortMode` INTEGER NOT NULL DEFAULT 0")
@@ -117,6 +118,7 @@ abstract class AppDatabase : RoomDatabase() {
                 context,
                 AppDatabase::class.java,
                 "preferences",
+            // NDShades: MIGRATION_3_4
             ).addMigrations(MIGRATION_1_3).addMigrations(MIGRATION_2_3).addMigrations(MIGRATION_3_4).build()
         }
     }
