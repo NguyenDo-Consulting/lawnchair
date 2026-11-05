@@ -1050,9 +1050,11 @@ class PreferenceManager2 @Inject constructor(
         scope.cancel()
     }
 
+    // Lawnchair: a copy saved before live information was turned off is ignored too
     private fun getRemoteDefault(key: String): String? = liveInformationManager.liveInformation
         .firstBlocking()
         .features[key]
+        .takeIf { liveInformationManager.enabled.firstBlocking() }
         .also { value ->
             if (value == null) {
                 Log.d(TAG, "getRemoteDefault: $key -> no remote default")

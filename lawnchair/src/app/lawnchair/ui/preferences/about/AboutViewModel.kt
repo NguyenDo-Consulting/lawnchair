@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.ui.preferences.about
 
 import android.app.Application
@@ -43,20 +59,9 @@ class AboutViewModel(
                     BuildConfig.VERSION_NAME
                 },
                 commitHash = BuildConfig.COMMIT_HASH,
-                coreTeam = team,
-                supportAndPr = supportAndPr,
-                topLinks = topLinks,
-                bottomLinks = bottomLinks,
+                // Lawnchair: ND Shades doesn't show Lawnchair's team and links, or look up which
+                // of them are active on Lawnchair's GitHub. The About screen credits Lawnchair.
             )
-        }
-
-        viewModelScope.launch(Dispatchers.Default) {
-            val activeContributors = fetchActiveContributors()
-            val updatedCoreTeam = uiState.value.coreTeam.map { member ->
-                val status = if (member.githubUsername != null && activeContributors.contains(member.githubUsername.lowercase())) ContributorStatus.Active else ContributorStatus.Idle
-                member.copy(status = status)
-            }
-            uiState.update { it.copy(coreTeam = updatedCoreTeam) }
         }
 
         // Check if the build variant is Nightly

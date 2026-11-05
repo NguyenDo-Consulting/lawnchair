@@ -79,7 +79,8 @@ abstract class RebrandStringsTask extends DefaultTask {
 def rebrandStrings = tasks.register("generateNdShadesStrings", RebrandStringsTask) {
     sourceRes = layout.projectDirectory.dir("lawnchair/res")
     appName = "ND Shades"
-    keptStrings = []
+    // The About screen's credit to the Lawnchair project.
+    keptStrings = ["about_based_on_lawnchair", "about_based_on_lawnchair_description"]
     outputDir = layout.buildDirectory.dir("generated/res/ndShadesStrings")
 }
 

@@ -12,13 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package app.lawnchair.ui.preferences.about
 
 import android.content.Intent
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -56,7 +57,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceDivider
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroupHeading
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroupItem
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayoutLazyColumn
-import app.lawnchair.ui.preferences.components.layout.preferenceGroupItems
+import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.ui.preferences.navigation.AboutLicenses
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.R
@@ -137,6 +138,7 @@ fun About(
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
             ) {
+                // Lawnchair: no long press to open the commit, ND Shades' repository is private
                 Text(
                     text = if (prefs.hideVersionInfo.get()) {
                         prefs.pseudonymVersion.get() + " (pseudonym)"
@@ -146,15 +148,6 @@ fun About(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = {},
-                            onLongClick = {
-                                val commitUrl =
-                                    "https://github.com/LawnchairLauncher/lawnchair/commit/${BuildConfig.COMMIT_HASH}"
-                                context.startActivity(Intent(Intent.ACTION_VIEW, commitUrl.toUri()))
-                            },
-                        ),
                 )
             }
         }
@@ -184,53 +177,22 @@ fun About(
         item {
             Spacer(modifier = Modifier.requiredHeight(16.dp))
         }
+        // Lawnchair: ND Shades' developer in place of Lawnchair's links, team and community.
+        // Lawnchair is credited under Legal.
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+            PreferenceGroupHeading(
+                stringResource(R.string.about_developer),
+            )
+        }
+        item {
+            PreferenceGroupItem(
+                cutTop = false,
+                cutBottom = false,
             ) {
-                uiState.topLinks.forEach { link ->
-                    LawnchairLink(
-                        iconResId = link.iconResId,
-                        label = stringResource(id = link.labelResId),
-                        modifier = Modifier.weight(weight = 1f),
-                        url = link.url,
-                    )
-                }
+                PreferenceTemplate(
+                    title = { Text(text = stringResource(R.string.about_developer_name)) },
+                )
             }
-        }
-        preferenceGroupItems(
-            items = uiState.coreTeam,
-            isFirstChild = false,
-            heading = { stringResource(id = R.string.product) },
-            key = { _, it -> it.name },
-        ) { _, it ->
-            ContributorRow(
-                member = it,
-            )
-        }
-        preferenceGroupItems(
-            items = uiState.supportAndPr,
-            isFirstChild = false,
-            heading = { stringResource(id = R.string.support_and_pr) },
-            key = { _, it -> it.name },
-        ) { _, it ->
-            ContributorRow(
-                member = it,
-            )
-        }
-        preferenceGroupItems(
-            items = uiState.bottomLinks,
-            isFirstChild = false,
-            heading = { stringResource(id = R.string.community) },
-            key = { _, it -> it.labelResId },
-        ) { _, it ->
-            HorizontalLawnchairLink(
-                iconResId = it.iconResId,
-                label = stringResource(id = it.labelResId),
-                url = it.url,
-            )
         }
         item {
             PreferenceGroupHeading(
@@ -256,10 +218,12 @@ fun About(
                 cutTop = true,
                 cutBottom = false,
             ) {
+                // Lawnchair: credit to the Lawnchair project, in place of its privacy policy
                 ClickablePreference(
-                    label = stringResource(id = R.string.privacy_policy),
+                    label = stringResource(id = R.string.about_based_on_lawnchair),
+                    subtitle = stringResource(id = R.string.about_based_on_lawnchair_description),
                     onClick = {
-                        val webpage = PRIVACY_POLICY.toUri()
+                        val webpage = LAWNCHAIR_PROJECT.toUri()
                         val intent = Intent(Intent.ACTION_VIEW, webpage)
                         if (intent.resolveActivity(context.packageManager) != null) {
                             context.startActivity(intent)
@@ -271,4 +235,4 @@ fun About(
     }
 }
 
-private const val PRIVACY_POLICY = "https://lawnchair.app/privacy_policy"
+private const val LAWNCHAIR_PROJECT = "https://github.com/LawnchairLauncher/lawnchair"

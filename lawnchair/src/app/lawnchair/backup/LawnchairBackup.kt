@@ -244,9 +244,13 @@ class LawnchairBackup(
             INCLUDE_WALLPAPER to R.string.backup_content_wallpaper,
         )
 
+        /**
+         * Lawnchair: named for ND Shades. Restoring goes by file type, not name, so Lawnchair's
+         * .lawnchairbackup files still restore.
+         */
         fun generateBackupFileName(): String {
-            val fileName = "Lawnchair_Backup ${SimpleDateFormat.getDateTimeInstance().format(Date())}"
-            return "$fileName.lawnchairbackup"
+            val fileName = "NDShades_Backup ${SimpleDateFormat.getDateTimeInstance().format(Date())}"
+            return "$fileName.ndsbackup"
         }
 
         fun getFiles(context: Context, forRestore: Boolean): Map<String, File> {

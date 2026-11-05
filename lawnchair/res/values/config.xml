@@ -13,6 +13,8 @@
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
+  ~
+  ~ Modifications copyright 2026, Nguyen-Do Consulting
   -->
 
 <resources>
@@ -154,7 +156,8 @@
     <bool name="config_default_smartspace_show_date">true</bool>
     <bool name="config_default_smartspace_show_time">false</bool>
     <bool name="config_default_perform_wide_search">true</bool>
-    <bool name="config_default_live_information_enabled">true</bool>
+    <!-- Lawnchair: off for ND Shades. The endpoint is Lawnchair's, with its announcements -->
+    <bool name="config_default_live_information_enabled">false</bool>
     <bool name="config_default_live_information_show_announcements">true</bool>
     <bool name="config_default_enable_dot_pagination">true</bool>
     <bool name="config_default_enable_material_u_popup">true</bool>
