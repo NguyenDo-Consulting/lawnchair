@@ -258,9 +258,13 @@ fun CustomizeShortcutDialog(
     }
 }
 
+/**
+ * Swipe up, down, left and right of one icon, see [app.lawnchair.gestures.IconGestureKeys] for
+ * [iconKey]. Also shown in the options sheet of an open folder.
+ */
 @Composable
-private fun IconGesturesGroup(iconKey: String) {
-    PreferenceGroup(heading = stringResource(R.string.gestures_label)) {
+fun IconGesturesGroup(iconKey: String, modifier: Modifier = Modifier) {
+    PreferenceGroup(heading = stringResource(R.string.gestures_label), modifier = modifier) {
         listOf(
             GestureType.SWIPE_UP,
             GestureType.SWIPE_DOWN,

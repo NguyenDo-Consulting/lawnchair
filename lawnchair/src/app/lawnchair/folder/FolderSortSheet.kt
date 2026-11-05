@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ListItemDefaults
@@ -43,12 +45,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.lawnchair.LawnchairLauncher
+import app.lawnchair.gestures.IconGestureKeys
+import app.lawnchair.override.IconGesturesGroup
 import app.lawnchair.ui.ModalBottomSheetContent
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.layout.PreferenceGroupHeading
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.views.ComposeBottomSheet
 import com.android.launcher3.R
 import com.android.launcher3.folder.Folder
+import com.android.launcher3.model.data.ItemInfo
 
 object FolderSortSheet {
 
@@ -57,7 +63,9 @@ object FolderSortSheet {
     fun isSupported(context: Context): Boolean = findLauncher(context) != null
 
     /**
-     * Opened from the ⋮ button in an open home screen or dock folder.
+     * Opened from the ⋮ button in an open home screen or dock folder: the folder's sort order
+     * and its swipe gestures. The sort order is saved with OK, while a gesture is saved as soon
+     * as it's picked, like in an app's customize sheet.
      */
     @JvmStatic
     fun show(folder: Folder) {
@@ -66,7 +74,7 @@ object FolderSortSheet {
         ComposeBottomSheet.show(launcher) {
             var mode by remember { mutableStateOf(FolderSortMode.of(info)) }
             ModalBottomSheetContent(
-                title = { Text(stringResource(R.string.folder_sort_label)) },
+                title = { Text(stringResource(R.string.folder_options)) },
                 buttons = {
                     OutlinedButton(
                         onClick = { close(true) },
@@ -87,10 +95,16 @@ object FolderSortSheet {
                     }
                 },
             ) {
-                FolderSortOptions(
-                    selected = mode,
-                    onSelect = { mode = it },
-                )
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    PreferenceGroupHeading(stringResource(R.string.folder_sort_label))
+                    FolderSortOptions(
+                        selected = mode,
+                        onSelect = { mode = it },
+                    )
+                    if (info.id != ItemInfo.NO_ID) {
+                        IconGesturesGroup(iconKey = IconGestureKeys.forFolder(info.id))
+                    }
+                }
             }
         }
     }

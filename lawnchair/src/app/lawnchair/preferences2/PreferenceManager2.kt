@@ -1011,6 +1011,30 @@ class PreferenceManager2 @Inject constructor(
         return decodeGesture(getCachedPreferences()[key])
     }
 
+    /** Copies all swipe gestures of one icon to another, replacing what the other one had. */
+    suspend fun copyGesturesForIcon(fromIconKey: String, toIconKey: String) {
+        preferencesDataStore.edit { prefs ->
+            GestureType.entries.forEach { type ->
+                val value = prefs[stringPreferencesKey("$fromIconKey:${type.name}")]
+                val toKey = stringPreferencesKey("$toIconKey:${type.name}")
+                if (value != null) prefs[toKey] = value else prefs.remove(toKey)
+            }
+        }
+    }
+
+    /** Removes the swipe gestures of every icon whose key [matches]. */
+    suspend fun removeGesturesForIcons(matches: (iconKey: String) -> Boolean) {
+        val suffixes = GestureType.entries.map { ":${it.name}" }
+        preferencesDataStore.edit { prefs ->
+            prefs.asMap().keys
+                .filter { key ->
+                    val suffix = suffixes.firstOrNull { key.name.endsWith(it) } ?: return@filter false
+                    matches(key.name.removeSuffix(suffix))
+                }
+                .forEach { prefs.remove(it) }
+        }
+    }
+
     private fun decodeGesture(value: String?): GestureHandlerConfig = value?.let {
         runCatching { kotlinxJson.decodeFromString<GestureHandlerConfig>(it) }
             .getOrDefault(GestureHandlerConfig.NoOp)

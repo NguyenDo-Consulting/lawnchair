@@ -26,6 +26,7 @@ import com.android.launcher3.shortcuts.ShortcutKey
  */
 object IconGestureKeys {
     private const val SHORTCUT_PREFIX = "shortcut:"
+    const val FOLDER_PREFIX = "folder:"
 
     /**
      * Returns the gesture key for an icon. A pinned shortcut has its own gestures, so that e.g.
@@ -42,4 +43,11 @@ object IconGestureKeys {
 
     @JvmStatic
     fun forShortcut(key: ShortcutKey): String = SHORTCUT_PREFIX + key
+
+    /**
+     * Returns the gesture key for a home screen or dock folder. Folders have no other lasting
+     * identity, so their gestures follow the folder's id in the launcher database.
+     */
+    @JvmStatic
+    fun forFolder(folderId: Int): String = FOLDER_PREFIX + folderId
 }

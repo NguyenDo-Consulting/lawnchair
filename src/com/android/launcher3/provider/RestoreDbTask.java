@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.provider;
@@ -52,6 +54,8 @@ import android.util.SparseLongArray;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
+
+import app.lawnchair.backup.RestoreProfiles;
 
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
@@ -257,6 +261,10 @@ public class RestoreDbTask {
         for (int i = oldManagedProfileIds.size() - 1; i >= 0; --i) {
             long oldManagedProfileId = oldManagedProfileIds.keyAt(i);
             UserHandle user = getUserForAncestralSerialNumber(backupManager, oldManagedProfileId);
+            if (user == null) {
+                // Lawnchair: a backup file restored on the same phone keeps its profile numbers
+                user = RestoreProfiles.findProfileOnThisDevice(context, oldManagedProfileId);
+            }
             if (user != null) {
                 long newManagedProfileId = controller.getSerialNumberForUser(user);
                 profileMapping.put(oldManagedProfileId, newManagedProfileId);
@@ -331,8 +339,12 @@ public class RestoreDbTask {
             changeDefaultColumn(db, myProfileId);
         }
 
-        // If restored from a single display backup, remove gaps between screenIds
-        if (LauncherPrefs.get(context).get(RESTORE_DEVICE) != TYPE_MULTI_DISPLAY) {
+        // If restored from a single display backup, remove gaps between screenIds.
+        // Lawnchair: unless the backup has a saved page order. That order keeps the user's empty
+        // pages (e.g. a first page with only At a Glance), and closing the gaps would move the
+        // next page's items onto it.
+        if (LauncherPrefs.get(context).get(RESTORE_DEVICE) != TYPE_MULTI_DISPLAY
+                && LauncherPrefs.get(context).get(LauncherPrefs.WORKSPACE_SCREEN_ORDER).isBlank()) {
             removeScreenIdGaps(db);
         }
 

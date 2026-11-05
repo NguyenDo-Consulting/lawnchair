@@ -17,6 +17,7 @@
 package app.lawnchair.gestures
 
 import android.util.Log
+import android.view.View
 import android.view.ViewConfiguration
 import androidx.datastore.preferences.core.Preferences
 import androidx.dynamicanimation.animation.DynamicAnimation
@@ -27,15 +28,17 @@ import app.lawnchair.gestures.config.GestureHandlerConfig
 import app.lawnchair.gestures.type.GestureType
 import app.lawnchair.launcher
 import app.lawnchair.preferences2.PreferenceManager2
-import com.android.launcher3.BubbleTextView
 import com.android.launcher3.util.MSDLPlayerWrapper
 import com.android.launcher3.util.VibratorWrapper
 import com.google.android.msdl.data.model.MSDLToken
 import kotlin.math.abs
 import kotlinx.coroutines.launch
 
+/**
+ * Swipe gestures of a home screen icon: an app or shortcut icon, or a folder icon.
+ */
 class IconGestureListener(
-    private val view: BubbleTextView,
+    private val view: View,
     private val prefs: PreferenceManager2,
     private val iconKey: String?,
 ) : DirectionalGestureListener(view.context) {

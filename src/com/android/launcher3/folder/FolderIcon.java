@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * Modifications copyright 2025 Lawnchair
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.folder;
@@ -49,6 +50,9 @@ import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import app.lawnchair.gestures.FolderIconSwipeGestures;
+import app.lawnchair.gestures.IconSwipeTarget;
 
 import com.android.app.animation.Interpolators;
 import com.android.launcher3.Alarm;
@@ -96,7 +100,8 @@ import java.util.function.Predicate;
  * An icon that can appear on in the workspace representing an {@link Folder}.
  */
 public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion,
-        DraggableView, Reorderable {
+        DraggableView, Reorderable,
+        IconSwipeTarget /* Lawnchair: folder swipe gestures */ {
 
     private final MultiTranslateDelegate mTranslateDelegate = new MultiTranslateDelegate(this);
     @Thunk ActivityContext mActivity;
@@ -104,6 +109,8 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
     public FolderInfo mInfo;
 
     private CheckLongPressHelper mLongPressHelper;
+    // Lawnchair: folder swipe gestures, null outside the launcher (e.g. in the taskbar)
+    @Nullable private FolderIconSwipeGestures mSwipeGestures;
 
     static final int DROP_IN_ANIMATION_DURATION = 400;
 
@@ -221,6 +228,10 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
         icon.setOnClickListener(activity.getItemOnClickListener());
         icon.mInfo = folderInfo;
         icon.mActivity = activity;
+        // Lawnchair: folder swipe gestures
+        if (activity instanceof Launcher launcher) {
+            icon.mSwipeGestures = new FolderIconSwipeGestures(icon, launcher);
+        }
         icon.mDotRenderer = grid.mDotRendererWorkSpace;
 
         icon.setContentDescription(icon.getAccessiblityTitle(folderInfo.title));
@@ -708,12 +719,35 @@ public class FolderIcon extends FrameLayout implements FloatingIconViewCompanion
             return false;
         }
 
+        // Lawnchair: a swipe that triggered a folder gesture cancels the click and long press
+        if (mSwipeGestures != null && mSwipeGestures.onTouchEvent(event)) {
+            cancelLongPress();
+            MotionEvent cancelEvent = MotionEvent.obtain(event);
+            cancelEvent.setAction(MotionEvent.ACTION_CANCEL);
+            super.onTouchEvent(cancelEvent);
+            cancelEvent.recycle();
+            setPressed(false);
+            return true;
+        }
+
         // Call the superclass onTouchEvent first, because sometimes it changes the state to
         // isPressed() on an ACTION_UP
         super.onTouchEvent(event);
         mLongPressHelper.onTouchEvent(event);
         // Keep receiving the rest of the events
         return true;
+    }
+
+    /** Lawnchair: folder swipe gestures */
+    @Override
+    public boolean hasConfiguredHorizontalIconSwipeGesture() {
+        return mSwipeGestures != null && mSwipeGestures.hasHorizontalGesture();
+    }
+
+    /** Lawnchair: folder swipe gestures */
+    @Override
+    public boolean hasConfiguredVerticalIconSwipeGesture() {
+        return mSwipeGestures != null && mSwipeGestures.hasVerticalGesture();
     }
 
     /**

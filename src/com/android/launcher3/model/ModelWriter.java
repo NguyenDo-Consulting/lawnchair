@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.model;
@@ -28,6 +30,8 @@ import android.util.SparseIntArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import app.lawnchair.gestures.FolderGestures;
 
 import com.android.launcher3.LauncherModel;
 import com.android.launcher3.LauncherPrefs;
@@ -432,6 +436,7 @@ public class ModelWriter {
                 mModel.getModelDbController().delete(itemIdMatch(item.id), null);
             }
             mBgDataModel.removeItem(mContext, items, mOwner);
+            FolderGestures.onItemsDeleted(mContext, items); // Lawnchair: folder swipe gestures
             verifier.verifyModel();
         }));
     }
@@ -453,6 +458,7 @@ public class ModelWriter {
             List<ItemInfo> itemsToDelete = new ArrayList<>(info.getContents());
             itemsToDelete.add(info);
             mBgDataModel.removeItem(mContext, itemsToDelete, mOwner);
+            FolderGestures.onItemsDeleted(mContext, itemsToDelete); // Lawnchair: folder swipe gestures
             verifier.verifyModel();
         }));
     }

@@ -30,6 +30,7 @@ import android.util.Log
 import app.lawnchair.DeviceProfileOverrides
 import app.lawnchair.allapps.filters.DrawerFilter
 import app.lawnchair.data.folder.service.FolderService
+import app.lawnchair.gestures.FolderGestures
 import app.lawnchair.gestures.IconGestureKeys
 import app.lawnchair.gestures.config.GestureHandlerConfig
 import app.lawnchair.gestures.handlers.OpenAppTarget
@@ -39,6 +40,7 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.shortcuts.ConvertedShortcuts
 import com.android.launcher3.GridType
 import com.android.launcher3.InvariantDeviceProfile
+import com.android.launcher3.LauncherPrefs
 import com.android.launcher3.LauncherSettings.Favorites
 import com.android.launcher3.model.DatabaseHelper
 import com.android.launcher3.model.DeviceGridState
@@ -179,6 +181,8 @@ class NovaBackupConverter(
         val deepShortcuts: Map<String, Set<String>>,
         /** Ids of the legacy shortcuts converted to Lawnchair's pinned shortcuts, by Nova item id. */
         val convertedShortcutIds: Map<Int, String>,
+        /** Ids of the imported home screen and dock folders, the same as their Nova ids. */
+        val folderIds: Set<Int>,
     )
 
     /** A swipe action on an icon, with the Nova gesture setting it came from. */
@@ -266,7 +270,7 @@ class NovaBackupConverter(
                 keepFirstRowFree = prefs2.enableSmartspace.get().first(),
             )
             val drawerGroups = readDrawerGroups(novaDbFile, info.drawerSmartFolders)
-            val iconGestures = readIconGestures(novaDbFile, restoredDb.convertedShortcutIds)
+            val iconGestures = readIconGestures(novaDbFile, restoredDb.convertedShortcutIds, restoredDb.folderIds)
 
             val columns = info.columns
             val rows = info.rows
@@ -295,6 +299,9 @@ class NovaBackupConverter(
             restoredDbFile.parentFile?.mkdirs()
             stagedDbFile.copyTo(restoredDbFile, overwrite = true)
 
+            // The saved page order belongs to the replaced home screen. Nova's pages are ordered
+            // by their screen numbers, and the restore closes the gaps between them.
+            LauncherPrefs.get(context).putSync(LauncherPrefs.WORKSPACE_SCREEN_ORDER.to(""))
             val dbController = ModelDbController(context)
             RestoreDbTask.performRestore(context, dbController)
 
@@ -309,6 +316,8 @@ class NovaBackupConverter(
                 prefs2.homeIconSizeFactor.set(factor.coerceIn(MIN_ICON_SIZE_FACTOR, MAX_ICON_SIZE_FACTOR))
             }
             importGestures(info.gestures, prefs2)
+            // The folders are all new, so gestures of the replaced ones would land on the wrong folder.
+            FolderGestures.removeAll(prefs2)
             importIconGestures(iconGestures, prefs2)
             info.drawerIconScale?.let { scale ->
                 prefs2.drawerIconSizeFactor.set(scale.coerceIn(MIN_ICON_SIZE_FACTOR, MAX_ICON_SIZE_FACTOR))
@@ -452,6 +461,7 @@ class NovaBackupConverter(
         val importedDeepShortcuts = mutableMapOf<String, MutableSet<String>>()
         val legacyShortcuts = mutableListOf<Pair<Int, ConvertedShortcuts.Spec>>()
         var convertedShortcutIds = emptyMap<Int, String>()
+        var folderIds = emptySet<Int>()
 
         val targetDb = SQLiteDatabase.openOrCreateDatabase(targetDbFile, null)
         targetDb.use { db ->
@@ -478,10 +488,15 @@ class NovaBackupConverter(
                     db.endTransaction()
                 }
             }
+            folderIds = db.rawQuery(
+                "SELECT _id FROM favorites WHERE itemType = ${Favorites.ITEM_TYPE_FOLDER}",
+                null,
+            ).use { cursor -> buildSet { while (cursor.moveToNext()) add(cursor.getInt(0)) } }
         }
         return RestoredDb(
             deepShortcuts = importedDeepShortcuts.mapValues { (_, shortcutIds) -> shortcutIds.toSet() },
             convertedShortcutIds = convertedShortcutIds,
+            folderIds = folderIds,
         )
     }
 
@@ -868,36 +883,43 @@ class NovaBackupConverter(
     }
 
     /**
-     * Reads the swipe up and down actions on app icons and on the legacy shortcuts converted to
-     * Lawnchair's pinned shortcuts. Lawnchair keeps app icon gestures per app, so an app's actions
-     * apply to all its icons. Swipe actions on folders and other kinds of icons aren't read, since
-     * Lawnchair can't do those.
-     *
-     * TODO: When Lawnchair gets folder swipe gestures, import Nova's too. Nova keeps them in the
-     *  same flingUpIntent / flingDownIntent columns on the folder's row (itemType 2), e.g. a dock
-     *  folder that opens Phone on swipe up.
+     * Reads the swipe up and down actions on app icons, on the legacy shortcuts converted to
+     * Lawnchair's pinned shortcuts, and on folders, e.g. a dock folder that opens Phone on swipe
+     * up. Lawnchair keeps app icon gestures per app, so an app's actions apply to all its icons.
+     * Folders keep their Nova id, so their gestures are keyed by it. Swipe actions on other kinds
+     * of icons aren't read, since Lawnchair can't do those.
      *
      * @param convertedShortcutIds the converted shortcut ids, by Nova item id
+     * @param folderIds the ids of the folders that were imported
      */
-    private fun readIconGestures(novaDbFile: File, convertedShortcutIds: Map<Int, String>): List<NovaIconGesture> {
+    private fun readIconGestures(
+        novaDbFile: File,
+        convertedShortcutIds: Map<Int, String>,
+        folderIds: Set<Int>,
+    ): List<NovaIconGesture> {
         val user = Process.myUserHandle()
         val src = SQLiteDatabase.openDatabase(novaDbFile.absolutePath, null, SQLiteDatabase.OPEN_READONLY)
         return src.use { db ->
             db.rawQuery(
                 """SELECT * FROM $NOVA_TABLE_FAVORITES WHERE $NOVA_COL_ITEM_TYPE IN
-                    (${Favorites.ITEM_TYPE_APPLICATION}, ${Favorites.ITEM_TYPE_SHORTCUT})""",
+                    (${Favorites.ITEM_TYPE_APPLICATION}, ${Favorites.ITEM_TYPE_SHORTCUT},
+                    ${Favorites.ITEM_TYPE_FOLDER})""",
                 null,
             ).use { cursor ->
                 buildList {
                     while (cursor.moveToNext()) {
                         val novaId = cursor.getInt(cursor.getColumnIndexOrThrow(NOVA_COL_ID))
+                        val itemType = cursor.getInt(cursor.getColumnIndexOrThrow(NOVA_COL_ITEM_TYPE))
                         val convertedId = convertedShortcutIds[novaId]
-                        val iconKey = if (convertedId != null) {
+                        val iconKey = if (itemType == Favorites.ITEM_TYPE_FOLDER) {
+                            if (novaId !in folderIds) continue
+                            IconGestureKeys.forFolder(novaId)
+                        } else if (convertedId != null) {
                             IconGestureKeys.forShortcut(ShortcutKey(context.packageName, user, convertedId))
                         } else {
                             getStringOrNull(cursor, NOVA_COL_INTENT)
                                 ?.let { runCatching { Intent.parseUri(it, 0).component }.getOrNull() }
-                                ?.takeIf { cursor.getInt(cursor.getColumnIndexOrThrow(NOVA_COL_ITEM_TYPE)) == Favorites.ITEM_TYPE_APPLICATION }
+                                ?.takeIf { itemType == Favorites.ITEM_TYPE_APPLICATION }
                                 ?.let { ComponentKey(it, user).toString() }
                                 ?: continue
                         }

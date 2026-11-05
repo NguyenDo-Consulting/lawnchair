@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.model;
@@ -43,6 +45,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
+import app.lawnchair.gestures.FolderGestures;
 import app.lawnchair.preferences2.PreferenceManager2;
 import com.android.launcher3.Flags;
 import com.android.launcher3.InvariantDeviceProfile;
@@ -343,6 +346,10 @@ public class GridSizeMigrationDBController {
     static void insertEntryInDb(DatabaseHelper helper, DbEntry entry,
             String srcTableName, String destTableName, List<Integer> idsInUse) {
         int id = copyEntryAndUpdate(helper, entry, srcTableName, destTableName, idsInUse);
+        if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+            // Lawnchair: folder swipe gestures follow the folder to its new id
+            FolderGestures.onFolderIdChanged(entry.id, id);
+        }
         if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER
                 || entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_APP_PAIR) {
             for (Set<Integer> itemIds : entry.mFolderItems.values()) {
