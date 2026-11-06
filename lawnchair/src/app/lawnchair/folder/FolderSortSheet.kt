@@ -187,7 +187,8 @@ fun FolderSortOptions(
     }
 }
 
-private fun openUsageAccessSettings(context: Context) {
+/** Opens Android's usage access screen, on ND Shades' own entry where the phone supports that. */
+internal fun openUsageAccessSettings(context: Context) {
     val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
         .setData(Uri.fromParts("package", context.packageName, null))
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

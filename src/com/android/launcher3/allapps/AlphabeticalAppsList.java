@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * Modifications copyright 2025, Lawnchair
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.allapps;
 
@@ -500,6 +501,15 @@ public class AlphabeticalAppsList<T extends Context & ActivityContext> implement
                 mAdapterItems.add(AdapterItem.asApp(info));
             }
 
+            // NDShades: When the drawer isn't sorted by name, letters would come out jumbled. Each
+            // app gets an unnamed section instead, so dragging the scrollbar still moves through
+            // the list, without the letter popup.
+            if (!useLetterSections()) {
+                mFastScrollerSections.add(new FastScrollSectionInfo("", position));
+                position++;
+                continue;
+            }
+
             String sectionName = info.sectionName;
             // Create a new section if the section names do not match
             if (!sectionName.equals(lastSectionName)) {
@@ -515,6 +525,11 @@ public class AlphabeticalAppsList<T extends Context & ActivityContext> implement
             position++;
         }
         return position;
+    }
+
+    /** NDShades: Whether fast scroll sections follow the apps' first letters. */
+    protected boolean useLetterSections() {
+        return true;
     }
 
 

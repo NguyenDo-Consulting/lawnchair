@@ -366,6 +366,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = false,
     )
 
+    /** NDShades: How the app drawer orders its apps, see [app.lawnchair.allapps.DrawerSortMode]. */
+    val drawerSortMode = preference(
+        key = stringPreferencesKey(name = "drawer_sort_mode"),
+        defaultValue = app.lawnchair.allapps.DrawerSortMode.ALPHABETICAL.id,
+    )
+
     val roundedWidgets = preference(
         key = booleanPreferencesKey(name = "rounded_widgets"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_rounded_widgets),

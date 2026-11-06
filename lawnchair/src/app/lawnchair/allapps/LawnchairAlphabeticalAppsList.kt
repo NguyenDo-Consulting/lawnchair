@@ -71,15 +71,22 @@ class LawnchairAlphabeticalAppsList<T>(
     private var hideFilteredAppsFromAll = false
     private var activeFilterId: String? = null
 
+    // NDShades: drawer sort order, see [DrawerSortMode]
+    private var sortMode = DrawerSortMode.ALPHABETICAL
+
     private val viewModel = FolderViewModel(
         (context as? ComponentActivity)?.application ?: context.launcher.application,
     )
     private val folderList = mutableListOf<FolderEntry>()
     private val filteredList = mutableListOf<AppInfo>()
 
-    /** NDShades: Rebuilds the list when new usage counts would reorder a "Most used" folder. */
+    /** NDShades: Rebuilds the list when new usage counts would reorder a "Most used" folder or drawer. */
     private val folderUsageListener = Runnable {
-        if (folderList.any { it.sortMode == FolderSortMode.MOST_USED }) onAppsUpdated()
+        if (sortMode == DrawerSortMode.MOST_USED ||
+            folderList.any { it.sortMode == FolderSortMode.MOST_USED }
+        ) {
+            onAppsUpdated()
+        }
     }
 
     init {
@@ -115,7 +122,15 @@ class LawnchairAlphabeticalAppsList<T>(
                 onAppsUpdated()
             }
             .launchIn(scope)
+        // NDShades: drawer sort order
+        prefs2.drawerSortMode.onEach(launchIn = scope) {
+            sortMode = DrawerSortMode.fromId(it)
+            onAppsUpdated()
+        }
     }
+
+    // NDShades: drawer sort order. Letters only make sense when the drawer is sorted by name.
+    override fun useLetterSections() = sortMode == DrawerSortMode.ALPHABETICAL
 
     // NDShades: the selected drawer filter chip, if any
     private val activeFilter: DrawerFilter?
@@ -161,8 +176,10 @@ class LawnchairAlphabeticalAppsList<T>(
         onAppsUpdated()
     }
 
-    override fun addAppsWithSections(appList: List<AppInfo?>?, startPosition: Int): Int {
-        if (appList.isNullOrEmpty()) return startPosition
+    override fun addAppsWithSections(unsortedApps: List<AppInfo?>?, startPosition: Int): Int {
+        if (unsortedApps.isNullOrEmpty()) return startPosition
+        // NDShades: drawer sort order. Upstream hands the apps over in alphabetical order.
+        val appList = DrawerSorter.sort(context, unsortedApps.filterNotNull(), sortMode, appsStore.apps)
         val drawerListDefault = prefs.drawerList.get()
         filteredList.clear()
         var position = startPosition

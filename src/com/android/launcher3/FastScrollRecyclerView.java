@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3;
@@ -109,8 +111,22 @@ public abstract class FastScrollRecyclerView extends RecyclerView  {
      */
     public void restoreScrollPosition() {
         if (savedScrollPosition != RecyclerView.NO_POSITION) {
-            scrollToPosition(savedScrollPosition);
+            // NDShades: savedScrollPosition is a distance in pixels (see saveScrollPosition), so
+            // scroll by the difference (upstream: scrollToPosition(savedScrollPosition), which
+            // reads it as an item index and jumps to the wrong place when it's small)
+            int delta = savedScrollPosition - computeVerticalScrollOffset();
+            if (delta != 0) {
+                scrollBy(0, delta);
+            }
         }
+    }
+
+    /**
+     * NDShades: Scrolls to the top and forgets the saved position, so a later restore stays there.
+     */
+    public void resetScrollPosition() {
+        savedScrollPosition = 0;
+        scrollToPosition(0);
     }
 
     /**

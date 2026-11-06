@@ -63,6 +63,10 @@ object FolderUsageStats {
     @Volatile
     private var lastRefresh = 0L
 
+    /** Whether [counts] were read with usage access, so granting it refreshes them right away. */
+    @Volatile
+    private var countsHadAccess = false
+
     /** Set once something asks for counts, so resuming the launcher doesn't query for nothing. */
     @Volatile
     private var wanted = false
@@ -118,14 +122,17 @@ object FolderUsageStats {
 
     private fun refresh(context: Context) {
         val now = System.currentTimeMillis()
-        if (counts != null && now - lastRefresh < MIN_REFRESH_INTERVAL_MS) return
+        val accessChanged = hasUsageAccess(context) != countsHadAccess
+        if (counts != null && !accessChanged && now - lastRefresh < MIN_REFRESH_INTERVAL_MS) return
         if (!loading.compareAndSet(false, true)) return
         val appContext = context.applicationContext
         UI_HELPER_EXECUTOR.execute {
             try {
+                val hadAccess = hasUsageAccess(appContext)
                 val newCounts = queryLaunchCounts(appContext)
                 val changed = newCounts != counts
                 counts = newCounts
+                countsHadAccess = hadAccess
                 lastRefresh = System.currentTimeMillis()
                 if (changed) {
                     MAIN_EXECUTOR.execute { listeners.forEach { it.run() } }

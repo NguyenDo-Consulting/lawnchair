@@ -43,6 +43,7 @@ import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.AppDrawerHapticFeedbackPreference
+import app.lawnchair.ui.preferences.components.DrawerSortPreference
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
@@ -108,6 +109,7 @@ fun AppDrawerPreferences(
                     drawerFilters.size,
                 ),
             )
+            DrawerSortPreference() // NDShades: drawer sort order
             SearchBarPreference(SearchRoute.DRAWER_SEARCH, showLabel = false)
             NavigationActionPreference(
                 label = stringResource(R.string.suggestion_pref_screen_title),

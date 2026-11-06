@@ -99,6 +99,7 @@ import com.patrykmichalik.opto.core.onEach
 import dev.kdrag0n.monet.theme.ColorScheme
 import java.util.stream.Stream
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -125,11 +126,21 @@ class LawnchairLauncher : QuickstepLauncher() {
             }
         }
     }
+    // NDShades: After the drawer sort changes, the remembered position would land among different
+    // apps, so the drawer opens at the top once instead
+    private var drawerSortChanged = false
+
     private val rememberPositionStateListener = object : StateManager.StateListener<LauncherState> {
         override fun onStateTransitionStart(toState: LauncherState) {
             if (toState is AllAppsState) {
                 val recyclerView = mAppsView.activeRecyclerView
-                recyclerView.restoreScrollPosition()
+                // NDShades: drawer sort order (upstream: always restoreScrollPosition)
+                if (drawerSortChanged) {
+                    drawerSortChanged = false
+                    recyclerView.resetScrollPosition()
+                } else {
+                    recyclerView.restoreScrollPosition()
+                }
                 // NDShades: the header follows the restored position once the list is laid out
                 recyclerView.post { mAppsView.floatingHeaderView.syncToScrollPosition() }
             }
@@ -229,7 +240,9 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             }
         }.launchIn(scope = lifecycleScope)
-        preferenceManager2.rememberPosition.get().onEach {
+        // NDShades: distinctUntilChanged, or the listener is added again on every settings change and
+        // the extra copies undo the reset after a drawer sort change (upstream: no distinctUntilChanged)
+        preferenceManager2.rememberPosition.get().distinctUntilChanged().onEach {
             with(launcher.stateManager) {
                 if (it) {
                     addStateListener(rememberPositionStateListener)
@@ -238,6 +251,12 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             }
         }.launchIn(scope = lifecycleScope)
+        // NDShades: drawer sort order, see drawerSortChanged
+        preferenceManager2.drawerSortMode.get()
+            .distinctUntilChanged()
+            .drop(1)
+            .onEach { drawerSortChanged = true }
+            .launchIn(scope = lifecycleScope)
 
         prefs.overrideWindowCornerRadius.subscribeValues(this) {
             QuickStepContract.sHasCustomCornerRadius = it
