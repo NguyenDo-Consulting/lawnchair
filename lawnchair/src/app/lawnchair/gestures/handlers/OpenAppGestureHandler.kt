@@ -25,6 +25,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.core.content.getSystemService
 import app.lawnchair.LawnchairLauncher
+import app.lawnchair.applock.AppLockManager
 import com.android.launcher3.R
 import app.lawnchair.util.ComponentKeySerializer
 import app.lawnchair.util.IntentSerializer
@@ -39,6 +40,18 @@ class OpenAppGestureHandler(
 ) : GestureHandler(context) {
 
     override suspend fun onTrigger(launcher: LawnchairLauncher) {
+        // NDShades: a locked app asks for the unlock first, then opens
+        val (packageName, user) = when (target) {
+            is OpenAppTarget.App -> target.key.componentName.packageName to target.key.user
+            is OpenAppTarget.Shortcut -> target.packageName to target.user
+        }
+        val asked = AppLockManager.getInstance(launcher).interceptLaunch(launcher, packageName, user) {
+            open(launcher)
+        }
+        if (!asked) open(launcher)
+    }
+
+    private fun open(launcher: LawnchairLauncher) {
         when (target) {
             is OpenAppTarget.App -> {
                 val key = target.key

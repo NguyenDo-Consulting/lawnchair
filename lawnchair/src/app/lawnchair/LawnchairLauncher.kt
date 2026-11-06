@@ -35,6 +35,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.LawnchairApp.Companion.showRestoreFailureIfNecessary
+import app.lawnchair.applock.AppLockManager
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
 import app.lawnchair.data.wallpaper.service.WallpaperService
@@ -127,7 +128,10 @@ class LawnchairLauncher : QuickstepLauncher() {
     private val rememberPositionStateListener = object : StateManager.StateListener<LauncherState> {
         override fun onStateTransitionStart(toState: LauncherState) {
             if (toState is AllAppsState) {
-                mAppsView.activeRecyclerView.restoreScrollPosition()
+                val recyclerView = mAppsView.activeRecyclerView
+                recyclerView.restoreScrollPosition()
+                // NDShades: the header follows the restored position once the list is laid out
+                recyclerView.post { mAppsView.floatingHeaderView.syncToScrollPosition() }
             }
         }
         override fun onStateTransitionComplete(finalState: LauncherState) {}
@@ -509,6 +513,15 @@ class LawnchairLauncher : QuickstepLauncher() {
     }
 
     override fun startActivitySafely(v: View?, intent: Intent, item: ItemInfo?): RunnableList? {
+        // NDShades: a locked app asks for the unlock first, then launches again. Before resume,
+        // Launcher defers the launch and calls this again, so it's only checked then
+        if (hasBeenResumed()) {
+            val packageName = intent.component?.packageName ?: intent.`package` ?: item?.targetPackage
+            val asked = AppLockManager.getInstance(this).interceptLaunch(this, packageName, item?.user) {
+                startActivitySafely(v, intent, item)
+            }
+            if (asked) return null
+        }
         // NDShades: counts shortcut launches for "Most used" folder sorting. Before resume,
         // Launcher defers the launch and calls this again, so count it only then
         val countLaunch = hasBeenResumed()

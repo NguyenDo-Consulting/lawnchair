@@ -53,7 +53,6 @@ import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.theme.color.ColorStyle
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.toOptionOrderString
-import app.lawnchair.ui.preferences.components.HiddenAppsInSearch
 import app.lawnchair.ui.preferences.data.liveinfo.LiveInformationManager
 import app.lawnchair.util.kotlinxJson
 import app.lawnchair.views.overlay.FullScreenOverlayMode
@@ -340,6 +339,21 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = setOf(),
     )
 
+    /**
+     * NDShades: Locked apps, by [ComponentKey] string like [hiddenApps]. Opening one asks for the
+     * unlock, see [app.lawnchair.applock.AppLockManager]. Backed up; the unlock itself isn't.
+     */
+    val lockedApps = preference(
+        key = stringSetPreferencesKey(name = "locked_apps"),
+        defaultValue = setOf(),
+    )
+
+    /** NDShades: When an unlock of the locked apps expires, see [app.lawnchair.applock.RelockMode]. */
+    val appLockRelock = preference(
+        key = stringPreferencesKey(name = "app_lock_relock"),
+        defaultValue = app.lawnchair.applock.RelockMode.SCREEN_OFF.id,
+    )
+
     /** NDShades: User-made app drawer filters, in chip order. */
     val drawerFilters = serializablePreference<List<DrawerFilter>>(
         key = stringPreferencesKey(name = "drawer_filters"),
@@ -469,11 +483,8 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_app_drawer_haptic_feedback),
     )
 
-    val hiddenAppsInSearch = preference(
-        key = stringPreferencesKey(name = "hidden_apps_in_search"),
-        defaultValue = HiddenAppsInSearch.NEVER,
-        onSet = { reloadHelper.recreate() },
-    )
+    // NDShades: hiddenAppsInSearch removed. Hidden apps are always found by search, and hidden
+    // and locked apps only by their full name, see filterHiddenApps.
 
     val searchAlgorithm = preference(
         key = stringPreferencesKey(name = "search_algorithm"),

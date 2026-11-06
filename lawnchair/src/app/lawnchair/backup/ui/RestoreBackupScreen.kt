@@ -63,6 +63,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.lawnchair.applock.AppLockManager
 import app.lawnchair.backup.LawnchairBackup
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.LocalNavController
@@ -260,8 +261,17 @@ fun ColumnScope.RestoreBackupOptions(
             .padding(top = 8.dp)
             .padding(horizontal = 16.dp),
     ) {
+        // NDShades: with locked apps, restoring asks for the code first (the separate PIN, or the
+        // phone's pattern/PIN), since restoring an older backup could remove locks
+        val lockManager = remember { AppLockManager.getInstance(context) }
         Button(
-            onClick = { restoreBackup() },
+            onClick = {
+                if (lockManager.hasLockedApps) {
+                    lockManager.requestWeaken(context, onSuccess = ::restoreBackup)
+                } else {
+                    restoreBackup()
+                }
+            },
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .fillMaxWidth(),

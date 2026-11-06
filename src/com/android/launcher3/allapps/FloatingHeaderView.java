@@ -346,7 +346,10 @@ public class FloatingHeaderView extends LinearLayout implements
     }
 
     protected void applyVerticalMove() {
-        int maxTranslation = mMaxTranslation - mCurrentRV.getSavedScrollPosition();
+        // NDShades: the header's own limit. Lawnchair subtracted the remembered drawer position
+        // (saved each time scrolling stops), so with "Remember position" on, stopping far down and
+        // scrolling back up pushed the tabs and floating rows far off screen, leaving a gap.
+        int maxTranslation = mMaxTranslation;
         int uncappedTranslationY = mTranslationY;
         mTranslationY = Math.max(mTranslationY, -maxTranslation);
 
@@ -403,6 +406,12 @@ public class FloatingHeaderView extends LinearLayout implements
         if (mAnimator.isStarted()) {
             mAnimator.cancel();
         }
+        // NDShades: with "Remember position", the list keeps its place, so the header follows it
+        // instead of being fully shown over a list that's scrolled down
+        if (PreferenceCacheExtensionsKt.firstCached(pref2.getRememberPosition())) {
+            syncToScrollPosition();
+            return;
+        }
         if (animate) {
             mAnimator.setIntValues(mTranslationY, 0);
             mAnimator.addUpdateListener(this);
@@ -416,6 +425,29 @@ public class FloatingHeaderView extends LinearLayout implements
         mSnappedScrolledY = -mMaxTranslation;
         if (!PreferenceCacheExtensionsKt.firstCached(pref2.getRememberPosition())) {
             mCurrentRV.scrollToTop();
+        }
+    }
+
+    /**
+     * NDShades: Sets the header to where scrolling to the list's current position would have left
+     * it: partly scrolled away near the top, collapsed further down. For a remembered position.
+     */
+    public void syncToScrollPosition() {
+        if (mCurrentRV == null) {
+            return;
+        }
+        if (mAnimator.isStarted()) {
+            mAnimator.cancel();
+        }
+        boolean wasCollapsed = mHeaderCollapsed;
+        int offset = mCurrentRV.computeVerticalScrollOffset();
+        // The same state moved() reaches when scrolling down from the top to offset.
+        mSnappedScrolledY = -mMaxTranslation;
+        mHeaderCollapsed = offset >= mMaxTranslation;
+        mTranslationY = -Math.min(offset, mMaxTranslation);
+        applyVerticalMove();
+        if (wasCollapsed != mHeaderCollapsed && getParent() instanceof ActivityAllAppsContainerView) {
+            ((ActivityAllAppsContainerView<?>) getParent()).invalidateHeader();
         }
     }
 

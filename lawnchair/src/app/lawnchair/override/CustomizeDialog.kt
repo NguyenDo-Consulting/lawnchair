@@ -50,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import app.lawnchair.BlankActivity
+import app.lawnchair.applock.AppLockManager
 import app.lawnchair.gestures.type.GestureType
 import app.lawnchair.launcher
 import app.lawnchair.preferences.getAdapter
@@ -214,6 +215,27 @@ fun CustomizeAppDialog(
                     val newSet = hiddenApps.toMutableSet()
                     if (newValue) newSet.add(stringKey) else newSet.remove(stringKey)
                     adapter.onChange(newSet)
+                },
+            )
+            // NDShades: locking asks for nothing (it sets up the unlock the first time), and
+            // removing a lock asks for the code: the separate PIN, or the phone's pattern/PIN
+            val lockedAdapter = preferenceManager2.lockedApps.getAdapter()
+            val lockManager = remember { AppLockManager.getInstance(context) }
+            SwitchPreference(
+                checked = lockedAdapter.state.value.contains(stringKey),
+                label = stringResource(id = R.string.app_lock_customize_lock),
+                onCheckedChange = { newValue ->
+                    val apply = {
+                        val newSet = lockedAdapter.state.value.toMutableSet()
+                        if (newValue) newSet.add(stringKey) else newSet.remove(stringKey)
+                        lockedAdapter.onChange(newSet)
+                        lockManager.onSettingsChanged()
+                    }
+                    when {
+                        !newValue -> lockManager.requestWeaken(context, onSuccess = apply)
+                        !lockManager.isSetUp && !lockManager.hasLockedApps -> lockManager.requestSetup(context, onSuccess = apply)
+                        else -> apply()
+                    }
                 },
             )
         }

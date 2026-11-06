@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.backup.ui
 
 import android.app.Activity
@@ -15,10 +31,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -36,6 +54,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.lawnchair.applock.AppLockManager
 import app.lawnchair.backup.LawnchairBackup
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.LocalNavController
@@ -105,6 +124,34 @@ fun CreateBackupScreen(
         intent.type = "*/*"
         intent.putExtra(Intent.EXTRA_TITLE, LawnchairBackup.generateBackupFileName())
         request.launch(intent)
+    }
+
+    // NDShades: with locked apps, a backup asks for the unlock first, since it lists them. A
+    // backup of the layout also warns that the lock itself isn't in it.
+    val lockManager = remember { AppLockManager.getInstance(context) }
+    var showLockWarning by remember { mutableStateOf(false) }
+    fun createBackup() {
+        when {
+            !lockManager.hasLockedApps -> launchPicker()
+            contents.hasFlag(LawnchairBackup.INCLUDE_LAYOUT_AND_SETTINGS) -> showLockWarning = true
+            else -> lockManager.requestVerify(context, onSuccess = ::launchPicker)
+        }
+    }
+    if (showLockWarning) {
+        AlertDialog(
+            onDismissRequest = { showLockWarning = false },
+            title = { Text(stringResource(R.string.app_lock_backup_warning_title)) },
+            text = { Text(stringResource(R.string.app_lock_backup_warning_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showLockWarning = false
+                    lockManager.requestVerify(context, onSuccess = ::launchPicker)
+                }) { Text(stringResource(R.string.app_lock_continue)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLockWarning = false }) { Text(stringResource(android.R.string.cancel)) }
+            },
+        )
     }
 
     PreferenceLayout(
@@ -179,7 +226,7 @@ fun CreateBackupScreen(
                 .padding(horizontal = 16.dp),
         ) {
             Button(
-                onClick = { launchPicker() },
+                onClick = { createBackup() }, // NDShades: (upstream: launchPicker())
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxWidth(),

@@ -201,6 +201,10 @@ data object AppDrawerFilters : PreferenceRoute, PreferenceDeepLink {
 @Serializable
 data class AppDrawerFilterApps(val id: String) : PreferenceRoute
 
+// NDShades: locked apps. No deep link: the screen is entered from App drawer only.
+@Serializable
+data object AppDrawerLockedApps : PreferenceRoute
+
 // Search section routes
 @Serializable
 data class SearchProviderPreference(val id: SearchProviderId) :

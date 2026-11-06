@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.predictions
 
 import android.app.AppOpsManager
@@ -19,6 +35,7 @@ import com.android.launcher3.Utilities
 import com.android.launcher3.model.BgDataModel
 import com.android.launcher3.model.WidgetItem
 import com.android.launcher3.pm.UserCache
+import com.android.launcher3.util.ComponentKey
 
 /**
  * Compiles ranked store keys into [AppTarget] lists for all-apps and widget predictions. Holds
@@ -46,6 +63,8 @@ class LawnchairPredictionEngine(
         excludedKeys: Set<String> = emptySet(),
     ): List<AppTarget> {
         val launcherApps = context.getSystemService(LauncherApps::class.java)
+        // NDShades: hidden apps, locked or not, aren't suggested
+        val hiddenApps = prefs2.hiddenApps.firstCached(prefs2)
         return buildList(count) {
             ranked.forEach { key ->
                 if (size == count) return@buildList
@@ -54,6 +73,7 @@ class LawnchairPredictionEngine(
                 val componentName = ComponentName(parsedKey.packageName, parsedKey.className)
                 val storeKey = toStoreKey(componentName, parsedKey.user)
                 if (storeKey in excludedKeys) return@forEach
+                if (ComponentKey(componentName, parsedKey.user).toString() in hiddenApps) return@forEach
 
                 try {
                     launcherApps?.resolveActivity(

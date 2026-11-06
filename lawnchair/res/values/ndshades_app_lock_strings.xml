@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2026, Nguyen-Do Consulting
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!-- NDShades: locked apps, see docs/ndc/locked-apps.md. In their own file so upstream's
+     strings.xml stays as it is. -->
+<resources>
+    <!-- Settings -->
+    <string name="locked_apps_label">Locked apps</string>
+    <string name="app_lock_group_lock">Lock</string>
+    <string name="app_lock_change_pin">Change PIN</string>
+    <string name="app_lock_customize_lock">Lock app</string>
+    <string name="app_lock_limits_text">Locking stops casual snooping, not a determined person. A locked app can still be opened from Android Settings, its notifications, the Play Store, recent apps, or another launcher.</string>
+
+    <!-- Spoken by TalkBack for a widget of a locked app, covered until unlocked -->
+    <string name="app_lock_widget_covered">Locked widget. Tap to unlock.</string>
+
+    <!-- Backups -->
+    <string name="app_lock_backup_warning_title">Locked apps in this backup</string>
+    <string name="app_lock_backup_warning_text">The backup keeps which apps are locked, but not your fingerprint, PIN or other unlock. After restoring it on a phone where the lock isn\'t set up, you\'ll need to wait 10 minutes before you can set up the lock again.</string>
+
+    <!-- Lock methods -->
+    <string name="app_lock_method_label">Lock with</string>
+    <string name="app_lock_method_biometric">Fingerprint or face</string>
+    <string name="app_lock_method_biometric_description">Opens locked apps with whichever your phone allows. Every fingerprint on this phone now works, including other people\'s; ones added later don\'t. Removing a lock asks for your phone\'s pattern or PIN.</string>
+    <string name="app_lock_method_pin">Separate PIN</string>
+    <string name="app_lock_method_pin_description">A PIN just for locked apps, different from your phone\'s, also asked for when removing a lock. Choose this if someone else\'s fingerprint is on this phone.</string>
+
+    <!-- Relock -->
+    <string name="app_lock_relock_label">Relock locked apps</string>
+    <string name="app_lock_relock_immediately">Immediately</string>
+    <string name="app_lock_relock_screen_off">When screen turns off</string>
+    <string name="app_lock_relock_screen_off_5min">5 minutes after screen turns off</string>
+    <string name="app_lock_relock_restart">When phone restarts</string>
+
+    <!-- Unlock -->
+    <string name="app_lock_prompt_title">Unlock locked apps</string>
+    <string name="app_lock_failed_title">Couldn\'t unlock</string>
+    <string name="app_lock_try_again">Try again</string>
+    <string name="app_lock_forgot">Forgot?</string>
+    <string name="app_lock_continue">Continue</string>
+    <string name="app_lock_close">Close</string>
+    <string name="app_lock_reset">Reset</string>
+    <string name="app_lock_key_invalidated_title">Fingerprint or face added</string>
+    <string name="app_lock_key_invalidated_text">A fingerprint or face was added to this phone, so fingerprint unlock for locked apps was turned off. Reset the lock to set it up again.</string>
+
+    <!-- PIN -->
+    <string name="app_lock_pin_enter">Enter your PIN</string>
+    <string name="app_lock_pin_create">Choose a PIN</string>
+    <string name="app_lock_pin_confirm">Enter the PIN again</string>
+    <string name="app_lock_pin_length">At least %1$d digits</string>
+    <string name="app_lock_pin_wrong">Wrong PIN</string>
+    <string name="app_lock_pin_mismatch">The PINs didn\'t match. Choose a PIN again.</string>
+    <string name="app_lock_pin_lockout">Too many tries. Try again in %1$s.</string>
+    <string name="app_lock_pin_delete">Delete</string>
+
+    <!-- Reset -->
+    <string name="app_lock_reset_confirm_title">Reset the lock?</string>
+    <string name="app_lock_reset_confirm_text">After you confirm with your phone\'s screen lock, you\'ll wait %1$s, then set up the lock again. Your apps stay locked. A notification stays up while you wait, and unlocking normally cancels the reset.</string>
+    <string name="app_lock_reset_from_backup_title">Set up the lock</string>
+    <string name="app_lock_reset_from_backup_text">These locked apps came from a backup, so the lock needs to be set up on this phone. You\'ll wait %1$s first. Your apps stay locked.</string>
+    <string name="app_lock_reset_count_text">This will be reset request %1$d in a row. Each request in a row doubles the wait, up to 24 hours.</string>
+    <string name="app_lock_reset_request">Start reset</string>
+    <string name="app_lock_reset_verify_title">Confirm it\'s you</string>
+    <string name="app_lock_reset_pending_title">Reset requested</string>
+    <string name="app_lock_reset_pending_text">You can set up the lock again in %1$s. If you didn\'t request this, unlock to cancel it.</string>
+    <string name="app_lock_reset_ready_text">The wait is over. You can set up the lock again now.</string>
+    <string name="app_lock_set_up_now">Set up now</string>
+    <string name="app_lock_unlock_to_cancel">Unlock to cancel</string>
+    <string name="app_lock_reset_choice_title">Was this reset you?</string>
+    <string name="app_lock_reset_choice_text">A reset of the lock was requested at %1$s. This is reset request %2$d in a row.\n\nIf it wasn\'t you, the next reset waits longer, giving you more time to notice.</string>
+    <string name="app_lock_reset_choice_not_me">That wasn\'t me</string>
+    <string name="app_lock_reset_choice_me">That was me</string>
+    <string name="app_lock_notification_channel">Locked apps</string>
+    <string name="app_lock_reset_notification_title">Locked apps reset requested</string>
+    <string name="app_lock_reset_notification_text">Requested at %1$s. If this wasn\'t you, tap to unlock and cancel it.</string>
+
+    <!-- Durations -->
+    <plurals name="app_lock_minutes">
+        <item quantity="one">%d minute</item>
+        <item quantity="other">%d minutes</item>
+    </plurals>
+    <plurals name="app_lock_hours">
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
+    </plurals>
+    <!-- e.g. "1 hour 20 minutes" -->
+    <string name="app_lock_hours_minutes">%1$s %2$s</string>
+</resources>

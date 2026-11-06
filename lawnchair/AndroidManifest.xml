@@ -14,6 +14,8 @@
 ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 ** See the License for the specific language governing permissions and
 ** limitations under the License.
+**
+** Modifications copyright 2026, Nguyen-Do Consulting
 */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -39,6 +41,8 @@
     <uses-permission android:name="android.permission.STATUS_BAR_SERVICE" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.SUSPEND_APPS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <!-- NDShades: fingerprint or face unlock of locked apps -->
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <!-- Support non-cellular enabled devices -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -122,6 +126,16 @@
 
         <activity
             android:name="app.lawnchair.BlankActivity"
+            android:theme="@style/Theme.Transparent" />
+
+        <!-- NDShades: unlock of locked apps. Config changes don't recreate it, so a request
+             isn't asked twice. -->
+        <activity
+            android:name="app.lawnchair.applock.AppLockActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboard|keyboardHidden|navigation|density|uiMode"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:taskAffinity=""
             android:theme="@style/Theme.Transparent" />
 
         <activity

@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.ui.preferences.components.search
 
 import android.content.Context
@@ -16,7 +32,6 @@ import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.engine.provider.web.CustomWebSearchProvider
 import app.lawnchair.ui.preferences.LocalNavController
-import app.lawnchair.ui.preferences.components.HiddenAppsInSearchPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
 import app.lawnchair.ui.preferences.components.controls.MainSwitchPreference
@@ -39,7 +54,6 @@ fun DrawerSearchPreference(
     val context = LocalContext.current
 
     val showDrawerSearchBar = !prefs2.hideAppDrawerSearchBar.getAdapter()
-    val hiddenApps = prefs2.hiddenApps.getAdapter().state.value
 
     MainSwitchPreference(
         adapter = showDrawerSearchBar,
@@ -47,9 +61,7 @@ fun DrawerSearchPreference(
         modifier = modifier,
     ) {
         PreferenceGroup(heading = stringResource(R.string.general_label)) {
-            if (hiddenApps.isNotEmpty()) {
-                HiddenAppsInSearchPreference()
-            }
+            // NDShades: "show hidden apps in search results" removed, see filterHiddenApps
             SwitchPreference(
                 adapter = prefs2.autoShowKeyboardInDrawer.getAdapter(),
                 label = stringResource(id = R.string.pref_search_auto_show_keyboard),

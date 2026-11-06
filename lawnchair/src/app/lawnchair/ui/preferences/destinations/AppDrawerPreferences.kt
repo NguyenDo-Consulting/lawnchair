@@ -54,6 +54,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.ui.preferences.navigation.AppDrawerFilters
 import app.lawnchair.ui.preferences.navigation.AppDrawerHiddenApps
+import app.lawnchair.ui.preferences.navigation.AppDrawerLockedApps
 import app.lawnchair.ui.preferences.navigation.Predictions
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.R
@@ -91,6 +92,11 @@ fun AppDrawerPreferences(
                 label = stringResource(id = R.string.hidden_apps_label),
                 destination = AppDrawerHiddenApps,
                 subtitle = resources.getQuantityString(R.plurals.apps_count, hiddenApps.size, hiddenApps.size),
+            )
+            // NDShades: locked apps. No count: it would show which apps are locked without the unlock.
+            NavigationActionPreference(
+                label = stringResource(id = R.string.locked_apps_label),
+                destination = AppDrawerLockedApps,
             )
             // NDShades: app drawer filters
             NavigationActionPreference(

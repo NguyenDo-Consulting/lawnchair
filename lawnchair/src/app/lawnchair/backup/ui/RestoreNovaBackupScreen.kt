@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.backup.ui
 
 import android.app.Activity
@@ -30,6 +46,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import app.lawnchair.applock.AppLockManager
 import app.lawnchair.backup.NovaBackupConverter.NovaBackupInfo
 import app.lawnchair.backup.ui.RestoreNovaBackupViewModel.Event
 import app.lawnchair.backup.ui.RestoreNovaBackupViewModel.State
@@ -74,9 +91,19 @@ internal fun RestoreNovaBackupScreen(
     ) {
         when (val stateValue = state.value) {
             is State.Success -> {
+                // NDShades: with locked apps, importing asks for the code first (the separate PIN,
+                // or the phone's pattern/PIN), since it replaces the layout and settings
+                val context = LocalContext.current
+                val lockManager = remember { AppLockManager.getInstance(context) }
                 RestoreNovaBackupContent(
                     state = stateValue,
-                    onRestore = viewModel::restore,
+                    onRestore = {
+                        if (lockManager.hasLockedApps) {
+                            lockManager.requestWeaken(context, onSuccess = viewModel::restore)
+                        } else {
+                            viewModel.restore()
+                        }
+                    },
                 )
             }
 

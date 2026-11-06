@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.search.algorithms
 
 import android.content.Context
@@ -28,7 +44,7 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
 
     private var hiddenApps: Set<String> = setOf()
 
-    private var hiddenAppsInSearch = ""
+    private var lockedApps: Set<String> = setOf() // NDShades: (upstream: hiddenAppsInSearch)
     private var enableFuzzySearch = false
     private var maxResultsCount = 5
 
@@ -46,8 +62,8 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
         prefs2.hiddenApps.onEach(launchIn = coroutineScope) {
             hiddenApps = it
         }
-        prefs2.hiddenAppsInSearch.onEach(launchIn = coroutineScope) {
-            hiddenAppsInSearch = it
+        prefs2.lockedApps.onEach(launchIn = coroutineScope) {
+            lockedApps = it
         }
         prefs2.maxAppSearchResultCount.onEach(launchIn = coroutineScope) {
             maxResultsCount = it
@@ -80,9 +96,9 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
         query: String,
     ): ArrayList<BaseAllAppsAdapter.AdapterItem> {
         val appResults = if (enableFuzzySearch) {
-            SearchUtils.fuzzySearch(apps, query, maxResultsCount, hiddenApps, hiddenAppsInSearch)
+            SearchUtils.fuzzySearch(apps, query, maxResultsCount, hiddenApps, lockedApps)
         } else {
-            SearchUtils.normalSearch(apps, query, maxResultsCount, hiddenApps, hiddenAppsInSearch)
+            SearchUtils.normalSearch(apps, query, maxResultsCount, hiddenApps, lockedApps)
         }
 
         val searchTargets = mutableListOf<SearchTargetCompat>()

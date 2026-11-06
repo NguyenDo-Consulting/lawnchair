@@ -42,6 +42,7 @@ import app.lawnchair.ui.preferences.components.colorpreference.ColorSelection
 import app.lawnchair.ui.preferences.components.search.SearchProviderId
 import app.lawnchair.ui.preferences.components.search.SearchProviderPreferenceScreen
 import app.lawnchair.ui.preferences.destinations.AppDrawerFiltersPreference
+import app.lawnchair.applock.LockedAppsPreferences
 import app.lawnchair.ui.preferences.destinations.AppDrawerFoldersPreference
 import app.lawnchair.ui.preferences.destinations.SelectAppsForDrawerFilter
 import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
@@ -202,6 +203,8 @@ fun PreferenceNavigation(
         composable<AppDrawerFilterApps> { backStackEntry ->
             SelectAppsForDrawerFilter(backStackEntry.toRoute<AppDrawerFilterApps>().id)
         }
+        // NDShades: locked apps
+        composable<AppDrawerLockedApps> { LockedAppsPreferences() }
 
         composable<Search>(
             deepLinks = getDeepLink(Search()),
