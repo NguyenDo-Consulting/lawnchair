@@ -353,10 +353,28 @@ android {
     }
 }
 
+// NDShades: ND Shades' own version, independent of upstream's versionCode scheme.
+// versionCode = major * 10000 + minor * 100 + patch, so 1.2.3 -> 10203. Bump for every Play upload.
+final def ndMajor = 1
+final def ndMinor = 0
+final def ndPatch = 0
+final def ndVersionName = "${ndMajor}.${ndMinor}.${ndPatch}"
+final def ndVersionCode = ndMajor * 10000 + ndMinor * 100 + ndPatch
+
 androidComponents {
     onVariants(selector().all()) { variant ->
         def channel = variant.productFlavors.last().second
+
+        // NDShades: About and the settings title read these instead of versionName.
+        variant.buildConfigFields.put("VERSION_DISPLAY_NAME",
+            new com.android.build.api.variant.BuildConfigField("String", "\"${ndVersionName}\"", null))
+        variant.buildConfigFields.put("MAJOR_VERSION",
+            new com.android.build.api.variant.BuildConfigField("String", "\"${ndMajor}\"", null))
+
         variant.outputs.forEach { output ->
+            // NDShades: ND Shades' version (upstream: defaultConfig versionCode/versionName)
+            output.versionCode.set(ndVersionCode)
+            output.versionName.set(ndVersionName)
             // NDShades: named after ND Shades (upstream: Lawnchair.<version>...apk)
             output.outputFileName.set("NDShades.${output.versionName.get()}.$channel.${variant.buildType}.apk")
         }
