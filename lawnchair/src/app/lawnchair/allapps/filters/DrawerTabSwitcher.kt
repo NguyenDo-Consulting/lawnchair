@@ -25,9 +25,9 @@ import com.android.launcher3.allapps.ActivityAllAppsContainerView
 import com.android.launcher3.allapps.AllAppsRecyclerView
 
 /**
- * Switches the personal app list between drawer tabs (All and the [DrawerFilter]s). With
- * "Remember position", each tab keeps its own scroll position in [DrawerFilterState.scrollOffsets];
- * without it, every tab opens at the top.
+ * Switches the personal app list between drawer tabs (All and the [DrawerFilter]s). Each tab keeps
+ * its own scroll position in [DrawerFilterState.scrollOffsets]. Without "Remember position", those
+ * are forgotten when the drawer closes, so tabs only keep their place while the drawer is open.
  */
 object DrawerTabSwitcher {
 
@@ -36,8 +36,7 @@ object DrawerTabSwitcher {
         listOf<String?>(null) + PreferenceManager2.getInstance(context).drawerFilters.firstCached().map { it.id }
 
     /** Where a tab's list should be scrolled to when it's shown, in pixels. */
-    fun savedOffset(context: Context, tabId: String?): Int =
-        if (rememberPosition(context)) DrawerFilterState.scrollOffsets[tabId] ?: 0 else 0
+    fun savedOffset(tabId: String?): Int = DrawerFilterState.scrollOffsets[tabId] ?: 0
 
     /**
      * Shows [targetId] in the personal list. The current tab's position is saved first, and the
@@ -49,7 +48,6 @@ object DrawerTabSwitcher {
         targetId: String?,
         onShown: (() -> Unit)? = null,
     ) {
-        val context = appsView.context
         val currentId = DrawerFilterState.activeFilterId.value
         if (currentId == targetId) {
             onShown?.invoke()
@@ -57,7 +55,7 @@ object DrawerTabSwitcher {
         }
         val personalList = appsView.personalAppList
         val rv = appsView.activeRecyclerView?.takeIf { it.apps === personalList }
-        if (rememberPosition(context) && rv != null) {
+        if (rv != null) {
             DrawerFilterState.scrollOffsets[currentId] = rv.computeVerticalScrollOffset()
         }
 
@@ -68,7 +66,7 @@ object DrawerTabSwitcher {
             onShown?.invoke()
             return
         }
-        val targetOffset = savedOffset(context, targetId)
+        val targetOffset = savedOffset(targetId)
         // The new apps are laid out by then, so the position can be restored.
         rv.doOnPreDraw {
             scrollTo(rv, targetOffset)
@@ -85,7 +83,4 @@ object DrawerTabSwitcher {
         val delta = offset - rv.computeVerticalScrollOffset()
         if (delta != 0) rv.scrollBy(0, delta)
     }
-
-    private fun rememberPosition(context: Context): Boolean =
-        PreferenceManager2.getInstance(context).rememberPosition.firstCached()
 }

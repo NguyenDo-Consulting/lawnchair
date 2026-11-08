@@ -176,6 +176,16 @@ class LawnchairLauncher : QuickstepLauncher() {
         }
     }
 
+    // NDShades: Without "Remember position", drawer tabs keep their place only while the drawer is
+    // open, so their positions are forgotten once it has closed
+    private val drawerSessionEndListener = object : StateManager.StateListener<LauncherState> {
+        override fun onStateTransitionComplete(finalState: LauncherState) {
+            if (finalState !is AllAppsState && !preferenceManager2.rememberPosition.firstCached()) {
+                DrawerFilterState.scrollOffsets.clear()
+            }
+        }
+    }
+
     private lateinit var colorScheme: ColorScheme
     private var hasBackGesture = false
 
@@ -203,6 +213,7 @@ class LawnchairLauncher : QuickstepLauncher() {
             defaultOverlay.setEnableFeed(enable)
         }.launchIn(scope = lifecycleScope)
         launcher.stateManager.addStateListener(clearSearchStateListener)
+        launcher.stateManager.addStateListener(drawerSessionEndListener) // NDShades
         FolderUsageStats.addListener(folderUsageListener) // NDShades: per-folder sorting
 
         if (prefs.autoLaunchRoot.get()) {

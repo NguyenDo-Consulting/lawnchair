@@ -36,8 +36,9 @@ object DrawerFilterState {
     val activeFilterId = MutableStateFlow<String?>(null)
 
     /**
-     * With "Remember position", how far each tab's list was scrolled when it was left, in pixels,
-     * by [DrawerFilter] id (null for "All"). Tabs that aren't in here open at the top.
+     * How far each tab's list was scrolled when it was left, in pixels, by [DrawerFilter] id (null
+     * for "All"). Tabs that aren't in here open at the top. Without "Remember position", this is
+     * cleared when the drawer closes.
      */
     val scrollOffsets = HashMap<String?, Int>()
 }

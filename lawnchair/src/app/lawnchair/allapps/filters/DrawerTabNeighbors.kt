@@ -84,7 +84,7 @@ class DrawerTabNeighbors<T>(private val appsView: ActivityAllAppsContainerView<T
             val tabChanged = tabId != newTabId || appliedOffset < 0
             tabId = newTabId
             list.showTab(newTabId)
-            val offset = DrawerTabSwitcher.savedOffset(appsView.context, newTabId)
+            val offset = DrawerTabSwitcher.savedOffset(newTabId)
             if (tabChanged || offset != appliedOffset) {
                 appliedOffset = offset
                 rv.doOnPreDraw { DrawerTabSwitcher.scrollTo(rv, offset) }

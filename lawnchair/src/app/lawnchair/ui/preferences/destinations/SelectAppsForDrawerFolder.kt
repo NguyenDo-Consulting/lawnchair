@@ -97,11 +97,8 @@ fun SelectAppsForDrawerFolder(
     allFolderPackages: Set<String>?,
     onUpdate: (title: String, componentKeys: List<String>) -> Unit,
     modifier: Modifier = Modifier,
-    // NDShades: Filtering out apps of other folders doesn't apply when picking apps for a drawer
-    // filter.
-    showDuplicatesFilter: Boolean = true,
 ) {
-    var filterNonUniqueItems by remember { mutableStateOf(showDuplicatesFilter) } // NDShades
+    var filterNonUniqueItems by remember { mutableStateOf(true) }
 
     val activeIds = remember(folderEntry) {
         folderEntry?.itemComponentKeys ?: emptyList()
@@ -151,19 +148,16 @@ fun SelectAppsForDrawerFolder(
                 PositionalListOverflowMenu(
                     state = state,
                 ) { hideMenu ->
-                    // NDShades: hidden when picking apps for a drawer filter
-                    if (showDuplicatesFilter) {
-                        DropdownMenuItem(
-                            onClick = {
-                                filterNonUniqueItems = !filterNonUniqueItems
-                                hideMenu()
-                            },
-                            trailingIcon = {
-                                if (filterNonUniqueItems) Icon(Icons.Rounded.Check, null)
-                            },
-                            text = { Text(stringResource(R.string.folders_filter_duplicates)) },
-                        )
-                    }
+                    DropdownMenuItem(
+                        onClick = {
+                            filterNonUniqueItems = !filterNonUniqueItems
+                            hideMenu()
+                        },
+                        trailingIcon = {
+                            if (filterNonUniqueItems) Icon(Icons.Rounded.Check, null)
+                        },
+                        text = { Text(stringResource(R.string.folders_filter_duplicates)) },
+                    )
                 }
             }
         },

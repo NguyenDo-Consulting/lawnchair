@@ -715,6 +715,8 @@
     <string name="drawer_tab_all">All</string>
     <string name="add_drawer_tab">Add tab</string>
     <string name="my_drawer_tab_label">My tab</string>
+    <string name="delete_drawer_tab_title">Delete tab?</string>
+    <string name="delete_drawer_tab_text">“%1$s” will be removed. Its apps stay in the app drawer.</string>
     <string name="hide_tab_apps_from_all_label">Hide tab apps from All</string>
     <string name="hide_tab_apps_from_all_description">Apps in a tab only appear under that tab. Search still finds all apps.</string>
     <string name="hide_drawer_tab_labels_label">Hide tab labels</string>

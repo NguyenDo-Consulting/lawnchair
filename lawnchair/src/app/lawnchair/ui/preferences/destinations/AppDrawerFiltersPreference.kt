@@ -21,24 +21,32 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import app.lawnchair.allapps.filters.DrawerFilter
 import app.lawnchair.data.folder.FolderEntry
+import app.lawnchair.data.folder.model.FolderViewModel
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalNavController
+import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
@@ -69,6 +77,32 @@ fun AppDrawerFiltersPreference(
         filtersAdapter.onChange(transform(filtersAdapter.state.value))
     }
 
+    // The tab waiting for the user to confirm its deletion.
+    var pendingDelete by remember { mutableStateOf<DrawerFilter?>(null) }
+    pendingDelete?.let { filter ->
+        AlertDialog(
+            onDismissRequest = { pendingDelete = null },
+            title = { Text(text = stringResource(R.string.delete_drawer_tab_title)) },
+            text = { Text(text = stringResource(R.string.delete_drawer_tab_text, filter.title)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        mMSDLPlayerWrapper.playToken(MSDLToken.SUCCESS)
+                        update { list -> list.filterNot { it.id == filter.id } }
+                        pendingDelete = null
+                    },
+                ) {
+                    Text(text = stringResource(R.string.delete_label))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { pendingDelete = null }) {
+                    Text(text = stringResource(android.R.string.cancel))
+                }
+            },
+        )
+    }
+
     PreferenceLayout(
         label = stringResource(id = R.string.drawer_tabs_label),
         backArrowVisible = true,
@@ -87,6 +121,11 @@ fun AppDrawerFiltersPreference(
                 adapter = prefs2.hideDrawerTabLabels.getAdapter(),
                 label = stringResource(id = R.string.hide_drawer_tab_labels_label),
                 description = stringResource(id = R.string.hide_drawer_tab_labels_description),
+            )
+            ColorPreference(preference = prefs2.workProfileTabBackgroundColor)
+            SwitchPreference(
+                label = stringResource(id = R.string.work_profile_tab_container_background_label),
+                adapter = prefs2.workProfileTabContainerBackground.getAdapter(),
             )
         }
         PreferenceGroup(heading = stringResource(R.string.drawer_tabs_label)) {
@@ -151,8 +190,8 @@ fun AppDrawerFiltersPreference(
                     }
                 },
                 onDelete = {
-                    mMSDLPlayerWrapper.playToken(MSDLToken.SUCCESS)
-                    update { list -> list.filterNot { it.id == filter.id } }
+                    mMSDLPlayerWrapper.playToken(MSDLToken.TAP_MEDIUM_EMPHASIS)
+                    pendingDelete = filter
                 },
                 dragIndicator = {
                     ReorderableDragHandle(
@@ -202,11 +241,22 @@ private fun DrawerFilterItem(
 fun SelectAppsForDrawerFilter(
     filterId: String,
     modifier: Modifier = Modifier,
+    viewModel: FolderViewModel = viewModel(),
 ) {
     val prefs2 = preferenceManager2()
     val filtersAdapter = prefs2.drawerFilters.getAdapter()
-    val filter = filtersAdapter.state.value.firstOrNull { it.id == filterId }
+    val filters = filtersAdapter.state.value
+    val filter = filters.firstOrNull { it.id == filterId }
     val apps by appsState()
+    val allFolderPackages by viewModel.allFolderPackages.collectAsStateWithLifecycle()
+    // Apps already in a drawer folder or in another tab count as taken.
+    val takenPackages = remember(allFolderPackages, filters, filterId) {
+        allFolderPackages?.let { folderPackages ->
+            folderPackages + filters.filter { it.id != filterId }
+                .flatMap { it.componentKeys }
+                .map { it.substringBefore("/") }
+        }
+    }
 
     if (filter == null) {
         val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
@@ -221,7 +271,7 @@ fun SelectAppsForDrawerFilter(
     SelectAppsForDrawerFolder(
         folderEntry = folderEntry,
         apps = apps,
-        allFolderPackages = emptySet(),
+        allFolderPackages = takenPackages,
         onUpdate = { _, componentKeys ->
             filtersAdapter.onChange(
                 filtersAdapter.state.value.map {
@@ -230,6 +280,5 @@ fun SelectAppsForDrawerFilter(
             )
         },
         modifier = modifier,
-        showDuplicatesFilter = false,
     )
 }
