@@ -18,7 +18,6 @@
 
 package app.lawnchair.ui.preferences.about
 
-import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -46,13 +45,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import app.lawnchair.preferences.PreferenceManager
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
-import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceDivider
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroupHeading
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroupItem
@@ -178,7 +175,7 @@ fun About(
             Spacer(modifier = Modifier.requiredHeight(16.dp))
         }
         // NDShades: ND Shades' developer in place of Lawnchair's links, team and community.
-        // Lawnchair is credited under Legal.
+        // Lawnchair is credited in Acknowledgements.
         item {
             PreferenceGroupHeading(
                 stringResource(R.string.about_developer),
@@ -202,7 +199,7 @@ fun About(
         item {
             PreferenceGroupItem(
                 cutTop = false,
-                cutBottom = true,
+                cutBottom = false, // NDShades: upstream true, the privacy policy followed
             ) {
                 NavigationActionPreference(
                     label = stringResource(id = R.string.acknowledgements),
@@ -210,30 +207,5 @@ fun About(
                 )
             }
         }
-        item {
-            Spacer(Modifier.height(3.dp))
-        }
-        item {
-            PreferenceGroupItem(
-                cutTop = true,
-                cutBottom = false,
-            ) {
-                // NDShades: credit to the Lawnchair project, in place of its privacy policy
-                ClickablePreference(
-                    label = stringResource(id = R.string.about_based_on_lawnchair),
-                    subtitle = stringResource(id = R.string.about_based_on_lawnchair_description),
-                    onClick = {
-                        val webpage = LAWNCHAIR_PROJECT.toUri()
-                        val intent = Intent(Intent.ACTION_VIEW, webpage)
-                        if (intent.resolveActivity(context.packageManager) != null) {
-                            context.startActivity(intent)
-                        }
-                    },
-                )
-            }
-        }
     }
 }
-
-// NDShades: Lawnchair credit link (upstream: PRIVACY_POLICY)
-private const val LAWNCHAIR_PROJECT = "https://github.com/LawnchairLauncher/lawnchair"

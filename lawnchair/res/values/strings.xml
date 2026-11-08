@@ -611,11 +611,16 @@
     <string name="legal">Legal</string>
     <string name="acknowledgements">Acknowledgements</string>
     <string name="privacy_policy">Privacy policy</string>
-    <!-- NDShades: About screen: who makes ND Shades, and credit to the project it's built on -->
+    <!-- NDShades: About screen: who makes ND Shades -->
     <string name="about_developer">Developer</string>
     <string name="about_developer_name" translatable="false">Nguyen-Do Consulting</string>
-    <string name="about_based_on_lawnchair">Based on Lawnchair</string>
-    <string name="about_based_on_lawnchair_description">Built on Lawnchair, an open-source launcher by the Lawnchair team</string>
+    <!-- NDShades: Acknowledgements: the projects ND Shades is built on, above the libraries it uses -->
+    <string name="acknowledgements_based_on">Based on</string>
+    <string name="acknowledgements_libraries">Libraries</string>
+    <string name="acknowledgements_lawnchair" translatable="false">Lawnchair</string>
+    <string name="acknowledgements_lawnchair_description">Lawnchair team · Apache License 2.0</string>
+    <string name="acknowledgements_launcher3" translatable="false">Launcher3</string>
+    <string name="acknowledgements_launcher3_description">Android Open Source Project · Apache License 2.0</string>
 
     <string name="contributor_status_active">Active</string>
 

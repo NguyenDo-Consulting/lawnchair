@@ -1,0 +1,186 @@
+#!/bin/sh
+#
+# Copyright 2026, Nguyen-Do Consulting
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Adds the Nguyen-Do Consulting notice that Apache 2.0 section 4(b) asks for to staged files that
+# don't have it yet, then re-stages them:
+# - A file with a license header gets "Modifications copyright <year>, Nguyen-Do Consulting" as
+#   the header's last line. AOSP and Lawnchair notices stay as they are.
+# - A new file without a header gets an Apache header starting with "Copyright <year>, ...".
+# - A changed file without a header gets one starting with "Modifications copyright <year>, ...".
+#
+# Checks .kt, .java, .kts, .gradle, .aidl and .xml files. Translated values-*/strings.xml files
+# come from upstream's translations and are skipped.
+#
+# A file that also has unstaged changes gets its header, but isn't re-staged, as that would commit
+# the unstaged changes too. The commit stops so the header can be staged by hand.
+#
+# Turn it on once per clone:  git config core.hooksPath .githooks
+
+export LC_ALL=C
+year=$(date +%Y)
+tab=$(printf '\t')
+
+list=$(mktemp)
+trap 'rm -f "$list" "$list.out"' EXIT
+git diff --cached --name-status --diff-filter=AMR > "$list"
+
+added=""
+partial=""
+manual=""
+
+while IFS="$tab" read -r status path renamed; do
+    case "$status" in
+        R*) path=$renamed ;;
+    esac
+    case "$path" in
+        *.kt | *.java | *.kts | *.gradle | *.aidl) mode=block ;;
+        *.xml) mode=xml ;;
+        *) continue ;;
+    esac
+    case "$path" in
+        *res/values-*/strings.xml) continue ;;
+    esac
+    [ -f "$path" ] || continue
+    head -n 30 "$path" | grep -q "Nguyen-Do Consulting" && continue
+
+    case "$status" in
+        A) first="Copyright" ;;
+        *) first="Modifications copyright" ;;
+    esac
+
+    # Whether the file in the working tree is exactly what's staged.
+    if git diff --quiet -- "$path"; then fully_staged=1; else fully_staged=0; fi
+
+    # BINMODE=3 keeps Windows line endings: Git for Windows' awk drops the \r otherwise.
+    awk -v BINMODE=3 -v mode="$mode" -v first="$first" -v year="$year" '
+        { line[++n] = $0 }
+        function out(text) { printf "%s%s\n", text, nl }
+        END {
+            nl = (n > 0 && line[1] ~ /\r$/) ? "\r" : ""
+            bom = ""
+            if (n > 0 && substr(line[1], 1, 3) == "\357\273\277") {
+                bom = "\357\273\277"
+                line[1] = substr(line[1], 4)
+            }
+            notice = year ", Nguyen-Do Consulting"
+
+            # The license header, if the file starts with one.
+            s = 1
+            if (mode == "xml" && s <= n && line[s] ~ /^[ \t]*<\?xml/) s++
+            while (s <= n && line[s] ~ /^[ \t\r]*$/) s++
+            openRe = (mode == "xml") ? "^[ \t]*<!--" : "^[ \t]*/\\*"
+            closeRe = (mode == "xml") ? "-->" : "\\*/"
+            last = 0
+            if (s <= n && line[s] ~ openRe) {
+                e = s
+                while (e <= n && line[e] !~ closeRe) e++
+                if (e <= n) {
+                    for (i = s; i <= e; i++) {
+                        if (tolower(line[i]) ~ /copyright|limitations under the license/) last = i
+                    }
+                }
+            }
+
+            if (last > 0) {
+                # The notice goes after the header s last copyright or license line, in the
+                # header s own style, e.g. " * ", "  ~ " or no prefix.
+                if (last == s || last == e) exit 3
+                text = line[last]
+                sub(/\r$/, "", text)
+                match(text, /[A-Za-z]/)
+                prefix = substr(text, 1, RSTART - 1)
+                blank = prefix
+                sub(/[ \t]+$/, "", blank)
+                for (i = 1; i <= n; i++) {
+                    printf "%s%s\n", (i == 1 ? bom : ""), line[i]
+                    if (i == last) {
+                        if (text !~ /Modifications copyright/) out(blank)
+                        out(prefix "Modifications copyright " notice)
+                    }
+                }
+                exit 0
+            }
+
+            # No header: a new Apache header.
+            printf "%s", bom
+            start = 1
+            if (mode == "xml") {
+                if (n > 0 && line[1] ~ /^[ \t]*<\?xml/) { printf "%s\n", line[1]; start = 2 }
+                out("<!--")
+                p = ""
+            } else {
+                out("/*")
+                p = " * "
+            }
+            b = p
+            sub(/[ \t]+$/, "", b)
+            out(p first " " notice)
+            out(b)
+            out(p "Licensed under the Apache License, Version 2.0 (the \"License\");")
+            out(p "you may not use this file except in compliance with the License.")
+            out(p "You may obtain a copy of the License at")
+            out(b)
+            out(p "    http://www.apache.org/licenses/LICENSE-2.0")
+            out(b)
+            out(p "Unless required by applicable law or agreed to in writing, software")
+            out(p "distributed under the License is distributed on an \"AS IS\" BASIS,")
+            out(p "WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.")
+            out(p "See the License for the specific language governing permissions and")
+            out(p "limitations under the License.")
+            if (mode == "xml") {
+                out("-->")
+            } else {
+                out(" */")
+                out("")
+            }
+            for (i = start; i <= n; i++) printf "%s\n", line[i]
+        }
+    ' "$path" > "$list.out"
+    rc=$?
+
+    if [ $rc -eq 3 ]; then
+        manual="$manual
+  $path"
+        continue
+    fi
+    [ $rc -eq 0 ] || exit $rc
+
+    # Written in place, so the file keeps its permissions.
+    cat "$list.out" > "$path"
+    if [ $fully_staged -eq 1 ]; then
+        git add -- "$path"
+        added="$added
+  $path"
+    else
+        partial="$partial
+  $path"
+    fi
+done < "$list"
+
+if [ -n "$added" ]; then
+    echo "pre-commit: added the Nguyen-Do Consulting notice to:$added"
+fi
+if [ -n "$partial" ]; then
+    echo "pre-commit: added the notice to these files, which also have unstaged changes:$partial"
+    echo "Stage the header (e.g. git add -p), then commit again."
+fi
+if [ -n "$manual" ]; then
+    echo "pre-commit: couldn't place the notice in these headers, please add it by hand:$manual"
+fi
+if [ -n "$partial" ] || [ -n "$manual" ]; then
+    exit 1
+fi
+exit 0

@@ -23,7 +23,9 @@ class AcknowledgementsViewModel(
             .bufferedReader().use { it.readText() }
         val libraries = kotlinxJson.decodeFromString<List<OssLibrary>>(jsonString)
             .asSequence()
-            .distinctBy { "${it.groupId}:${it.artifactId}" }
+            // NDShades: by name, since multiplatform libraries publish one library as several
+            // artifacts (upstream: distinctBy groupId:artifactId)
+            .distinctBy { it.name }
             .sortedBy { it.name }
             .toList()
         emit(libraries)

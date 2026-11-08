@@ -12,11 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package app.lawnchair.ui.preferences.about.acknowledgements
 
 import android.content.Intent
+import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -40,13 +43,60 @@ fun Acknowledgements(
         label = stringResource(id = R.string.acknowledgements),
         modifier = modifier,
     ) {
-        preferenceGroupItems(ossLibraries, isFirstChild = true) { _, library ->
+        // NDShades: the projects ND Shades is built on, above the libraries
+        preferenceGroupItems(
+            items = basedOnProjects,
+            isFirstChild = true,
+            heading = { stringResource(R.string.acknowledgements_based_on) },
+        ) { _, project ->
+            BasedOnProjectItem(project)
+        }
+        preferenceGroupItems(
+            ossLibraries,
+            isFirstChild = false, // NDShades: upstream true, the libraries were the only group
+            heading = { stringResource(R.string.acknowledgements_libraries) }, // NDShades
+        ) { _, library ->
             OssLibraryItem(
                 name = library.name,
                 license = library.license,
             )
         }
     }
+}
+
+/** NDShades: A project ND Shades is built on, credited above the libraries. */
+private class BasedOnProject(
+    @StringRes val name: Int,
+    @StringRes val description: Int,
+    val url: String,
+)
+
+private val basedOnProjects = listOf(
+    BasedOnProject(
+        name = R.string.acknowledgements_lawnchair,
+        description = R.string.acknowledgements_lawnchair_description,
+        url = "https://github.com/LawnchairLauncher/lawnchair",
+    ),
+    BasedOnProject(
+        name = R.string.acknowledgements_launcher3,
+        description = R.string.acknowledgements_launcher3_description,
+        url = "https://android.googlesource.com/platform/packages/apps/Launcher3/",
+    ),
+)
+
+@Composable
+private fun BasedOnProjectItem(project: BasedOnProject) {
+    val context = LocalContext.current
+    ClickablePreference(
+        label = stringResource(project.name),
+        subtitle = stringResource(project.description),
+        onClick = {
+            val intent = Intent(Intent.ACTION_VIEW, project.url.toUri())
+            if (intent.resolveActivity(context.packageManager) != null) {
+                context.startActivity(intent)
+            }
+        },
+    )
 }
 
 @Composable

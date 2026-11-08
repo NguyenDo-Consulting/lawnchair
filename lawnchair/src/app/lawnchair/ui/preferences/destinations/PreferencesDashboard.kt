@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package app.lawnchair.ui.preferences.destinations
@@ -107,7 +109,8 @@ fun PreferencesDashboard(
     val aboutDescrption = if (prefs.hideVersionInfo.get()) {
         prefs.pseudonymVersion.get()
     } else {
-        "${context.getString(R.string.derived_app_name)} ${BuildConfig.MAJOR_VERSION}"
+        // NDShades: the full version (upstream: MAJOR_VERSION)
+        "${context.getString(R.string.derived_app_name)} ${BuildConfig.VERSION_DISPLAY_NAME}"
     }
 
     PreferenceLayout(
