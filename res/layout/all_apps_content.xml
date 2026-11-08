@@ -11,8 +11,6 @@
      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
      See the License for the specific language governing permissions and
      limitations under the License.
-
-     Modifications copyright 2026, Nguyen-Do Consulting
 -->
 <!-- This file is used by multiple all_apps.xml. Layout consists of all contents
      showed in all apps screen
@@ -40,12 +38,6 @@
         android:paddingTop="@dimen/all_apps_header_top_padding"
         android:paddingBottom="@dimen/all_apps_header_bottom_padding"
         android:orientation="vertical" >
-
-        <!-- NDShades: app drawer filter chips -->
-        <app.lawnchair.allapps.filters.DrawerFilterChipsRow
-            android:id="@+id/drawer_filter_chips"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
 
         <include layout="@layout/floating_header_content" />
 

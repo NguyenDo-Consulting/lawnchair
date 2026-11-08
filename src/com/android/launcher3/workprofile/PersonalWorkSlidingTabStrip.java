@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.workprofile;
 
@@ -59,6 +61,8 @@ public class PersonalWorkSlidingTabStrip extends LinearLayout implements PageInd
 
         FontManager fontManager = FontManager.INSTANCE.get(getContext());
         for (int i = 0; i < getChildCount(); i++) {
+            // NDShades: skip the drawer tab bar (DrawerTabStrip), which isn't a button
+            if (!(getChildAt(i) instanceof Button)) continue;
             Button tab = (Button) getChildAt(i);
             tab.setAllCaps(false);
             // Lawnchair-TODO: StateListDrawable
@@ -75,6 +79,8 @@ public class PersonalWorkSlidingTabStrip extends LinearLayout implements PageInd
      */
     public void updateTabTextColor(int pos) {
         for (int i = 0; i < getChildCount(); i++) {
+            // NDShades: skip the drawer tab bar (DrawerTabStrip), which isn't a button
+            if (!(getChildAt(i) instanceof Button)) continue;
             Button tab = (Button) getChildAt(i);
             tab.setSelected(i == pos);
         }

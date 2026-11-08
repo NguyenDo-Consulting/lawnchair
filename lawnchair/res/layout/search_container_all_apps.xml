@@ -12,6 +12,10 @@
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
+  ~
+  ~ Modifications copyright 2026, Nguyen-Do Consulting
+  ~ NDShades: importantForAutofill="no" on the input, so autofill doesn't keep the first tap from
+  ~ opening the keyboard
   -->
 
 <app.lawnchair.allapps.AllAppsSearchInput xmlns:android="http://schemas.android.com/apk/res/android"
@@ -66,6 +70,7 @@
             android:focusableInTouchMode="true"
             android:gravity="start|center"
             android:imeOptions="actionGo|flagNoExtractUi"
+            android:importantForAutofill="no"
             android:inputType="textNoSuggestions"
             android:letterSpacing="-0.01"
             android:privateImeOptions="bc_search"

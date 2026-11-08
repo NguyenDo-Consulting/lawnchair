@@ -709,17 +709,19 @@
     <string name="dock_search_bar_above_icons_description">Tablets and foldables always show it above the icons.</string>
     <string name="folder_bg_blur_label">Blur behind open folders</string>
     <string name="folder_bg_blur_description">Frosted glass look. Lower the background opacity to see more of it. Needs blur support on the device.</string>
-    <!-- App drawer filters: chips above the app list that show only the apps of a user-made filter -->
-    <string name="drawer_filters_label">Filters</string>
-    <string name="drawer_filters_description">Filters appear as chips above the app list. Tap a chip to see only its apps.</string>
-    <string name="drawer_filter_all">All</string>
-    <string name="add_drawer_filter">Add filter</string>
-    <string name="my_drawer_filter_label">My filter</string>
-    <string name="hide_filtered_apps_from_all_label">Hide filtered apps from All</string>
-    <string name="hide_filtered_apps_from_all_description">Apps in a filter only appear under their filter\'s chip. Search still finds all apps.</string>
-    <plurals name="drawer_filters_count">
-        <item quantity="one">%d filter</item>
-        <item quantity="other">%d filters</item>
+    <!-- App drawer tabs: user-made tabs above the app list that show only the apps picked for them -->
+    <string name="drawer_tabs_label">Tabs</string>
+    <string name="drawer_tabs_description">Tabs appear above the app list, each with the apps you pick. Tap a tab or swipe on the list to switch.</string>
+    <string name="drawer_tab_all">All</string>
+    <string name="add_drawer_tab">Add tab</string>
+    <string name="my_drawer_tab_label">My tab</string>
+    <string name="hide_tab_apps_from_all_label">Hide tab apps from All</string>
+    <string name="hide_tab_apps_from_all_description">Apps in a tab only appear under that tab. Search still finds all apps.</string>
+    <string name="hide_drawer_tab_labels_label">Hide tab labels</string>
+    <string name="hide_drawer_tab_labels_description">Swipe on the app list to switch tabs. A bar briefly shows which tab you\'re on.</string>
+    <plurals name="drawer_tabs_count">
+        <item quantity="one">%d tab</item>
+        <item quantity="other">%d tabs</item>
     </plurals>
     <string name="gesture_handler_open_shortcut_option">Open shortcut</string>
     <!-- Label of a shortcut opened by a gesture: 1 is the shortcut's name (e.g. a contact), 2 is the kind of shortcut (e.g. "Direct dial") -->

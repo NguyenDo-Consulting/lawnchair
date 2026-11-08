@@ -12,6 +12,8 @@
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
+  ~
+  ~ Modifications copyright 2026, Nguyen-Do Consulting
 -->
 
 <com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip
@@ -51,4 +53,11 @@
         android:textColor="@color/all_apps_tab_text"
         android:textSize="14sp"
         style="@style/AllAppsPersonalWorkTabStyle" />
+
+    <!-- NDShades: drawer tab bar (Personal or All and filters, then Work); hides the buttons above -->
+    <app.lawnchair.allapps.filters.DrawerTabStrip
+        android:id="@+id/drawer_tabs"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1" />
 </com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip>

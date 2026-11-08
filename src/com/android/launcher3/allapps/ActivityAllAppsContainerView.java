@@ -119,6 +119,7 @@ import app.lawnchair.preferences2.PreferenceCacheExtensionsKt;
 import static com.topjohnwu.superuser.internal.Utils.context;
 import app.lawnchair.allapps.LawnchairAlphabeticalAppsList;
 import app.lawnchair.allapps.filters.DrawerFilterSwipeHelper;
+import app.lawnchair.allapps.filters.DrawerTabStrip;
 import app.lawnchair.font.FontManager;
 import app.lawnchair.preferences.PreferenceManager;
 import app.lawnchair.preferences2.PreferenceManager2;
@@ -181,8 +182,12 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     private final int mHeaderProtectionColor;
     private final int mPrivateSpaceBottomExtraSpace;
     private final Path mTmpPath = new Path();
-    // NDShades: app drawer filter chips
+    // NDShades: app drawer filter tabs
     private final DrawerFilterSwipeHelper mFilterSwipeHelper = new DrawerFilterSwipeHelper(this);
+    // NDShades: drawer filters bring up the tab bar even without a work profile, see showsTabBar,
+    // and "Hide tab labels" shrinks it. Both kept up to date by DrawerTabStrip.
+    private boolean mHasDrawerFilters;
+    private int mDrawerTabBarHeight;
     private final RectF mTmpRectF = new RectF();
     protected AllAppsPagedView mViewPager;
     protected FloatingHeaderView mHeader;
@@ -243,7 +248,10 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         
         pref2 = PreferenceManager2.getInstance(mActivityContext);
         pref = PreferenceManager.getInstance(mActivityContext);
-        
+        // NDShades: kept up to date by DrawerTabStrip, see setDrawerTabBarState
+        mHasDrawerFilters = !PreferenceCacheExtensionsKt.firstCached(pref2.getDrawerFilters()).isEmpty();
+        mDrawerTabBarHeight = DrawerTabStrip.tabBarHeight(context);
+
         mScrimColor = ColorTokens.AllAppsScrimColor.resolveColor(context);
         mHeaderThreshold = getResources().getDimensionPixelSize(
                 R.dimen.dynamic_grid_cell_border_spacing);
@@ -835,14 +843,16 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         removeCustomRules(rvContainer);
         removeCustomRules(getSearchRecyclerView());
+        // NDShades: the list makes room for the tab bar, which drawer filters also bring up
+        boolean tabBar = showTabs || mHasDrawerFilters;
         if (isAppDrawerSearchBarHidden()) {
-            layoutWithoutSearchContainer(rvContainer, showTabs);
+            layoutWithoutSearchContainer(rvContainer, tabBar);
             layoutWithoutSearchContainer(getSearchRecyclerView(), /* tabs= */ false);
         } else if (isSearchBarFloating()) {
-            alignParentTop(rvContainer, showTabs);
+            alignParentTop(rvContainer, tabBar);
             alignParentTop(getSearchRecyclerView(), /* tabs= */ false);
         } else {
-            layoutBelowSearchContainer(rvContainer, showTabs);
+            layoutBelowSearchContainer(rvContainer, tabBar);
             layoutBelowSearchContainer(getSearchRecyclerView(), /* tabs= */ false);
         }
 
@@ -854,8 +864,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
 
         boolean hideSearchBar = isAppDrawerSearchBarHidden();
         // Keep personal/work tabs visible when search is off; only hide the empty header shell.
-        mHeader.setVisibility((hideSearchBar && !mUsingTabs) ? View.GONE : View.VISIBLE);
-        boolean tabsHidden = !mUsingTabs;
+        // NDShades: showsTabBar instead of mUsingTabs here and below, for drawer filter tabs
+        mHeader.setVisibility((hideSearchBar && !showsTabBar()) ? View.GONE : View.VISIBLE);
+        boolean tabsHidden = !showsTabBar();
         mHeader.setup(
                 mAH.get(AdapterHolder.MAIN).mRecyclerView,
                 mAH.get(AdapterHolder.WORK).mRecyclerView,
@@ -863,7 +874,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                 getCurrentPage(),
                 tabsHidden);
 
-        int padding = (hideSearchBar && !mUsingTabs) ? 0 : mHeader.getMaxTranslation();
+        int padding = (hideSearchBar && !showsTabBar()) ? 0 : mHeader.getMaxTranslation();
         mAH.forEach(adapterHolder -> {
             adapterHolder.mPadding.top = padding;
             adapterHolder.applyPadding();
@@ -908,7 +919,8 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
     }
 
     protected void updateHeaderScroll(int scrolledOffset) {
-        if (isAppDrawerSearchBarHidden() && !mUsingTabs)
+        // NDShades: showsTabBar, for drawer filter tabs
+        if (isAppDrawerSearchBarHidden() && !showsTabBar())
             return;
         
         // Check if tab container background should be shown
@@ -1085,8 +1097,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         int topMargin = getContext().getResources().getDimensionPixelSize(
                 R.dimen.all_apps_header_top_margin);
         if (includeTabsMargin) {
-            topMargin += getContext().getResources().getDimensionPixelSize(
-                    R.dimen.all_apps_header_pill_height);
+            topMargin += mDrawerTabBarHeight; // NDShades: shrinks with "Hide tab labels"
         }
         layoutParams.topMargin = topMargin;
     }
@@ -1100,8 +1111,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         layoutParams.addRule(RelativeLayout.ALIGN_PARENT_TOP);
         layoutParams.topMargin =
                 includeTabsMargin
-                        ? getContext().getResources().getDimensionPixelSize(
-                        R.dimen.all_apps_header_pill_height)
+                        ? mDrawerTabBarHeight // NDShades: shrinks with "Hide tab labels"
                         : 0;
     }
 
@@ -1130,8 +1140,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
                     R.dimen.bottom_sheet_handle_area_height);
         }
         if (includeTabsMargin) {
-            topMargin += getContext().getResources().getDimensionPixelSize(
-                    R.dimen.all_apps_header_pill_height);
+            topMargin += mDrawerTabBarHeight; // NDShades: shrinks with "Hide tab labels"
         }
         layoutParams.topMargin = topMargin;
     }
@@ -1289,7 +1298,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (mTouchHandler != null) {
             return mTouchHandler.handleTouchEvent(ev, mFastScrollerOffset);
         }
-        // NDShades: swipe between drawer filter chips, before the personal/work pager can
+        // NDShades: swipe between drawer filter tabs, before the personal/work pager can
         return mFilterSwipeHelper.onInterceptTouchEvent(ev);
     }
 
@@ -1298,7 +1307,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         if (!isInAllApps()) {
             return false;
         }
-        // NDShades: rest of a swipe that switched drawer filter chips
+        // NDShades: rest of a swipe that switched drawer filter tabs
         if (mFilterSwipeHelper.onTouchEvent(ev)) {
             return true;
         }
@@ -1461,8 +1470,9 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
             getSearchRecyclerView().setVisibility(GONE);
             getAppsRecyclerViewContainer().setVisibility(VISIBLE);
             // Keep the empty header shell hidden when search is off and there are no tabs.
+            // NDShades: showsTabBar, for drawer filter tabs
             mHeader.setVisibility(
-                    (isAppDrawerSearchBarHidden() && !mUsingTabs) ? View.GONE : View.VISIBLE);
+                    (isAppDrawerSearchBarHidden() && !showsTabBar()) ? View.GONE : View.VISIBLE);
         }
         if (mHeader.isSetUp()) {
             mHeader.setActiveRV(getCurrentPage());
@@ -1498,6 +1508,28 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
      */
     public boolean shouldShowTabs() {
         return mHasWorkApps;
+    }
+
+    /**
+     * NDShades: Whether the tab bar shows: with a work profile (personal/work pager), or with
+     * drawer filters (see DrawerTabStrip).
+     */
+    private boolean showsTabBar() {
+        return mUsingTabs || mHasDrawerFilters;
+    }
+
+    /**
+     * NDShades: Called by DrawerTabStrip with whether there are drawer filters and the tab bar's
+     * height. Lays the lists out again when the first filter is added or the last removed, or when
+     * "Hide tab labels" changes the height.
+     */
+    public void setDrawerTabBarState(boolean filtersShown, int tabBarHeight) {
+        if (mHasDrawerFilters == filtersShown && mDrawerTabBarHeight == tabBarHeight) {
+            return;
+        }
+        mHasDrawerFilters = filtersShown;
+        mDrawerTabBarHeight = tabBarHeight;
+        rebindAdapters(true);
     }
 
     // Used by tests only
@@ -1721,7 +1753,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
         final FloatingHeaderView headerView = getFloatingHeaderView();
         if (hasBottomSheet) {
             // Start adding header protection if search bar or tabs will attach to the top.
-            if (!isSearchBarFloating() || mUsingTabs) {
+            if (!isSearchBarFloating() || showsTabBar()) { // NDShades: showsTabBar, for filter tabs
                 mTmpRectF.set(
                         leftWithScale,
                         topWithScale,
@@ -1774,7 +1806,7 @@ public class ActivityAllAppsContainerView<T extends Context & ActivityContext>
      */
     float getHeaderProtectionHeight() {
         float headerBottom = getHeaderBottom() - getTranslationY();
-        if (mUsingTabs) {
+        if (showsTabBar()) { // NDShades: showsTabBar, for drawer filter tabs
             return headerBottom + mHeader.getPeripheralProtectionHeight(/* expectedHeight */ true);
         } else {
             return headerBottom;

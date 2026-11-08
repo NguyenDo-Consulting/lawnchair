@@ -354,15 +354,24 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = app.lawnchair.applock.RelockMode.SCREEN_OFF.id,
     )
 
-    /** NDShades: User-made app drawer filters, in chip order. */
+    /** NDShades: User-made app drawer filters, in tab order. */
     val drawerFilters = serializablePreference<List<DrawerFilter>>(
         key = stringPreferencesKey(name = "drawer_filters"),
         defaultValue = emptyList(),
     )
 
-    /** NDShades: Whether the "All" chip leaves out apps that are in any drawer filter. */
+    /** NDShades: Whether the "All" tab leaves out apps that are in any drawer filter. */
     val hideFilteredAppsFromAll = preference(
         key = booleanPreferencesKey(name = "drawer_filters_hide_from_all"),
+        defaultValue = false,
+    )
+
+    /**
+     * NDShades: Whether the drawer tab bar hides its labels and shrinks to a line, where the
+     * underline only shows briefly when swiping to another tab. See [app.lawnchair.allapps.filters.DrawerTabStrip].
+     */
+    val hideDrawerTabLabels = preference(
+        key = booleanPreferencesKey(name = "drawer_tabs_hide_labels"),
         defaultValue = false,
     )
 

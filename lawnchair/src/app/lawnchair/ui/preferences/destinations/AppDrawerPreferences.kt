@@ -101,10 +101,10 @@ fun AppDrawerPreferences(
             )
             // NDShades: app drawer filters
             NavigationActionPreference(
-                label = stringResource(id = R.string.drawer_filters_label),
+                label = stringResource(id = R.string.drawer_tabs_label),
                 destination = AppDrawerFilters,
                 subtitle = resources.getQuantityString(
-                    R.plurals.drawer_filters_count,
+                    R.plurals.drawer_tabs_count,
                     drawerFilters.size,
                     drawerFilters.size,
                 ),

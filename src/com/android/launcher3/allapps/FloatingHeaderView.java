@@ -44,7 +44,7 @@ import com.android.launcher3.workprofile.PersonalWorkSlidingTabStrip;
 import com.android.systemui.plugins.AllAppsRow;
 import com.android.systemui.plugins.AllAppsRow.OnHeightUpdatedListener;
 import com.android.systemui.plugins.PluginListener;
-import app.lawnchair.allapps.filters.DrawerFilterChipsRow;
+import app.lawnchair.allapps.filters.DrawerTabStrip;
 import app.lawnchair.preferences2.PreferenceCacheExtensionsKt;
 
 import java.util.ArrayList;
@@ -278,10 +278,10 @@ public class FloatingHeaderView extends LinearLayout implements
         mCurrentRV.addOnScrollListener(mOnScrollListener);
         maybeSetTabVisibility(rvType == AdapterHolder.SEARCH ? GONE : VISIBLE);
 
-        // NDShades: drawer filter chips only apply to personal apps
-        DrawerFilterChipsRow filterChips = findFixedRowByType(DrawerFilterChipsRow.class);
-        if (filterChips != null && rvType != AdapterHolder.SEARCH) {
-            filterChips.setWorkTabActive(rvType == AdapterHolder.WORK);
+        // NDShades: the drawer tab bar shows a Work tab with a work profile, selected on its page
+        DrawerTabStrip drawerTabs = mTabLayout.findViewById(R.id.drawer_tabs);
+        if (drawerTabs != null && rvType != AdapterHolder.SEARCH) {
+            drawerTabs.setWorkTabState(mWorkRV != null, rvType == AdapterHolder.WORK);
         }
     }
 
@@ -445,6 +445,49 @@ public class FloatingHeaderView extends LinearLayout implements
         mSnappedScrolledY = -mMaxTranslation;
         mHeaderCollapsed = offset >= mMaxTranslation;
         mTranslationY = -Math.min(offset, mMaxTranslation);
+        applyVerticalMove();
+        if (wasCollapsed != mHeaderCollapsed && getParent() instanceof ActivityAllAppsContainerView) {
+            ((ActivityAllAppsContainerView<?>) getParent()).invalidateHeader();
+        }
+    }
+
+    // NDShades: the header's state when a drawer tab swipe started, see beginTabSwipe
+    private int mTabSwipeTranslationY;
+    private int mTabSwipeSnappedScrolledY;
+    private boolean mTabSwipeHeaderCollapsed;
+
+    /**
+     * NDShades: Remembers the header's state at the start of a swipe between drawer tabs
+     * (DrawerTabNeighbors), to move it from there and to put it back if the swipe is cancelled.
+     */
+    public void beginTabSwipe() {
+        if (mAnimator.isStarted()) {
+            mAnimator.cancel();
+        }
+        mTabSwipeTranslationY = mTranslationY;
+        mTabSwipeSnappedScrolledY = mSnappedScrolledY;
+        mTabSwipeHeaderCollapsed = mHeaderCollapsed;
+    }
+
+    /**
+     * NDShades: Moves the header part of the way, by {@code progress} (0 to 1), from where it was
+     * at beginTabSwipe to where a list scrolled to {@code toScrollOffset} leaves it (see
+     * syncToScrollPosition), so it slides in or out with the finger instead of jumping when the
+     * swipe settles. At 0, the header is exactly as it was.
+     */
+    public void setTabSwipeProgress(int toScrollOffset, float progress) {
+        boolean wasCollapsed = mHeaderCollapsed;
+        if (progress <= 0f) {
+            mTranslationY = mTabSwipeTranslationY;
+            mSnappedScrolledY = mTabSwipeSnappedScrolledY;
+            mHeaderCollapsed = mTabSwipeHeaderCollapsed;
+        } else {
+            int toTranslation = -Math.min(toScrollOffset, mMaxTranslation);
+            mTranslationY = Math.round(
+                    mTabSwipeTranslationY + (toTranslation - mTabSwipeTranslationY) * progress);
+            mSnappedScrolledY = -mMaxTranslation;
+            mHeaderCollapsed = mTranslationY <= -mMaxTranslation;
+        }
         applyVerticalMove();
         if (wasCollapsed != mHeaderCollapsed && getParent() instanceof ActivityAllAppsContainerView) {
             ((ActivityAllAppsContainerView<?>) getParent()).invalidateHeader();

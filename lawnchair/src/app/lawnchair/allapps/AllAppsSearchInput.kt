@@ -292,6 +292,11 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
 
         input.onFocusChangeListener = { _, hasFocus ->
             if (hasFocus) {
+                // NDShades: a tap that focuses the search bar opens the keyboard too. The text
+                // field only does that itself when nothing (e.g. autofill) holds it back, which
+                // left the keyboard for a second tap.
+                if (isDirectFocus) input.post { input.showKeyboard() }
+
                 if (prefs2.searchAlgorithm.firstCached() != LawnchairSearchAlgorithm.APP_SEARCH) {
                     input.setHint(R.string.all_apps_device_search_hint)
                 } else {

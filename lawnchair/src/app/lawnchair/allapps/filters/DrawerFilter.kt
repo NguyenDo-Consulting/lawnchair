@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.Serializable
 
 /**
- * A user-made filter of the app drawer, shown as a chip above the app list. Apps are kept as
+ * A user-made filter of the app drawer, shown as a tab above the app list. Apps are kept as
  * [com.android.launcher3.util.ComponentKey] strings. An app can be in several filters.
  */
 @Serializable
@@ -30,8 +30,14 @@ data class DrawerFilter(
     val componentKeys: List<String> = emptyList(),
 )
 
-/** The filter chip currently selected in the app drawer. */
+/** The filter tab currently selected in the app drawer. */
 object DrawerFilterState {
-    /** Id of the selected [DrawerFilter], or null for the "All" chip. */
+    /** Id of the selected [DrawerFilter], or null for the "All" tab. */
     val activeFilterId = MutableStateFlow<String?>(null)
+
+    /**
+     * With "Remember position", how far each tab's list was scrolled when it was left, in pixels,
+     * by [DrawerFilter] id (null for "All"). Tabs that aren't in here open at the top.
+     */
+    val scrollOffsets = HashMap<String?, Int>()
 }

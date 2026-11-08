@@ -86,9 +86,13 @@ Logic: `lawnchair/.../allapps/filters/`.
 
 | File | Canary | What the hook does |
 | --- | --- | --- |
-| `res/layout/all_apps_content.xml` | `DrawerFilterChipsRow` | The chip row above the floating header. |
-| `allapps/ActivityAllAppsContainerView` | `DrawerFilterSwipeHelper` | Sideways swipes switch chips before the personal/work pager sees them. |
-| `allapps/FloatingHeaderView` | `setWorkTabActive` | Chips only apply on the personal tab. |
+| `res/layout/all_apps_personal_work_tabs.xml` | `DrawerTabStrip` | The drawer tab bar (Personal or All and the filters, then Work) inside the upstream tab strip. It hides the upstream pill buttons and passes Personal/Work clicks on to them. |
+| `workprofile/PersonalWorkSlidingTabStrip` | `instanceof Button` | The strip skips the tab bar, which isn't a button, when styling and selecting its buttons. |
+| `allapps/ActivityAllAppsContainerView` | `DrawerFilterSwipeHelper` | Sideways swipes switch filter tabs before the personal/work pager sees them. |
+| `allapps/ActivityAllAppsContainerView` | `setDrawerTabBarState`, `showsTabBar` | The tab strip also shows without a work profile once there's a filter: `showsTabBar()` replaces `mUsingTabs` where the strip's visibility and space are decided (`replaceAppsRVContainer`, `setupHeader`, `updateHeaderScroll`, `updateSearchResultsVisibility`, header protection). `mUsingTabs` still means "the personal/work pager is in use". |
+| `allapps/ActivityAllAppsContainerView` | `mDrawerTabBarHeight` | `layoutBelowSearchContainer`, `alignParentTop` and `layoutWithoutSearchContainer` leave the tab bar's real height instead of `all_apps_header_pill_height`, which "Hide tab labels" shrinks to a line. |
+| `allapps/FloatingHeaderView` | `setWorkTabState` | Tells the tab bar whether there's a Work tab and whether its page is active. |
+| `allapps/FloatingHeaderView` | `beginTabSwipe`, `setTabSwipeProgress` | While swiping between drawer tabs (`DrawerTabNeighbors`), the header moves with the finger between the two tabs' header positions, and is put back exactly if the swipe is cancelled. |
 
 ### App drawer folders
 
@@ -188,7 +192,9 @@ shortcuts:
       and a pinned shortcut. Swiping up or down on them doesn't open the drawer or notifications.
 - [ ] Folder ⋮ button: sort A–Z and Most used. Dragging inside a sorted folder doesn't reorder.
 - [ ] Folder blur on the home screen and in the app drawer, opening and closing.
-- [ ] Drawer filter chips: tap and swipe between them; the work tab has no chips.
+- [ ] Drawer tabs: with filters, All, the filters and Work (last); tap and swipe between them,
+      the underline follows. Without filters, Personal | Work, or no tab bar without a work profile.
+      With "Hide tab labels", a thin line where the bar flashes on each swipe.
 - [ ] Drawer folders: edit from the long-press menu, rename, re-sort; the drawer updates.
 - [ ] Dock search bar above the icons, then below again.
 - [ ] Back up, then restore: empty pages, work apps, other apps' pinned shortcuts and contact

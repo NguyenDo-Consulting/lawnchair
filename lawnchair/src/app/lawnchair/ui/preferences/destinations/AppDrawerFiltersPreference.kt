@@ -70,25 +70,30 @@ fun AppDrawerFiltersPreference(
     }
 
     PreferenceLayout(
-        label = stringResource(id = R.string.drawer_filters_label),
+        label = stringResource(id = R.string.drawer_tabs_label),
         backArrowVisible = true,
         modifier = modifier,
     ) {
         PreferenceGroup(
             heading = stringResource(R.string.settings),
-            description = stringResource(R.string.drawer_filters_description),
+            description = stringResource(R.string.drawer_tabs_description),
         ) {
             SwitchPreference(
                 adapter = prefs2.hideFilteredAppsFromAll.getAdapter(),
-                label = stringResource(id = R.string.hide_filtered_apps_from_all_label),
-                description = stringResource(id = R.string.hide_filtered_apps_from_all_description),
+                label = stringResource(id = R.string.hide_tab_apps_from_all_label),
+                description = stringResource(id = R.string.hide_tab_apps_from_all_description),
+            )
+            SwitchPreference(
+                adapter = prefs2.hideDrawerTabLabels.getAdapter(),
+                label = stringResource(id = R.string.hide_drawer_tab_labels_label),
+                description = stringResource(id = R.string.hide_drawer_tab_labels_description),
             )
         }
-        PreferenceGroup(heading = stringResource(R.string.drawer_filters_label)) {
+        PreferenceGroup(heading = stringResource(R.string.drawer_tabs_label)) {
             PreferenceTemplate(
                 title = {
                     Text(
-                        text = stringResource(R.string.add_drawer_filter),
+                        text = stringResource(R.string.add_drawer_tab),
                         color = MaterialTheme.colorScheme.onSurface,
                     )
                 },
@@ -101,7 +106,7 @@ fun AppDrawerFiltersPreference(
                         // The sheet is shared with drawer folders, which identify items by index here.
                         FolderEditSheet(
                             folderId = 0,
-                            initialTitle = stringResource(R.string.my_drawer_filter_label),
+                            initialTitle = stringResource(R.string.my_drawer_tab_label),
                             itemCount = 0,
                             onRename = { _, title ->
                                 if (title.isNotBlank()) {

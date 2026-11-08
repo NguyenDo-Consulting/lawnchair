@@ -34,9 +34,14 @@ Folder swipe gestures|src/com/android/launcher3/folder/FolderIcon.java|FolderIco
 Folder swipe gestures|src/com/android/launcher3/folder/FolderIcon.java|hasConfiguredVerticalIconSwipeGesture
 Folder swipe gestures|src/com/android/launcher3/model/ModelWriter.java|FolderGestures.onItemsDeleted
 Folder swipe gestures|src/com/android/launcher3/model/GridSizeMigrationDBController.java|FolderGestures.onFolderIdChanged
-Drawer filters|res/layout/all_apps_content.xml|DrawerFilterChipsRow
+Drawer filters|res/layout/all_apps_personal_work_tabs.xml|DrawerTabStrip
+Drawer filters|src/com/android/launcher3/workprofile/PersonalWorkSlidingTabStrip.java|instanceof Button
 Drawer filters|src/com/android/launcher3/allapps/ActivityAllAppsContainerView.java|DrawerFilterSwipeHelper
-Drawer filters|src/com/android/launcher3/allapps/FloatingHeaderView.java|setWorkTabActive
+Drawer filters|src/com/android/launcher3/allapps/ActivityAllAppsContainerView.java|setDrawerTabBarState
+Drawer filters|src/com/android/launcher3/allapps/ActivityAllAppsContainerView.java|topMargin += mDrawerTabBarHeight
+Drawer filters|src/com/android/launcher3/allapps/ActivityAllAppsContainerView.java|boolean tabBar = showTabs || mHasDrawerFilters
+Drawer filters|src/com/android/launcher3/allapps/FloatingHeaderView.java|setWorkTabState
+Drawer filters|src/com/android/launcher3/allapps/FloatingHeaderView.java|public void setTabSwipeProgress
 Drawer folders|src/com/android/launcher3/allapps/BaseAllAppsAdapter.java|isSameFolder
 Drawer folders|src/com/android/launcher3/folder/Folder.java|Drawer folders hide their title
 Drawer folders|src/com/android/launcher3/folder/Folder.java|App drawer folders already show their name

@@ -52,11 +52,14 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach as onEachFlow
 
 @Suppress("SYNTHETIC_PROPERTY_WITHOUT_JAVA_ORIGIN")
-class LawnchairAlphabeticalAppsList<T>(
+class LawnchairAlphabeticalAppsList<T> @JvmOverloads constructor(
     private val context: T,
     private val appsStore: AllAppsStore<T>,
     workProfileManager: WorkProfileManager?,
     privateProfileManager: PrivateProfileManager?,
+    // NDShades: false for the off-screen drawer tab lists (DrawerTabNeighbors), which show a
+    // fixed tab set with showTab instead of the selected one
+    private val followsSelectedTab: Boolean = true,
 ) : AlphabeticalAppsList<T>(context, appsStore, workProfileManager, privateProfileManager),
     OnIDPChangeListener,
     DefaultLifecycleObserver
@@ -66,7 +69,7 @@ class LawnchairAlphabeticalAppsList<T>(
     private val prefs2 = PreferenceManager2.getInstance(context)
     private val prefs = PreferenceManager.getInstance(context)
 
-    // NDShades: Drawer filter chips, see [DrawerFilter]
+    // NDShades: Drawer filter tabs, see [DrawerFilter]
     private var drawerFilters: List<DrawerFilter> = emptyList()
     private var hideFilteredAppsFromAll = false
     private var activeFilterId: String? = null
@@ -118,8 +121,11 @@ class LawnchairAlphabeticalAppsList<T>(
         }
         DrawerFilterState.activeFilterId
             .onEachFlow {
-                activeFilterId = it
-                onAppsUpdated()
+                // Already shown when the switch went through showTab.
+                if (followsSelectedTab && activeFilterId != it) {
+                    activeFilterId = it
+                    onAppsUpdated()
+                }
             }
             .launchIn(scope)
         // NDShades: drawer sort order
@@ -132,12 +138,27 @@ class LawnchairAlphabeticalAppsList<T>(
     // NDShades: drawer sort order. Letters only make sense when the drawer is sorted by name.
     override fun useLetterSections() = sortMode == DrawerSortMode.ALPHABETICAL
 
-    // NDShades: the selected drawer filter chip, if any
+    /**
+     * NDShades: Shows the apps of a drawer tab (a [DrawerFilter] id, or null for "All") right away,
+     * so the list is up to date for the next frame. [DrawerTabSwitcher] uses it on the main list
+     * before setting [DrawerFilterState.activeFilterId], [DrawerTabNeighbors] on its own lists.
+     */
+    fun showTab(filterId: String?) {
+        if (activeFilterId == filterId) return
+        activeFilterId = filterId
+        onAppsUpdated()
+    }
+
+    /** NDShades: The filter last passed to [updateItemFilter], e.g. personal apps only. */
+    var baseItemFilter: Predicate<ItemInfo>? = null
+        private set
+
+    // NDShades: the selected drawer filter tab, if any
     private val activeFilter: DrawerFilter?
         get() = activeFilterId?.let { id -> drawerFilters.firstOrNull { it.id == id } }
 
     /**
-     * NDShades: Whether an app is shown under the selected filter chip. Filters only apply to the
+     * NDShades: Whether an app is shown under the selected filter tab. Filters only apply to the
      * personal profile, so work and private space apps are always shown.
      */
     private fun matchesDrawerFilter(info: AppInfo, componentKey: String): Boolean {
@@ -166,6 +187,7 @@ class LawnchairAlphabeticalAppsList<T>(
     }
 
     override fun updateItemFilter(itemFilter: Predicate<ItemInfo>?) {
+        baseItemFilter = itemFilter // NDShades: reused by DrawerTabNeighbors
         mItemFilter = Predicate { info ->
             require(info is AppInfo) { "`info` must be an instance of `AppInfo`." }
             val componentKey = info.toComponentKey().toString()
@@ -187,7 +209,7 @@ class LawnchairAlphabeticalAppsList<T>(
         // Show app drawer folders only on main profile, to prevent state complexity
         if (isWorkOrPrivateSpace(appList)) return super.addAppsWithSections(appList, position)
 
-        // NDShades: A filter chip shows its apps as a plain list, without drawer folders or
+        // NDShades: A filter tab shows its apps as a plain list, without drawer folders or
         // categories
         if (activeFilter != null) return super.addAppsWithSections(appList, position)
 

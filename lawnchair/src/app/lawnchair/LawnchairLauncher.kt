@@ -35,6 +35,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.LawnchairApp.Companion.showRestoreFailureIfNecessary
+import app.lawnchair.allapps.filters.DrawerFilterState
 import app.lawnchair.applock.AppLockManager
 import app.lawnchair.compat.LawnchairQuickstepCompat
 import app.lawnchair.data.AppDatabase
@@ -138,6 +139,7 @@ class LawnchairLauncher : QuickstepLauncher() {
                 if (drawerSortChanged) {
                     drawerSortChanged = false
                     recyclerView.resetScrollPosition()
+                    DrawerFilterState.scrollOffsets.clear() // NDShades: drawer tab positions too
                 } else {
                     recyclerView.restoreScrollPosition()
                 }
