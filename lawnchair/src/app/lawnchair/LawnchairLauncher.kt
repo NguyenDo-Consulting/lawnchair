@@ -303,6 +303,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
         showQuickstepWarningIfNecessary()
         showRestoreFailureIfNecessary() // NDShades: all-or-nothing backup restore
+        DefaultHomePrompt.askOnce(this) // NDShades: ask once to be the default home app
 
         reloadIconsIfNeeded()
 
