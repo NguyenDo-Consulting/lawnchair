@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.bugreport
 
 import android.app.NotificationChannel
@@ -13,6 +29,7 @@ import com.android.launcher3.R
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 class LawnchairBugReporter(private val context: Context) {
 
@@ -38,8 +55,13 @@ class LawnchairBugReporter(private val context: Context) {
 
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
-            sendNotification(throwable)
-            defaultHandler?.uncaughtException(thread, throwable)
+            try {
+                sendNotification(throwable)
+            } finally {
+                // Always hand off to the default handler so the process gets killed,
+                // even if generating the report fails. Otherwise the app would hang.
+                defaultHandler?.uncaughtException(thread, throwable)
+            }
         }
 
         removeDismissedLogs()
@@ -68,7 +90,9 @@ class LawnchairBugReporter(private val context: Context) {
 
     inner class Report(val error: String, val throwable: Throwable? = null) {
 
-        private val fileName = "$appName bug report ${SimpleDateFormat.getDateTimeInstance().format(Date())}"
+        // Use a fixed, locale-independent format: some locales produce characters
+        // such as '/' that are not valid in a file name.
+        private val fileName = "$appName bug report ${SimpleDateFormat("yyyy-MM-dd_HH-mm-ss", Locale.US).format(Date())}"
 
         fun generateBugReport(): BugReport? {
             val contents = writeContents()

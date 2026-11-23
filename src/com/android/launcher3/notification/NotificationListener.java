@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.notification;
@@ -259,7 +261,12 @@ public class NotificationListener extends NotificationListenerService {
         super.onListenerDisconnected();
         Log.i(TAG, "onListenerDisconnected");
         sIsConnected = false;
-        mSettingsCache.unregister(NOTIFICATION_BADGING_URI, mNotificationSettingsChangedListener);
+        // The framework also calls onListenerDisconnected() from NotificationListenerService's
+        // onDestroy(), so this can run before onListenerConnected() has initialised mSettingsCache.
+        if (mSettingsCache != null) {
+            mSettingsCache.unregister(NOTIFICATION_BADGING_URI,
+                    mNotificationSettingsChangedListener);
+        }
         onNotificationFullRefresh();
     }
 

@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.quickstep
 
@@ -472,8 +474,7 @@ class SystemUiProxy @Inject constructor(@ApplicationContext private val context:
 
     fun takeScreenshot(request: ScreenshotRequest) =
         executeWithErrorLog({ "Failed call takeScreenshot" }) {
-            // LC-Ignored
-            //systemUiProxy?.takeScreenshot(request)
+            systemUiProxy?.takeScreenshot(request)
         }
 
     fun expandNotificationPanel() =

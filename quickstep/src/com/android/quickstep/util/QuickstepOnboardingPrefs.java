@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.quickstep.util;
 
@@ -31,7 +33,6 @@ import com.android.launcher3.Launcher;
 import com.android.launcher3.LauncherPrefs;
 import com.android.launcher3.LauncherState;
 import com.android.launcher3.Utilities;
-import com.android.launcher3.Workspace;
 import com.android.launcher3.appprediction.AppsDividerView;
 import com.android.launcher3.hybridhotseat.HotseatPredictionController;
 import com.android.launcher3.statemanager.StateManager;
@@ -106,7 +107,7 @@ public class QuickstepOnboardingPrefs {
                         return;
                     }
                     mShouldIncreaseCount = toState == HINT_STATE
-                            && launcher.getWorkspace().getNextPage() == Workspace.DEFAULT_PAGE
+                            && launcher.getWorkspace().getNextPage() == launcher.getWorkspace().getDefaultPage()
                             && launcher.isCanShowAllAppsEducationView();
                 }
 

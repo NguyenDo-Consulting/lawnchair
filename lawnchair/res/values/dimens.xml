@@ -13,6 +13,8 @@
   ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
+  ~
+  ~ Modifications copyright 2026, Nguyen-Do Consulting
   -->
 
 <resources>
@@ -34,7 +36,7 @@
     <dimen name="edit_mode_page_strip_tip_margin">8dp</dimen>
 
     <!-- qsb -->
-    <dimen name="all_apps_search_bar_bottom_padding">36dp</dimen>
+    <dimen name="all_apps_search_bar_bottom_padding">0dp</dimen>
     <dimen name="all_apps_search_vertical_offset">30dp</dimen>
     <dimen name="qsb_g_icon_marginStart">16dp</dimen>
     <dimen name="qsb_icon_padding">10dp</dimen>

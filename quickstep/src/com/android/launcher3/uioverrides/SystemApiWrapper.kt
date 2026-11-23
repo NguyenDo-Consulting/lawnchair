@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.uioverrides
 
@@ -25,6 +27,7 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.pm.LauncherActivityInfo
 import android.content.pm.LauncherApps
+import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.graphics.Bitmap
 import android.graphics.Rect
@@ -59,6 +62,9 @@ import javax.inject.Inject
 
 import app.lawnchair.LawnchairApp
 
+private const val CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS =
+    "android.permission.CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS"
+
 /** A wrapper for the hidden API calls */
 @LauncherAppSingleton
 open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Context?) :
@@ -75,6 +81,17 @@ open class SystemApiWrapper @Inject constructor(@ApplicationContext context: Con
     }
 
     override fun createFadeOutAnimOptions(): ActivityOptions {
+        // Since Android 14, starting an activity with a RemoteTransition in its options
+        // requires the CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS permission, which cannot be
+        // granted to third-party apps; the system throws SecurityException at startActivity
+        // otherwise. Fall back to the default fade-out animation when it isn't held.
+        if (
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE &&
+            mContext.checkSelfPermission(CONTROL_REMOTE_APP_TRANSITION_ANIMATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+        ) {
+            return super.createFadeOutAnimOptions()
+        }
         return try {
             ActivityOptions.makeBasic().apply {
                 remoteTransition = RemoteTransition(FadeOutRemoteTransition(), "FadeOut")

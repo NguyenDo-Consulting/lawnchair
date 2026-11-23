@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3;
@@ -168,10 +170,27 @@ public class QuickstepWidgetPickerActivity extends
 
     @Override
     protected void registerBackDispatcher() {
-        if (Utilities.ATLEAST_T) {
+        // BackAnimationCallback extends FlingOnBackAnimationCallback, which references
+        // com.android.internal.dynamicanimation classes that are missing from the Android 13
+        // framework; instantiating it on T crashes with NoClassDefFoundError. Use it only on
+        // U+ and register a plain callback on T, mirroring
+        // QuickstepLauncher#registerBackDispatcher.
+        if (Utilities.ATLEAST_U) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT,
                     new BackAnimationCallback());
+        } else if (Utilities.ATLEAST_T) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                    OnBackInvokedDispatcher.PRIORITY_DEFAULT,
+                    () -> {
+                        // Delegate to the sheet like the U+ path so that back resets an active
+                        // search before closing the picker.
+                        if (mWidgetSheet != null) {
+                            mWidgetSheet.onBackInvoked();
+                        } else {
+                            onBackPressed();
+                        }
+                    });
         }
     }
 
@@ -465,7 +484,8 @@ public class QuickstepWidgetPickerActivity extends
             final boolean isHorizontallyResizable =
                     (info.resizeMode & AppWidgetProviderInfo.RESIZE_HORIZONTAL) != 0;
             if (mDesiredWidgetWidth > 0 && isHorizontallyResizable) {
-                if (info.maxResizeWidth > 0
+                // LC-Note: Support Android 11 and older with SDK check
+                if (Utilities.ATLEAST_S && info.maxResizeWidth > 0
                         && info.maxResizeWidth >= info.minWidth
                         && info.maxResizeWidth < mDesiredWidgetWidth) {
                     return rejectWidget(
@@ -489,7 +509,8 @@ public class QuickstepWidgetPickerActivity extends
             final boolean isVerticallyResizable =
                     (info.resizeMode & AppWidgetProviderInfo.RESIZE_VERTICAL) != 0;
             if (mDesiredWidgetHeight > 0 && isVerticallyResizable) {
-                if (info.maxResizeHeight > 0
+                // LC-Note: Support Android 11 and older with SDK check
+                if (Utilities.ATLEAST_S && info.maxResizeHeight > 0
                         && info.maxResizeHeight >= info.minHeight
                         && info.maxResizeHeight < mDesiredWidgetHeight) {
                     return rejectWidget(

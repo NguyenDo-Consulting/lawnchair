@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.pm;
@@ -28,6 +30,7 @@ import android.content.pm.ShortcutManager;
 import android.os.Build;
 import android.os.Parcelable;
 import android.os.SystemClock;
+import android.util.Log;
 
 import androidx.annotation.Nullable;
 
@@ -37,6 +40,8 @@ import com.android.launcher3.icons.CacheableShortcutInfo;
 import com.android.launcher3.model.data.WorkspaceItemInfo;
 
 public class PinRequestHelper {
+
+    private static final String TAG = "PinRequestHelper";
 
     /**
      * request.accept() will initiate the following flow:
@@ -61,7 +66,16 @@ public class PinRequestHelper {
                 && request.isValid()) {
 
             if (acceptDelay <= 0) {
-                if (!request.accept()) {
+                // The system server can throw while processing accept() (an NPE in
+                // ShortcutService.removeNonKeyFields when the publisher removes the shortcut
+                // while the request is in flight), rethrown over binder as a RuntimeException.
+                // Treat the request as rejected instead of crashing the launcher.
+                try {
+                    if (!request.accept()) {
+                        return null;
+                    }
+                } catch (RuntimeException e) {
+                    Log.e(TAG, "Failed to accept pin item request", e);
                     return null;
                 }
             } else {
@@ -69,7 +83,11 @@ public class PinRequestHelper {
                 MODEL_EXECUTOR.execute(() -> {
                     SystemClock.sleep(acceptDelay);
                     if (request.isValid()) {
-                        request.accept();
+                        try {
+                            request.accept();
+                        } catch (RuntimeException e) {
+                            Log.e(TAG, "Failed to accept pin item request", e);
+                        }
                     }
                 });
             }

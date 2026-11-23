@@ -12,11 +12,15 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package app.lawnchair.ui.preferences.destinations
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorManager
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,6 +63,9 @@ object HomeScreenRoutes {
     const val POPUP_EDITOR = "popup_editor"
 }
 
+/**
+ * Shows home-screen settings and exposes tilt-to-page only when a motion sensor is available.
+ */
 @Composable
 fun HomeScreenPreferences(
     modifier: Modifier = Modifier,
@@ -67,6 +74,15 @@ fun HomeScreenPreferences(
     val prefs2 = preferenceManager2()
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
+    val hasMotionSensor = remember {
+        context.getSystemService(SensorManager::class.java)
+            ?.let { manager ->
+                manager.getDefaultSensor(Sensor.TYPE_GYROSCOPE) != null ||
+                    manager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) != null
+            } == true
+    }
+    val panToMoveEnabledAdapter = prefs.panToMoveEnabled.getAdapter()
+    val panToMoveSensitivityAdapter = prefs.panToMoveSensitivity.getAdapter()
     PreferenceLayout(
         label = stringResource(id = R.string.home_screen_label),
         backArrowVisible = !LocalIsExpandedScreen.current,
@@ -100,6 +116,24 @@ fun HomeScreenPreferences(
                 label = stringResource(id = R.string.infinite_scrolling_label),
                 description = stringResource(id = R.string.infinite_scrolling_description),
             )
+        }
+        if (hasMotionSensor) {
+            PreferenceGroup {
+                SwitchPreference(
+                    adapter = panToMoveEnabledAdapter,
+                    label = stringResource(id = R.string.pan_to_move_icon_label),
+                    description = stringResource(id = R.string.pan_to_move_icon_description),
+                )
+                ExpandAndShrink(visible = panToMoveEnabledAdapter.state.value) {
+                    SliderPreference(
+                        adapter = panToMoveSensitivityAdapter,
+                        label = stringResource(id = R.string.pan_to_move_sensitivity_label),
+                        valueRange = 0f..1f,
+                        step = 0.05f,
+                        showAsPercentage = true,
+                    )
+                }
+            }
         }
         PreferenceGroup(heading = stringResource(id = R.string.home_screen_actions)) {
             ClickablePreference(

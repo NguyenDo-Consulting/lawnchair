@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.folder
@@ -74,7 +76,11 @@ data class FolderAnimationData(
                     folderIconWorkspacePosition,
                 )
             val scaledFolderRadius: Int = previewBackground.scaledRadius
-            val baseIconSize: Float = getBubbleTextView(itemsInPreview[0]).iconSize.toFloat()
+            // The preview can be empty when the folder has no bound child views yet. Fall back
+            // to the device profile icon size so that opening the folder does not crash.
+            val baseIconSize: Float =
+                itemsInPreview.firstOrNull()?.let { getBubbleTextView(it).iconSize.toFloat() }
+                    ?: mActivityContext.deviceProfile.iconSizePx.toFloat()
             val initialFolderSize = (scaledFolderRadius * 2) * scaleRelativeToDragLayer
             val initialFolderScale = previewSize / baseIconSize * scaleRelativeToDragLayer
 

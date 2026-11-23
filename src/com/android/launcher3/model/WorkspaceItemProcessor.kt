@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.model
 
@@ -775,19 +777,21 @@ class WorkspaceItemProcessor(
                 .append("defaultHeight: ")
                 .append(widgetProviderInfo.minHeight)
                 .append("\n")
-            widgetDimension
-                .append("targetCellWidth: ")
-                .append(widgetProviderInfo.targetCellWidth)
-                .append("\n")
-                .append("targetCellHeight: ")
-                .append(widgetProviderInfo.targetCellHeight)
-                .append("\n")
-                .append("maxResizeWidth: ")
-                .append(widgetProviderInfo.maxResizeWidth)
-                .append("\n")
-                .append("maxResizeHeight: ")
-                .append(widgetProviderInfo.maxResizeHeight)
-                .append("\n")
+            if (Utilities.ATLEAST_S) { // LC-Note: Support Android 11 and older with SDK check
+                widgetDimension
+                    .append("targetCellWidth: ")
+                    .append(widgetProviderInfo.targetCellWidth)
+                    .append("\n")
+                    .append("targetCellHeight: ")
+                    .append(widgetProviderInfo.targetCellHeight)
+                    .append("\n")
+                    .append("maxResizeWidth: ")
+                    .append(widgetProviderInfo.maxResizeWidth)
+                    .append("\n")
+                    .append("maxResizeHeight: ")
+                    .append(widgetProviderInfo.maxResizeHeight)
+                    .append("\n")
+            }
             FileLog.d(TAG, widgetDimension.toString())
         }
     }

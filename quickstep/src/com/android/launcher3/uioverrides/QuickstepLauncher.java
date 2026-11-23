@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.uioverrides;
 
@@ -686,7 +688,7 @@ public class QuickstepLauncher extends Launcher implements RecentsViewContainer,
             case HINT_STATE_ORDINAL: {
                 Workspace<?> workspace = getWorkspace();
                 getStateManager().goToState(NORMAL);
-                if (workspace.getNextPage() != Workspace.DEFAULT_PAGE) {
+                if (workspace.getNextPage() != workspace.getDefaultPage()) {
                     workspace.post(workspace::moveToDefaultScreen);
                 }
                 break;

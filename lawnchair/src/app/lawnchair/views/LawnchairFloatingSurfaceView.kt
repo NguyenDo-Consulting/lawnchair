@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.views
 
 import android.animation.Animator
@@ -104,9 +120,12 @@ class LawnchairFloatingSurfaceView @JvmOverloads constructor(
     private fun removeViewImmediate() {
         // Cancel any pending remove
         Executors.MAIN_EXECUTOR.handler.removeCallbacks(mRemoveViewRunnable)
-        if (isAttachedToWindow) {
-            removeViewFromParent()
-        }
+        // Remove unconditionally, matching FloatingSurfaceView. isAttachedToWindow can be false
+        // while the view is still a child of the drag layer: onNewIntent is delivered inside
+        // performResumeActivity, when the window may still be re-attaching. Skipping the removal
+        // in that window leaves the view with a parent, and the next show() crashes on addView
+        // with "The specified child already has a parent".
+        removeViewFromParent()
     }
 
     override fun isOfType(type: Int): Boolean {

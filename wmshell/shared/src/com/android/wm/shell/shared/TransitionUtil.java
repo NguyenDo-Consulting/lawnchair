@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.wm.shell.shared;
@@ -440,6 +442,11 @@ public class TransitionUtil {
                     TransitionInfo.Change.class, "getAllowEnterPip").invoke(change);
         } catch (ReflectiveOperationException e) {
             throw new IllegalStateException("Unable to read allowEnterPip from transition change", e);
+        } catch (LinkageError e) {
+            // The restriction bypass can be unavailable (libnrb.so failed to load), in which case
+            // touching RestrictionBypass throws ExceptionInInitializerError/NoClassDefFoundError.
+            // Assume PIP is not allowed instead of crashing the transition.
+            return false;
         }
     }
 

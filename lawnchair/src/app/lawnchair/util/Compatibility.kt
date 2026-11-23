@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.util
 
 import android.annotation.SuppressLint
@@ -13,6 +29,37 @@ val isGestureNavContractCompatible = checkGestureNavContract()
 
 val isNothingOs = checkNothingStock()
 
+/** Generic check to identify if the device is using Android 17 Initial build.
+ *
+ * (excluding Developer Preview/Beta/Milestone Stability build)
+ *
+ * Note: This MUST be in sync with [isAndroidCinnamonbunInitial] in [com.android.wm.shell.shared.split.SplitBounds] */
+val isAndroidCinnamonbunInitial = checkGenericCinnamonbunInitial()
+
+/** Generic check to identify if the device is using Android 16 QPR3 build.
+ *
+ * (excluding Developer Preview/Beta/Milestone Stability build)
+ *
+ * Note: This MUST be in sync with [isAndroidBaklavaThirdQuarterlyRelease] in [com.android.wm.shell.shared.split.SplitBounds] */
+val isAndroidBaklavaThirdQuarterlyRelease = checkGenericBaklavaThirdQuarterlyRelease()
+
+/** Generic check to identify if the device is using Android 16 QPR2 build.
+ *
+ * (excluding Developer Preview/Beta/Milestone Stability build)
+ *
+ * Note: This MUST be in sync with [isAndroidBaklavaSecondQuarterlyRelease] in [com.android.wm.shell.shared.split.SplitBounds] */
+val isAndroidBaklavaSecondQuarterlyRelease = checkGenericBaklavaSecondQuarterlyRelease()
+
+/** Generic check to identify if the device is using Android 16 QPR1 build.
+ *
+ * (excluding Developer Preview/Beta/Milestone Stability build)
+ *
+ * Note: This MUST be in sync with [isAndroidBaklavaFirstQuarterlyRelease] in [com.android.wm.shell.shared.split.SplitBounds] */
+val isAndroidBaklavaFirstQuarterlyRelease = checkGenericBaklavaFirstQuarterlyRelease()
+
+/** Generic check to identify if the device is using Android 16 Initial build.
+ *
+ * (excluding Developer Preview/Beta/Milestone Stability build) */
 val isAndroidBaklavaInitial = checkGenericBaklavaInitial()
 
 /** Generic check to identify if the device is using Android 15 QPR1 build.
@@ -70,6 +117,20 @@ private fun checkNothingStock(): Boolean = when {
     getSystemProperty("ro.nothing.version.id", "").isNotEmpty() -> true
     getSystemProperty("ro.build.nothing.version", "").isNotEmpty() -> true
     getSystemProperty("ro.build.nothing.feature.base", "").isNotEmpty() -> true
+    else -> false
+}
+
+private fun checkGenericCinnamonbunInitial(): Boolean = Utilities.ATLEAST_CINNAMON_BUN
+
+private fun checkGenericBaklavaFirstQuarterlyRelease(): Boolean = when {
+    Utilities.ATLEAST_BAKLAVA && arrayOf("BP3A.", "BD3A.").any { prefix -> Build.FINGERPRINT.contains(prefix) } -> true
+    else -> false
+}
+
+private fun checkGenericBaklavaSecondQuarterlyRelease(): Boolean = Utilities.ATLEAST_BAKLAVA_1
+
+private fun checkGenericBaklavaThirdQuarterlyRelease(): Boolean = when {
+    Utilities.ATLEAST_BAKLAVA_1 && Build.FINGERPRINT.contains("CP1A.") -> true
     else -> false
 }
 
