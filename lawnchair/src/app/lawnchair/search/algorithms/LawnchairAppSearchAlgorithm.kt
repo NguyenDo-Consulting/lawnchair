@@ -19,9 +19,12 @@ package app.lawnchair.search.algorithms
 import android.content.Context
 import android.os.Handler
 import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.preferences2.firstCached
 import app.lawnchair.search.adapter.SPACE
 import app.lawnchair.search.adapter.SearchTargetCompat
 import app.lawnchair.search.adapter.SearchTargetFactory
+import app.lawnchair.search.searchwith.SearchWithProvider
+import app.lawnchair.search.searchwith.createSearchWithTargets
 import app.lawnchair.util.isDefaultLauncher
 import com.android.launcher3.LauncherAppState
 import com.android.launcher3.allapps.BaseAllAppsAdapter
@@ -73,11 +76,13 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
     override fun doSearch(query: String, callback: SearchCallback<BaseAllAppsAdapter.AdapterItem>) {
         modelRetryJob?.cancel()
         modelRetryJob = appState.model.runWhenModelLoaded(coroutineScope) { apps ->
+            // NDShades: asks the package manager, so here rather than on the main thread below
+            val searchWith = SearchWithProvider.resolveEnabled(context, prefs2.searchWithProviders.firstCached())
             // Track the delivery job so cancel(true) (e.g. from a drawer close) can stop a
             // late-arriving result from being delivered after reset. See issue #7325.
             currentJob?.cancel()
             currentJob = coroutineScope.launch(Dispatchers.Main) {
-                val results = getResult(apps.data, query)
+                val results = getResult(apps.data, query, searchWith)
                 callback.onSearchResult(query, results)
             }
         }
@@ -94,6 +99,7 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
     private fun getResult(
         apps: MutableList<AppInfo>,
         query: String,
+        searchWith: List<String>,
     ): ArrayList<BaseAllAppsAdapter.AdapterItem> {
         val appResults = if (enableFuzzySearch) {
             SearchUtils.fuzzySearch(apps, query, maxResultsCount, hiddenApps, lockedApps)
@@ -122,7 +128,8 @@ class LawnchairAppSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm(c
             searchTargets.add(searchTargetFactory.createHeaderTarget(SPACE))
         }
 
-        searchTargetFactory.createMarketSearchTarget(query)?.let { searchTargets.add(it) }
+        // NDShades: the "Search with" row in place of the "Search for more apps" row
+        searchTargets.addAll(searchTargetFactory.createSearchWithTargets(context, query, searchWith))
 
         setFirstItemQuickLaunch(searchTargets)
         val adapterItems = transformSearchResults(searchTargets)

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2026, Nguyen-Do Consulting
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!-- NDShades: the drawer search's "Search with" row. In their own file so upstream's strings.xml stays as it is. -->
+<resources>
+    <!-- Heading over the row of search provider icons in the drawer search results -->
+    <string name="search_with_label">Search with</string>
+    <string name="search_with_providers_heading">Check to show, long-press the handle to reorder</string>
+    <!-- Shown under "Search provider" in settings when no provider is checked -->
+    <string name="search_with_none">None</string>
+    <string name="search_with_opens_website">Not installed, opens the website</string>
+
+    <string name="search_with_google" translatable="false">Google</string>
+    <string name="search_with_play_store" translatable="false">Play Store</string>
+    <string name="search_with_wikipedia" translatable="false">Wikipedia</string>
+    <string name="search_with_maps">Maps</string>
+    <string name="search_with_spotify" translatable="false">Spotify</string>
+    <string name="search_with_youtube" translatable="false">YouTube</string>
+    <string name="search_with_duckduckgo" translatable="false">DuckDuckGo</string>
+    <string name="search_with_youtube_music" translatable="false">YouTube Music</string>
+    <string name="search_with_translate" translatable="false">Google Translate</string>
+</resources>

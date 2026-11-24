@@ -312,12 +312,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_show_hotseat),
     )
 
+    // NDShades: always App search, so the dock and drawer search bars open the drawer search. The
+    // "Search provider" screen now picks the drawer's "Search with" row, see searchWithProviders.
     val hotseatQsbProvider = preference(
         key = stringPreferencesKey(name = "dock_search_bar_provider"),
-        defaultValue = getRemoteDefault("dock_search_bar_provider")?.let {
-            QsbSearchProvider.fromId(it)
-        } ?: QsbSearchProvider.resolveDefault(context),
-        parse = { QsbSearchProvider.fromId(it) },
+        defaultValue = QsbSearchProvider.fromId(app.lawnchair.qsb.providers.AppSearch.id),
+        parse = { QsbSearchProvider.fromId(app.lawnchair.qsb.providers.AppSearch.id) },
         save = { it.id },
     )
 
@@ -500,6 +500,15 @@ class PreferenceManager2 @Inject constructor(
 
     // NDShades: hiddenAppsInSearch removed. Hidden apps are always found by search, and hidden
     // and locked apps only by their full name, see filterHiddenApps.
+
+    /**
+     * NDShades: The providers of the drawer search's "Search with" row, in order and checked or not,
+     * see [app.lawnchair.search.searchwith.SearchWithOrder].
+     */
+    val searchWithProviders = preference(
+        key = stringPreferencesKey(name = "search_with_providers"),
+        defaultValue = with(app.lawnchair.search.searchwith.SearchWithOrder) { DEFAULT.toPrefString() },
+    )
 
     val searchAlgorithm = preference(
         key = stringPreferencesKey(name = "search_algorithm"),

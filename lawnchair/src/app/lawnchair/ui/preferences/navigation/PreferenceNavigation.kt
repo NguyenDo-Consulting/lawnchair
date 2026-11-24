@@ -43,6 +43,7 @@ import app.lawnchair.ui.preferences.components.search.SearchProviderId
 import app.lawnchair.ui.preferences.components.search.SearchProviderPreferenceScreen
 import app.lawnchair.ui.preferences.destinations.AppDrawerFiltersPreference
 import app.lawnchair.applock.LockedAppsPreferences
+import app.lawnchair.search.searchwith.SearchWithPreferences
 import app.lawnchair.ui.preferences.destinations.AppDrawerFoldersPreference
 import app.lawnchair.ui.preferences.destinations.SelectAppsForDrawerFilter
 import app.lawnchair.ui.preferences.destinations.AppDrawerPreferences
@@ -69,7 +70,6 @@ import app.lawnchair.ui.preferences.destinations.PredictionsPreferences
 import app.lawnchair.ui.preferences.destinations.PreferencesDashboard
 import app.lawnchair.ui.preferences.destinations.QuickstepPreferences
 import app.lawnchair.ui.preferences.destinations.SearchPreferences
-import app.lawnchair.ui.preferences.destinations.SearchProviderPreferences
 import app.lawnchair.ui.preferences.destinations.SelectAppsForDrawerFolder
 import app.lawnchair.ui.preferences.destinations.SelectIconPreference
 import app.lawnchair.ui.preferences.destinations.ShapePreference
@@ -175,7 +175,7 @@ fun PreferenceNavigation(
         ) { DockPreferences() }
         composable<DockSearchProvider>(
             deepLinks = getDeepLink(DockSearchProvider),
-        ) { SearchProviderPreferences() }
+        ) { SearchWithPreferences() } // NDShades: pick several and order them, in place of SearchProviderPreferences
 
         composable<Smartspace>(
             deepLinks = getDeepLink(Smartspace),

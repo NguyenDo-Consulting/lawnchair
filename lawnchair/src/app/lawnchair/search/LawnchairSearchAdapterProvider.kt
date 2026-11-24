@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.search
 
 import android.util.SparseIntArray
@@ -8,6 +24,7 @@ import androidx.core.util.contains
 import app.lawnchair.allapps.views.SearchItemDecorator
 import app.lawnchair.allapps.views.SearchResultView
 import app.lawnchair.search.adapter.SearchAdapterItem
+import app.lawnchair.search.searchwith.SEARCH_WITH_LAYOUT
 import com.android.app.search.LayoutType
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.R
@@ -37,6 +54,7 @@ class LawnchairSearchAdapterProvider(
         append(SEARCH_RESULT_CALCULATOR, R.layout.search_result_tall_icon_row_calculator)
         append(SEARCH_RESULT_EMPTY_STATE, R.layout.search_result_empty_state)
         append(SEARCH_RESULT_SEARCH_SETTINGS, R.layout.search_result_search_settings)
+        append(SEARCH_RESULT_SEARCH_WITH, R.layout.search_result_search_with) // NDShades
     }
     private var quickLaunchItem: SearchResultView? = null
         set(value) {
@@ -117,6 +135,7 @@ class LawnchairSearchAdapterProvider(
         private const val SEARCH_RESULT_CALCULATOR = 1 shl 20
         private const val SEARCH_RESULT_EMPTY_STATE = 1 shl 21
         private const val SEARCH_RESULT_SEARCH_SETTINGS = 1 shl 22
+        private const val SEARCH_RESULT_SEARCH_WITH = 1 shl 23 // NDShades
 
         val viewTypeMap = mapOf(
             LayoutType.ICON_SINGLE_VERTICAL_TEXT to SEARCH_RESULT_ICON,
@@ -132,6 +151,7 @@ class LawnchairSearchAdapterProvider(
             LayoutType.CALCULATOR to SEARCH_RESULT_CALCULATOR,
             LayoutType.EMPTY_STATE to SEARCH_RESULT_EMPTY_STATE,
             LayoutType.SEARCH_SETTINGS to SEARCH_RESULT_SEARCH_SETTINGS,
+            SEARCH_WITH_LAYOUT to SEARCH_RESULT_SEARCH_WITH, // NDShades
         )
     }
 }

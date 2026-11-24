@@ -17,22 +17,18 @@
 package app.lawnchair.ui.preferences.components.search
 
 import androidx.compose.animation.Crossfade
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.TipsAndUpdates
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
@@ -50,9 +46,12 @@ import app.lawnchair.qsb.LawnQsbUi
 import app.lawnchair.qsb.QsbActions
 import app.lawnchair.qsb.buildQsbStyle
 import app.lawnchair.qsb.getHotseatBackgroundColor
+import app.lawnchair.qsb.providers.AppSearch
 import app.lawnchair.qsb.providers.Google
 import app.lawnchair.qsb.providers.PixelSearch
 import app.lawnchair.qsb.providers.QsbSearchProvider
+import app.lawnchair.search.searchwith.searchProvidersSummary
+import app.lawnchair.qsb.rememberGoogleWidgetButtons
 import app.lawnchair.qsb.rememberHotseatQsbState
 import app.lawnchair.theme.UiColorMode
 import app.lawnchair.theme.color.ColorOption
@@ -68,7 +67,6 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.ui.preferences.navigation.DockSearchProvider
 import app.lawnchair.ui.theme.isSelectedThemeDark
-import app.lawnchair.ui.theme.preferenceGroupColor
 import com.android.launcher3.R
 
 @Composable
@@ -124,11 +122,7 @@ fun DockSearchPreference(
                             NavigationActionPreference(
                                 label = stringResource(R.string.search_provider),
                                 destination = DockSearchProvider,
-                                subtitle = stringResource(
-                                    id = QsbSearchProvider.values()
-                                        .first { it == hotseatQsbProviderAdapter }
-                                        .name,
-                                ),
+                                subtitle = searchProvidersSummary(), // NDShades: several providers now
                             )
                         }
                         PreferenceGroup(
@@ -203,32 +197,32 @@ private fun DockSearchBarPreview(
 ) {
     val context = LocalContext.current
     val searchProvider = provider
-    val supportsLens = searchProvider == Google || searchProvider == PixelSearch
+    // NDShades: the same buttons as the dock bar, see LawnQsbLayout
+    val supportsLens = searchProvider == Google || searchProvider == PixelSearch || searchProvider == AppSearch
     val voiceIntent = remember(searchProvider, context) {
         LawnQsbLayout.getVoiceIntent(searchProvider, context)
     }
     val lensIntent = remember(supportsLens, context) {
         if (supportsLens) LawnQsbLayout.getLensIntent(context) else null
     }
+    val widgetButtons = rememberGoogleWidgetButtons(searchProvider)
 
     PreferenceGroup(
         heading = stringResource(id = R.string.preview_label),
     ) {
-        Box(
+        // NDShades: the wallpaper behind it, so transparency and stroke look as on the home screen
+        WallpaperBackdrop(
             modifier = modifier
                 .fillMaxWidth()
-                .background(color = preferenceGroupColor(), shape = MaterialTheme.shapes.large)
-                .padding(horizontal = 16.dp)
-                .width(IntrinsicSize.Max)
                 .height(dimensionResource(id = R.dimen.qsb_widget_height) + 24.dp),
-            contentAlignment = Alignment.Center,
         ) {
             LawnQsbUi(
                 state = rememberHotseatQsbState(
                     searchProvider,
                     themed,
                     showMic = voiceIntent != null,
-                    showLens = lensIntent != null,
+                    showLens = lensIntent != null || widgetButtons.lens,
+                    showAiMode = widgetButtons.aiMode,
                 ),
                 style = buildQsbStyle(
                     context = context,
@@ -248,7 +242,9 @@ private fun DockSearchBarPreview(
                     onQsbClick = {},
                     onEndIconClick = {},
                 ),
-                modifier = Modifier.height(48.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
             )
         }
     }

@@ -64,9 +64,12 @@ import app.lawnchair.qsb.LawnQsbUi
 import app.lawnchair.qsb.QsbActions
 import app.lawnchair.qsb.QsbIconId
 import app.lawnchair.qsb.buildQsbStyle
+import app.lawnchair.qsb.launchGoogleWidgetButton
+import app.lawnchair.qsb.providers.AppSearch
 import app.lawnchair.qsb.providers.Google
 import app.lawnchair.qsb.providers.PixelSearch
 import app.lawnchair.qsb.rememberAllAppsQsbState
+import app.lawnchair.qsb.rememberGoogleWidgetButtons
 import app.lawnchair.search.LawnchairRecentSuggestionProvider
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.isHiddenLockedAppName
@@ -184,7 +187,8 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
                 val themedQsb by prefs2.themedHotseatQsb.asState()
                 val shouldShowIcons by prefs2.matchHotseatQsbStyle.asState()
 
-                val supportsLens = searchProvider == Google || searchProvider == PixelSearch
+                val supportsLens = searchProvider == Google || searchProvider == PixelSearch ||
+                    searchProvider == AppSearch // NDShades: see LawnQsbLayout.getVoiceIntent
                 val voiceIntent = remember(searchProvider, context) {
                     getVoiceIntent(searchProvider, context)
                 }
@@ -192,13 +196,18 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
                     if (supportsLens) getLensIntent(context) else null
                 }
 
+                // NDShades: AI Mode where the Google search bar widget has it, and Lens there too
+                // even without the Lens app
+                val widgetButtons = rememberGoogleWidgetButtons(searchProvider)
+
                 val state = rememberAllAppsQsbState(
                     searchProvider = searchProvider,
                     themed = themedQsb,
                     shouldShowIcons = shouldShowIcons,
                     queryEmpty = queryEmpty,
                     showMic = voiceIntent != null,
-                    showLens = lensIntent != null,
+                    showLens = lensIntent != null || widgetButtons.lens,
+                    showAiMode = widgetButtons.aiMode,
                 )
 
                 val backgroundColor = if (supportBlur) {
@@ -242,9 +251,28 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
                     },
                     onEndIconClick = { id ->
                         when (id) {
-                            QsbIconId.MIC -> voiceIntent?.let { context.startActivity(it) }
+                            // NDShades: Google's own voice search, Lens and AI Mode, like its search
+                            // bar widget's buttons
+                            QsbIconId.MIC -> launchGoogleWidgetButton(
+                                context,
+                                searchProvider,
+                                Google.WidgetButton.VOICE_SEARCH,
+                                voiceIntent,
+                            )
 
-                            QsbIconId.LENS -> lensIntent?.let { context.startActivity(it) }
+                            QsbIconId.LENS -> launchGoogleWidgetButton(
+                                context,
+                                searchProvider,
+                                Google.WidgetButton.LENS,
+                                lensIntent,
+                            )
+
+                            QsbIconId.AI_MODE -> launchGoogleWidgetButton(
+                                context,
+                                searchProvider,
+                                Google.WidgetButton.AI_MODE,
+                                null,
+                            )
 
                             QsbIconId.CLEAR -> {
                                 input.reset()

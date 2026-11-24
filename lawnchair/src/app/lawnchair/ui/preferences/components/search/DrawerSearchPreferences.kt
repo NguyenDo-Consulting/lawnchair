@@ -31,6 +31,7 @@ import app.lawnchair.preferences2.PreferenceManager2
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.search.algorithms.LawnchairSearchAlgorithm
 import app.lawnchair.search.algorithms.engine.provider.web.CustomWebSearchProvider
+import app.lawnchair.search.searchwith.SearchWithPreferenceItem
 import app.lawnchair.ui.preferences.LocalNavController
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
@@ -92,6 +93,7 @@ fun DrawerSearchPreference(
                         navController.navigate(SearchProviderPreference(SearchProviderId.APPS))
                     },
                 )
+                SearchWithPreferenceItem() // NDShades: the providers of the "Search with" row under the apps
             }
             when (searchAlgorithm) {
                 LawnchairSearchAlgorithm.LOCAL_SEARCH -> {

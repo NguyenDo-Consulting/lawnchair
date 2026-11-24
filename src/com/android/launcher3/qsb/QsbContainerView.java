@@ -14,6 +14,7 @@
  * limitations under the License.
  *
  * Modifications copyright 2025, Lawnchair
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.qsb;
@@ -194,7 +195,12 @@ public class QsbContainerView extends FrameLayout {
             mWrapper = createWrapper(getContext());
             // Only add the view when enabled
             if (isQsbEnabled()) {
-                mQsbWidgetHost.startListening();
+                // NDShades: a preview doesn't listen. Only one host per id listens, so a settings
+                // or wallpaper preview took the updates from the real search bar, which then went
+                // blank. A preview still draws: createView gets the widget's current views.
+                if (!isInPreviewMode()) {
+                    mQsbWidgetHost.startListening();
+                }
                 mWrapper.addView(createQsb(mWrapper));
             }
             return mWrapper;
@@ -277,6 +283,11 @@ public class QsbContainerView extends FrameLayout {
         @Override
         public void onResume() {
             super.onResume();
+            // NDShades: listen again in case another host with this id took over, see onCreateView.
+            // Listening again also delivers the updates that were missed.
+            if (isQsbEnabled()) {
+                mQsbWidgetHost.startListening();
+            }
             if (mQsb != null && mQsb.isReinflateRequired(mOrientation)) {
                 rebindFragment();
             }

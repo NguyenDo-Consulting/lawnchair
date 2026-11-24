@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.qsb
 
 import android.content.Context
@@ -63,7 +79,18 @@ enum class QsbIconId {
     MIC,
     LENS,
     CLEAR,
+    AI_MODE, // NDShades: Google's AI Mode, like the Google search bar's button
 }
+
+/** NDShades: The AI Mode button, before the mic as on the Google search bar. */
+private fun aiModeIcon(label: String, visible: Boolean) = QsbIconState(
+    id = QsbIconId.AI_MODE,
+    resId = R.drawable.ic_ai_mode_flat,
+    themed = true,
+    method = ThemingMethod.TINT,
+    contentDescription = label,
+    visible = visible,
+)
 
 /**
  * Represents the state and visual configuration of an individual icon within the Quick Search Bar (QSB).
@@ -183,12 +210,14 @@ fun rememberHotseatQsbState(
     themed: Boolean,
     showMic: Boolean,
     showLens: Boolean,
+    showAiMode: Boolean = false, // NDShades
 ): QsbState {
     val searchLabel = stringResource(R.string.label_search)
     val voiceSearchLabel = stringResource(R.string.label_voice_search)
     val lensLabel = stringResource(R.string.label_lens)
+    val aiModeLabel = stringResource(R.string.label_ai_mode) // NDShades
 
-    return remember(searchProvider, themed, showMic, showLens, searchLabel, voiceSearchLabel, lensLabel) {
+    return remember(searchProvider, themed, showMic, showLens, showAiMode, searchLabel, voiceSearchLabel, lensLabel, aiModeLabel) {
         val iconRes = if (themed) searchProvider.themedIcon else searchProvider.icon
         val isGoogleProvider = searchProvider == Google || searchProvider == GoogleGo || searchProvider == PixelSearch
 
@@ -202,6 +231,7 @@ fun rememberHotseatQsbState(
                 contentDescription = searchLabel,
             ),
             endIcons = listOf(
+                aiModeIcon(aiModeLabel, showAiMode), // NDShades
                 QsbIconState(
                     id = QsbIconId.MIC,
                     resId = if (isGoogleProvider) R.drawable.ic_mic_color else R.drawable.ic_mic_flat,
@@ -245,13 +275,15 @@ fun rememberAllAppsQsbState(
     queryEmpty: Boolean,
     showMic: Boolean,
     showLens: Boolean,
+    showAiMode: Boolean = false, // NDShades
 ): QsbState {
     val searchLabel = stringResource(R.string.label_search)
     val voiceSearchLabel = stringResource(R.string.label_voice_search)
     val lensLabel = stringResource(R.string.label_lens)
     val clearLabel = stringResource(R.string.search_input_action_clear_results)
+    val aiModeLabel = stringResource(R.string.label_ai_mode) // NDShades
 
-    return remember(searchProvider, themed, shouldShowIcons, queryEmpty, showMic, showLens, searchLabel, voiceSearchLabel, lensLabel, clearLabel) {
+    return remember(searchProvider, themed, shouldShowIcons, queryEmpty, showMic, showLens, showAiMode, searchLabel, voiceSearchLabel, lensLabel, clearLabel, aiModeLabel) {
         val iconRes = if (themed && shouldShowIcons) searchProvider.themedIcon else searchProvider.icon
         val resId = if (shouldShowIcons) iconRes else R.drawable.ic_qsb_search
         val isGoogleProvider = searchProvider == Google || searchProvider == GoogleGo || searchProvider == PixelSearch
@@ -266,6 +298,7 @@ fun rememberAllAppsQsbState(
                 contentDescription = searchLabel,
             ),
             endIcons = listOf(
+                aiModeIcon(aiModeLabel, shouldShowIcons && showAiMode && queryEmpty), // NDShades
                 QsbIconState(
                     id = QsbIconId.MIC,
                     resId = if (isGoogleProvider) R.drawable.ic_mic_color else R.drawable.ic_mic_flat,

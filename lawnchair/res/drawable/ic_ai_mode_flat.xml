@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Copyright 2026, Nguyen-Do Consulting
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+<!-- NDShades: the search bar's AI Mode button, like ic_mic_flat: a magnifying glass whose ring
+     opens at the top right, with a sparkle in the gap, as on the Google search bar -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Ring, open from 20 degrees right of the top round to just below the right -->
+    <path
+        android:pathData="M14.33,10.99 A5.6,5.6 0 1,1 10.67,5.24"
+        android:strokeWidth="2"
+        android:strokeColor="#ffffff" />
+    <!-- Handle -->
+    <path
+        android:pathData="M12.7,14.45 L19.4,21.15"
+        android:strokeWidth="2"
+        android:strokeColor="#ffffff" />
+    <!-- Sparkle, sitting in the ring's gap -->
+    <path
+        android:pathData="M17.4,2 Q19.06,4.94 22,6.6 Q19.06,8.26 17.4,11.2 Q15.74,8.26 12.8,6.6 Q15.74,4.94 17.4,2 Z"
+        android:fillColor="#ffffff" />
+</vector>

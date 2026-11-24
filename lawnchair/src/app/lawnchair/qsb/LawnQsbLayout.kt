@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.qsb
 
 import android.content.ComponentName
@@ -56,6 +72,9 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
     override fun onFinishInflate() {
         super.onFinishInflate()
 
+        // NDShades: for the wallpaper behind the search bar preview in settings
+        addOnLayoutChangeListener { bar, _, _, _, _, _, _, _, _ -> DockSearchBarPosition.record(bar) }
+
         preferenceManager2 = PreferenceManager2.getInstance(context)
         searchProvider = getSearchProvider(context, preferenceManager2)
 
@@ -75,7 +94,8 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         }
                         val themed by prefs2.themedHotseatQsb.asState()
 
-                        val supportsLens = searchProvider == Google || searchProvider == PixelSearch
+                        val supportsLens = searchProvider == Google || searchProvider == PixelSearch ||
+                            searchProvider == AppSearch // NDShades: see getVoiceIntent
                         val voiceIntent = remember(searchProvider, context) {
                             getVoiceIntent(searchProvider, context)
                         }
@@ -83,11 +103,16 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             if (supportsLens) getLensIntent(context) else null
                         }
 
+                        // NDShades: AI Mode where the Google search bar widget has it, and Lens there
+                        // too even without the Lens app
+                        val widgetButtons = rememberGoogleWidgetButtons(searchProvider)
+
                         val state = rememberHotseatQsbState(
                             searchProvider = searchProvider,
                             themed = themed,
                             showMic = voiceIntent != null,
-                            showLens = lensIntent != null,
+                            showLens = lensIntent != null || widgetButtons.lens,
+                            showAiMode = widgetButtons.aiMode,
                         )
 
                         val style = buildQsbStyle(
@@ -120,8 +145,26 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             onEndIconClick = { id ->
                                 runCatching {
                                     when (id) {
-                                        QsbIconId.MIC -> voiceIntent?.let { context.startActivity(it) }
-                                        QsbIconId.LENS -> lensIntent?.let { context.startActivity(it) }
+                                        // NDShades: Google's own voice search, Lens and AI Mode, like
+                                        // its search bar widget's buttons
+                                        QsbIconId.MIC -> launchGoogleWidgetButton(
+                                            context,
+                                            searchProvider,
+                                            Google.WidgetButton.VOICE_SEARCH,
+                                            voiceIntent,
+                                        )
+                                        QsbIconId.LENS -> launchGoogleWidgetButton(
+                                            context,
+                                            searchProvider,
+                                            Google.WidgetButton.LENS,
+                                            lensIntent,
+                                        )
+                                        QsbIconId.AI_MODE -> launchGoogleWidgetButton(
+                                            context,
+                                            searchProvider,
+                                            Google.WidgetButton.AI_MODE,
+                                            null,
+                                        )
                                         else -> null
                                     }
                                 }
@@ -228,7 +271,9 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
             provider: QsbSearchProvider,
             context: Context,
         ): Intent? {
-            val intent = if (provider.supportVoiceIntent) provider.createVoiceIntent() else null
+            // NDShades: the search bars are always App search now, so the mic is Google's voice search
+            val voiceProvider = if (provider == AppSearch) Google else provider
+            val intent = if (voiceProvider.supportVoiceIntent) voiceProvider.createVoiceIntent() else null
 
             return if (intent == null || !resolveIntent(context, intent)) {
                 null
