@@ -300,6 +300,10 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver,
                     mDeviceProfile.getAllAppsProfile().getIconDrawablePaddingPx());
             defaultIconSize = mDeviceProfile.getAllAppsProfile().getIconSizePx();
             LawnchairUtilsKt.overrideAllAppsTextColor(this);
+            // NDShades: the drawer's label padding setting, in place of the style's 8dp
+            int labelPadding = Utilities.dpToPx(
+                    PreferenceCacheExtensionsKt.firstCached(pref2.getDrawerLabelPadding()));
+            setPadding(labelPadding, getPaddingTop(), labelPadding, getPaddingBottom());
         } else if (mDisplay == DISPLAY_FOLDER) {
             setTextSize(TypedValue.COMPLEX_UNIT_PX, mDeviceProfile.folderChildTextSizePx);
             setCompoundDrawablePadding(mDeviceProfile.folderChildDrawablePaddingPx);

@@ -1643,7 +1643,9 @@ public class Launcher extends StatefulActivity<LauncherState>
                     mAppsView.reset(isStarted() /* animate */);
                 }
 
-                if (!mWorkspace.isHandlingTouch()) {
+                // NDShades: only jump to the default page when home is pressed while already on
+                // home. Leaving an app returns to the page the home screen was last on.
+                if (shouldMoveToDefaultScreen && !mWorkspace.isHandlingTouch()) {
                     if (mWorkspace.getNextPage() != mWorkspace.getDefaultPage()) {
                         mWorkspace.post(mWorkspace::moveToDefaultScreen);
                     } else if (shouldMoveToDefaultScreen) {

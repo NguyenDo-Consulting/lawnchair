@@ -200,13 +200,23 @@ fun AppDrawerPreferences(
             ExpandAndShrink(
                 visible = showDrawerLabels.state.value,
             ) {
-                SliderPreference(
-                    label = stringResource(id = R.string.label_size),
-                    adapter = prefs2.drawerIconLabelSizeFactor.getAdapter(),
-                    step = 0.1F,
-                    valueRange = 0.5F..1.5F,
-                    showAsPercentage = true,
-                )
+                Column {
+                    SliderPreference(
+                        label = stringResource(id = R.string.label_size),
+                        adapter = prefs2.drawerIconLabelSizeFactor.getAdapter(),
+                        step = 0.1F,
+                        valueRange = 0.5F..1.5F,
+                        showAsPercentage = true,
+                    )
+                    // NDShades: less padding shows more of each app's name
+                    SliderPreference(
+                        label = stringResource(id = R.string.label_padding),
+                        adapter = prefs2.drawerLabelPadding.getAdapter(),
+                        step = 1,
+                        valueRange = 0..8,
+                        showUnit = "dp",
+                    )
+                }
             }
             ExpandAndShrink(
                 visible = showDrawerLabels.state.value,

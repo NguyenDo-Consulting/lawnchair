@@ -618,6 +618,14 @@ class PreferenceManager2 @Inject constructor(
         onSet = { reloadHelper.reloadGrid() },
     )
 
+    // NDShades: the space on each side of an app drawer label, in dp. Lawnchair's is 8dp; less
+    // shows more of the app's name.
+    val drawerLabelPadding = preference(
+        key = intPreferencesKey(name = "drawer_label_padding"),
+        defaultValue = 2,
+        onSet = { reloadHelper.reloadGrid() },
+    )
+
     val drawerCellHeightFactor = preference(
         key = floatPreferencesKey(name = "drawer_cell_height_factor"),
         defaultValue = resourceProvider.getFloat(R.dimen.config_default_drawer_cell_height_factor),

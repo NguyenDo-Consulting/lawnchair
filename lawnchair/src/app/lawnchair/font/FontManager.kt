@@ -1,3 +1,19 @@
+/*
+ * Modifications copyright 2026, Nguyen-Do Consulting
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.lawnchair.font
 
 import android.content.Context
@@ -81,8 +97,11 @@ class FontManager @Inject constructor(
                 }
             }
 
+            // NDShades: a font the user picked wins over the Google Sans Flex variant, which the
+            // app drawer's labels always ask for
             val gsfAxes = GoogleSansFlexVariableFont.axesFor(fontFamily)
-            if (gsfAxes != null) {
+            val userPicked = specMap[fontType]?.isCustomized == true
+            if (gsfAxes != null && !userPicked) {
                 val font = variableFonts.getOrPut(fontFamily!!) {
                     fontCache.googleSansFlexVariable(gsfAxes)
                 }
@@ -117,10 +136,19 @@ class FontManager @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    class FontSpec(val loader: () -> FontCache.Font, val fallback: Typeface) {
-        constructor(pref: BasePreferenceManager.FontPref, fallback: Typeface) : this(pref::get, fallback)
+    class FontSpec(
+        val loader: () -> FontCache.Font,
+        val fallback: Typeface,
+        private val defaultFont: FontCache.Font? = null,
+    ) {
+        constructor(pref: BasePreferenceManager.FontPref, fallback: Typeface) :
+            this(pref::get, fallback, pref.defaultValue)
 
         val font get() = loader()
+
+        /** NDShades: Whether the user picked a font other than the default. */
+        val isCustomized: Boolean
+            get() = defaultFont != null && font.toJsonString() != defaultFont.toJsonString()
     }
 
     companion object {
