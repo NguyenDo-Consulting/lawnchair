@@ -287,6 +287,12 @@ fun HomeScreenPreferences(
                 label = stringResource(id = R.string.force_widget_resize_label),
                 description = stringResource(id = R.string.force_widget_resize_description),
             )
+            // NDShades: widget stacks
+            SwitchPreference(
+                adapter = prefs2.loopWidgetStacks.getAdapter(),
+                label = stringResource(id = R.string.loop_widget_stacks_label),
+                description = stringResource(id = R.string.loop_widget_stacks_description),
+            )
             SliderPreference(
                 label = stringResource(id = R.string.widget_padding_label),
                 adapter = prefs2.widgetPaddingFactor.getAdapter(),

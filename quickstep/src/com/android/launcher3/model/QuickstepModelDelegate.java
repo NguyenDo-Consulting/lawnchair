@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2020 The Android Open Source Project
+ * Modifications copyright 2026, Nguyen-Do Consulting
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -262,6 +263,8 @@ public class QuickstepModelDelegate extends ModelDelegate {
             ItemInfo info, WorkspaceData itemsIdMap) {
         if (info.container > 0) {
             ItemInfo containerInfo = itemsIdMap.get(info.container);
+            // NDShades: a widget in a widget stack has the stack as its container, not a folder
+            if (containerInfo instanceof app.lawnchair.widgetstack.WidgetStackInfo) return null;
 
             if (!(containerInfo instanceof CollectionInfo)) {
                 Log.e(TAG, String.format(

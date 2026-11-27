@@ -101,6 +101,19 @@ Logic: `lawnchair/.../allapps/filters/`.
 | `allapps/BaseAllAppsAdapter` | `isSameFolder` | A renamed or re-sorted drawer folder redraws (upstream treats all folder rows as unchanged). |
 | `folder/Folder` | "Drawer folders hide their title", "App drawer folders already show their name" | Drawer folders get a shorter footer and no title margin. |
 
+### Drag and drop inside the app drawer
+
+Logic: `lawnchair/.../allapps/drag/` (`DrawerDragDrop`, `DrawerDropTarget`, `DrawerOrganizer`),
+registered in `LawnchairLauncher.onCreate`.
+
+| File | Canary | What the hook does |
+| --- | --- | --- |
+| `Workspace` | `DrawerDragDrop.keepsDrawerOpen` | `onDragStart` doesn't go to `SPRING_LOADED` for a personal app dragged in the drawer, so the drawer stays open. Dragging above the search bar goes there later. |
+| `folder/Folder` | `onDropInAppDrawer`, `!isInAppDrawer() \|\| mIsExternalDrag` | A drawer folder opened by hovering during a drawer drag (`beginExternalDrag`) takes the drop like a home screen folder, closes when the drag leaves (`completeDragExit`), and puts the app in place without the launcher model. `DrawerDragDrop.onDroppedInDrawerFolder` saves it when the folder closes. `sortContents` is `applySortMode` without its drawer check. |
+| `dragndrop/LauncherDragController` | `DrawerDragDrop.isDrawerDragActive` | `exitDrag` doesn't close the drawer when a drawer drag is cancelled. |
+| `folder/Folder` | `public void openToNameInAppDrawer`, `hidesTitleInAppDrawer` | A drawer folder made by dropping an app on another opens with its title showing and the keyboard up. |
+| `folder/Folder` | `DrawerDragDrop.onDrawerFolderRenamed` | `onBackKey` hands a drawer folder's new name to Lawnchair, which saves it to its folder table once the folder has closed. |
+
 ### Per-folder sorting and the folder options button
 
 Logic: `lawnchair/.../folder/` (`FolderSortMode`, `FolderSorter`, `FolderSortSheet`,
@@ -144,6 +157,29 @@ Logic: `lawnchair/.../backup/` (`LawnchairBackup`, `NovaBackupConverter`, `Resto
 | `provider/RestoreDbTask` | `WORKSPACE_SCREEN_ORDER).isBlank()` | Empty pages in a backup are kept. |
 | `model/data/FolderInfo` | `ITEM_TYPE_SHORTCUT` | Legacy shortcuts (e.g. contacts from Nova) can be in folders. |
 
+### Widget stacks and the widget menu
+
+Logic: `lawnchair/.../widgetstack/` (`WidgetStackInfo`, `WidgetStacks`, `WidgetStackView`,
+`WidgetMenu`, `WidgetStackFlow`, `WidgetStackActivity`). Results of the stack's list, Android's
+"allow widgets" prompt and widget setup screens come back through
+`LawnchairLauncher.onActivityResult`.
+
+| File | Canary | What the hook does |
+| --- | --- | --- |
+| `model/WorkspaceItemProcessor` | `WidgetStacks.loadStack` | Loads stack rows (item type 1000). |
+| `model/WorkspaceItemProcessor` | `WidgetStacks.isPossibleStackChild` | Keeps widgets whose container is a stack; upstream deletes any widget not on the home screen or dock. |
+| `model/WorkspaceItemProcessor` | `WidgetStacks.finalizeLoad` | Puts each stack's widgets in it, deletes empty stacks and widgets in a missing stack, and turns a one-widget stack back into that widget in place. |
+| `model/GridSizeMigrationDBController` | `WidgetStacks.migrationKey`, "a widget stack's widgets go with it" | Changing the grid moves stacks like folders, keeps their size and copies or removes their widgets with them. Without it the migration deletes stacks as an unknown item type. |
+| `model/GridSizeMigrationLogic` | `WidgetStacks.ITEM_TYPE_WIDGET_STACK` | Same, for the newer migration's "remove replaced items" step. |
+| `util/ItemInflater` | `WidgetStackView.create` | Builds a stack's view; each widget in it is made like a home screen widget. Upstream throws "Invalid Item Type". |
+| `Launcher` | `WidgetStacks.deleteStack` | `removeItem`: removing a stack removes its widgets and releases their ids through the Undo queue. |
+| `Launcher` | `WidgetStacks.bindInStack` | `bindAppWidget`: a widget placeholder that's replaced once the launcher is showing (or after a rotation) is replaced inside its stack. Upstream adds it to a page, which crashes for a widget in a stack. |
+| `Workspace` | `WidgetStacks.findWidgetView` | `getWidgetForAppWidgetId`: also looks inside stacks. Without it, finishing a restored widget's setup can't find a widget in a stack and leaves its "set up" placeholder for good. |
+| `Workspace` | `WidgetStacks.removeWidgets` | `removeItemsByMatcher` (when `persistChanges`) and `removeWidget`: an uninstalled app's widget, or one Android says is gone, is also taken out of its stack right away; the stack then dissolves or disappears by Edit's rules. Upstream only clears pages and folders. |
+| `Workspace` | `WidgetMenu.showForView` | `beginDragShared`: a long-press on a widget or stack opens its menu, and the drag waits for a move, like an app's menu. Upstream widgets have no menu. |
+| `quickstep/.../logging/StatsLogCompatManager` | `as? CollectionInfo` | Usage logging looks up an item's container and casts it to a folder; a widget in a stack has the stack as its container, so the cast is a safe one. Upstream's hard cast crashes. |
+| `quickstep/.../model/QuickstepModelDelegate` | `WidgetStackInfo` | `getContainer`: the home screen snapshot log treats a stack container as "no folder" instead of crashing on the cast. |
+
 ### Branding
 
 | File | Canary | What the hook does |
@@ -164,6 +200,11 @@ migration. In that case:
    whatever is missing, because a version-4 database could be either upstream's or ours.
 3. Keep upstream's own migrations as they are.
 
+Widget stacks are rows in Launcher3's favorites table with item type 1000
+(`WidgetStacks.ITEM_TYPE_WIDGET_STACK`), far above upstream's types. Their widgets are ordinary
+widget rows whose container is the stack's id. If upstream ever uses 1000, pick another number and
+add a database step that rewrites existing stack rows.
+
 ND Shades's preferences (gesture keys like `folder:<id>` and `shortcut:<key>`, drawer filters,
 folder blur, dock search position) are new keys in `PreferenceManager2`. They don't collide
 unless upstream adds a key with the same name.
@@ -182,6 +223,12 @@ build fails in the ND Shades file. Fix the call there rather than in the upstrea
 - `SystemShortcut` factories (`APP_INFO`, `WIDGETS`, `UNINSTALL_APP`, `REMOVE`), wrapped in
   `LawnchairLauncher.hideForPinnedShortcuts`.
 - `LauncherPrefs.WORKSPACE_SCREEN_ORDER`, which is Lawnchair's.
+- Widget stacks: `ModelWriter` (`addItemToDatabase`, `moveItemInDatabase`, `modifyItemInDatabase`,
+  `updateItemInDatabase`, `deleteWidgetInfo`, `deleteItemFromDatabase`), `LauncherWidgetHolder`
+  (`allocateAppWidgetId`, `deleteAppWidgetId`, `startConfigActivity`), `Workspace`
+  (`getWidgetForAppWidgetId`, `getViewByItemId`, `removeWorkspaceItem`, `addInScreen`),
+  `DragView.detachContentView`, `DragOptions.PreDragCondition`, `AppWidgetResizeFrame.showForWidget`,
+  `LauncherAppWidgetProviderInfo` spans, `WidgetSizes`, `LoaderCursor`, `CellPosMapper`.
 
 ## Test after a merge
 
@@ -196,7 +243,13 @@ shortcuts:
       the underline follows. Without filters, Personal | Work, or no tab bar without a work profile.
       With "Hide tab labels", a thin line where the bar flashes on each swipe.
 - [ ] Drawer folders: edit from the long-press menu, rename, re-sort; the drawer updates.
+- [ ] Drag in the drawer: hold over a folder until it opens and drop in a spot (free sort) or
+      anywhere (sorted), onto an app (new folder opens to be named), out of a folder, to another
+      tab at the edge, and above the search bar to the home screen with Remove and Uninstall.
 - [ ] Dock search bar above the icons, then below again.
+- [ ] Widget stacks: long-press a widget for its menu, letting go leaves it open, moving drags
+      the widget. Create a stack, swipe between its widgets, edit it, drag it to Remove and Undo.
+      Change the grid size; the stack stays.
 - [ ] Back up, then restore: empty pages, work apps, other apps' pinned shortcuts and contact
       shortcuts come back.
 - [ ] Settings > About shows ND Shades and the Lawnchair credit; the app name and icon are

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2018 The Android Open Source Project
+ * Modifications copyright 2026, Nguyen-Do Consulting
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,7 +219,8 @@ class StatsLogCompatManager private constructor(context: Context) : StatsLogMana
                     event,
                     applyOverwrites(
                         info.buildProto(
-                            dataModel.itemsIdMap[info.container] as CollectionInfo?,
+                            // NDShades: a widget's container can be a widget stack, not a folder
+                            dataModel.itemsIdMap[info.container] as? CollectionInfo,
                             context,
                         )
                     ),

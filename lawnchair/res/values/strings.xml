@@ -170,6 +170,32 @@
     <string name="folder_sort_most_used_needs_access">Needs usage access to count app opens. Until then, only shortcuts opened from Lawnchair are counted.</string>
     <string name="folder_sort_grant_usage_access">Grant usage access</string>
     <string name="sort_active_items_action">Sort active items</string>
+    <!-- NDShades: widget stacks -->
+    <string name="widget_stack_description">Widget stack, %1$d of %2$d</string>
+    <string name="widget_menu_create_stack">Create stack</string>
+    <string name="widget_menu_edit_stack">Edit stack</string>
+    <string name="widget_menu_resize">Resize</string>
+    <string name="widget_menu_settings">Widget settings</string>
+    <string name="widget_stack_edit_title">Edit stack</string>
+    <string name="widget_stack_add_widgets">Add widgets</string>
+    <string name="widget_stack_remove_widget">Remove %1$s</string>
+    <string name="widget_stack_reorder_widget">Drag to reorder %1$s</string>
+    <string name="loop_widget_stacks_label">Loop widget stacks</string>
+    <string name="loop_widget_stacks_description">Swiping past the last widget goes back to the first</string>
+    <string name="widget_stack_next">Next widget</string>
+    <string name="widget_stack_previous">Previous widget</string>
+    <string name="widget_stack_add_count">Add (%1$d)</string>
+    <string name="widget_stack_none_fit">No widgets fit this size</string>
+    <string name="widget_stack_search">Search widgets</string>
+    <plurals name="widget_stack_app_widget_count">
+        <item quantity="one">%1$d widget</item>
+        <item quantity="other">%1$d widgets</item>
+    </plurals>
+    <string name="widget_stack_app_selected">%1$d selected</string>
+    <string name="widget_stack_app_in_stack">%1$d in stack</string>
+    <string name="widget_stack_in_stack">In stack</string>
+    <string name="widget_stack_app_expanded">Expanded</string>
+    <string name="widget_stack_app_collapsed">Collapsed</string>
 
     <!-- A11y description -->
     <string name="accessibility_service_description">To perform certain actions when you use a gesture, such as locking your phone, Lawnchair requires accessibility access.\n\nLawnchair doesn\'t watch your actions, though all accessibility services require this privilege. Lawnchair discards any event sent by the system.\n\nTo lock your phone or open the Recents screen, Lawnchair uses the performGlobalAction accessibility service.</string>
@@ -729,8 +755,7 @@
     <plurals name="drawer_tabs_count">
         <item quantity="one">%d tab</item>
         <item quantity="other">%d tabs</item>
-    </plurals>
-    <string name="gesture_handler_open_shortcut_option">Open shortcut</string>
+    </plurals>    <string name="gesture_handler_open_shortcut_option">Open shortcut</string>
     <!-- Label of a shortcut opened by a gesture: 1 is the shortcut's name (e.g. a contact), 2 is the kind of shortcut (e.g. "Direct dial") -->
     <string name="gesture_handler_open_shortcut_label">%1$s (%2$s)</string>
     <string name="pick_shortcut_for_gesture">Pick shortcut</string>

@@ -12,12 +12,17 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 
 package com.android.launcher3.util
 
 import android.appwidget.AppWidgetHostView
 import android.content.Context
+import app.lawnchair.widgetstack.WidgetStackInfo
+import app.lawnchair.widgetstack.WidgetStackView
+import app.lawnchair.widgetstack.WidgetStacks
 import android.view.LayoutInflater
 import android.view.View
 import android.view.View.OnClickListener
@@ -97,6 +102,11 @@ class ItemInflater<T>(
             Favorites.ITEM_TYPE_APPWIDGET,
             Favorites.ITEM_TYPE_CUSTOM_APPWIDGET ->
                 return inflateAppWidget(item as LauncherAppWidgetInfo, context.modelWriter)
+            // NDShades: widget stacks; each widget in it is made like one on the home screen
+            WidgetStacks.ITEM_TYPE_WIDGET_STACK ->
+                return WidgetStackView.create(context, item as WidgetStackInfo) {
+                    inflateAppWidget(it, context.modelWriter)
+                }
             else -> throw RuntimeException("Invalid Item Type")
         }
     }

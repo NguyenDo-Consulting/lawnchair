@@ -59,6 +59,9 @@ import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.getThemedIconPacksInstalled
 import app.lawnchair.util.unsafeLazy
 import app.lawnchair.views.LawnchairFloatingSurfaceView
+import app.lawnchair.widgetstack.WidgetStackAccessibilityDelegate
+import app.lawnchair.widgetstack.WidgetStackFlow
+import com.android.launcher3.accessibility.LauncherAccessibilityDelegate
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.BubbleTextView
@@ -343,6 +346,28 @@ class LawnchairLauncher : QuickstepLauncher() {
             }
         }
     }
+
+    /** NDShades: widget stacks open their list, Android's widget prompt and setup screens for a result. */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (WidgetStackFlow.onActivityResult(this, requestCode, resultCode, data)) {
+            // As Launcher3's own handler does. Left set, QuickstepLauncher cancels the "pending"
+            // request and opens its proxy screen every time the launcher resumes, which loops
+            // until Android kills the launcher for launching screens too fast.
+            mPendingActivityRequestCode = -1
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
+    }
+
+    /** NDShades: widget stacks open the next setup screen only once the launcher has resumed. */
+    override fun onDeferredResumed() {
+        super.onDeferredResumed()
+        WidgetStackFlow.onLauncherDeferredResumed(this)
+    }
+
+    /** NDShades: TalkBack actions for widget stacks (move, remove, edit, next...) and Create stack. */
+    override fun createAccessibilityDelegate(): LauncherAccessibilityDelegate =
+        WidgetStackAccessibilityDelegate(this)
 
     override fun getSupportedShortcuts(container: Int): Stream<SystemShortcut.Factory<*>> = Stream.concat(
         super.getSupportedShortcuts(container),

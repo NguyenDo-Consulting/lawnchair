@@ -163,6 +163,8 @@ import app.lawnchair.smartspace.model.LawnchairSmartspace;
 import app.lawnchair.smartspace.model.SmartspaceMode;
 import app.lawnchair.theme.drawable.DrawableTokens;
 import app.lawnchair.util.LawnchairUtilsKt;
+import app.lawnchair.widgetstack.WidgetMenu; // NDShades: widget long-press menu
+import app.lawnchair.widgetstack.WidgetStacks; // NDShades: widgets inside widget stacks
 
 /**
  * The workspace is a wide area with a wallpaper and a finite number of pages.
@@ -2000,6 +2002,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             if (btv.isDisplaySearchResult()) {
                 dragOptions.preDragEndScale = (float) mAllAppsIconSize / btv.getIconSize();
             }
+        } else if (!dragOptions.isAccessibleDrag && dragOptions.preDragCondition == null) {
+            // NDShades: widgets and widget stacks open their menu; the drag waits for a move
+            dragOptions.preDragCondition = WidgetMenu.showForView(mLauncher, child);
         }
 
         boolean lockHomeScreen = PreferenceCacheExtensionsKt.firstCached(mPreferenceManager2.getLockHomeScreen());
@@ -3733,7 +3738,7 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
      * @param appWidgetId
      */
     public void removeWidget(int appWidgetId) {
-        mapOverItems((info, view) -> {
+        View removed = mapOverItems((info, view) -> {
             if (info instanceof LauncherAppWidgetInfo) {
                 LauncherAppWidgetInfo appWidgetInfo = (LauncherAppWidgetInfo) info;
                 if (appWidgetInfo.appWidgetId == appWidgetId) {
@@ -3744,6 +3749,13 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
             }
             return false;
         });
+        // NDShades: a widget inside a widget stack isn't on a page
+        if (removed == null) {
+            WidgetStacks.removeWidgets(mLauncher,
+                    info -> info instanceof LauncherAppWidgetInfo lawi
+                            && lawi.appWidgetId == appWidgetId,
+                    true, "widget is removed in response to widget remove broadcast");
+        }
     }
 
     public boolean isDropEnabled() {
@@ -3834,8 +3846,10 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
     }
 
     public LauncherAppWidgetHostView getWidgetForAppWidgetId(final int appWidgetId) {
-        return (LauncherAppWidgetHostView) mapOverItems((info, v) ->
+        LauncherAppWidgetHostView view = (LauncherAppWidgetHostView) mapOverItems((info, v) ->
                 (info instanceof LauncherAppWidgetInfo lawi) && lawi.appWidgetId == appWidgetId);
+        // NDShades: a widget in a widget stack isn't on a page; look inside the stacks too
+        return view != null ? view : WidgetStacks.findWidgetView(this, appWidgetId);
     }
 
     void clearDropTargets() {
@@ -3889,6 +3903,11 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
                     }
                 }
             }
+        }
+        if (persistChanges) {
+            // NDShades: also widgets inside widget stacks, when items are really removed (an
+            // app uninstalled), not just redrawn. The model has already deleted their rows.
+            WidgetStacks.removeWidgets(mLauncher, matcher, false, "widget's app removed");
         }
 
         if (persistChanges) {

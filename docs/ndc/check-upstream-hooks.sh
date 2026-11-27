@@ -45,6 +45,13 @@ Drawer filters|src/com/android/launcher3/allapps/FloatingHeaderView.java|public 
 Drawer folders|src/com/android/launcher3/allapps/BaseAllAppsAdapter.java|isSameFolder
 Drawer folders|src/com/android/launcher3/folder/Folder.java|Drawer folders hide their title
 Drawer folders|src/com/android/launcher3/folder/Folder.java|App drawer folders already show their name
+Drawer drag and drop|src/com/android/launcher3/Workspace.java|DrawerDragDrop.keepsDrawerOpen
+Drawer drag and drop|src/com/android/launcher3/dragndrop/LauncherDragController.java|DrawerDragDrop.isDrawerDragActive
+Drawer drag and drop|src/com/android/launcher3/folder/Folder.java|public void openToNameInAppDrawer
+Drawer drag and drop|src/com/android/launcher3/folder/Folder.java|DrawerDragDrop.onDrawerFolderRenamed
+Drawer drag and drop|src/com/android/launcher3/folder/Folder.java|onDropInAppDrawer(d, launcher)
+Drawer drag and drop|src/com/android/launcher3/folder/Folder.java|isInAppDrawer() && !mIsExternalDrag
+Drawer drag and drop|src/com/android/launcher3/folder/Folder.java|(!isInAppDrawer() || mIsExternalDrag)
 Folder sorting|src/com/android/launcher3/folder/Folder.java|FolderSortSheet
 Folder sorting|src/com/android/launcher3/folder/Folder.java|FolderSortMode.FREE
 Folder sorting|src/com/android/launcher3/folder/Folder.java|public void applySortMode
@@ -62,6 +69,20 @@ Legacy shortcuts in folders|src/com/android/launcher3/model/data/FolderInfo.java
 Backup restore|src/com/android/launcher3/model/ModelDbController.java|consumePendingSanitize
 Backup restore|src/com/android/launcher3/provider/RestoreDbTask.java|RestoreProfiles.findProfileOnThisDevice
 Backup restore|src/com/android/launcher3/provider/RestoreDbTask.java|WORKSPACE_SCREEN_ORDER).isBlank()
+Widget stacks|src/com/android/launcher3/model/WorkspaceItemProcessor.kt|WidgetStacks.loadStack
+Widget stacks|src/com/android/launcher3/model/WorkspaceItemProcessor.kt|WidgetStacks.isPossibleStackChild
+Widget stacks|src/com/android/launcher3/model/WorkspaceItemProcessor.kt|WidgetStacks.finalizeLoad
+Widget stacks|src/com/android/launcher3/model/GridSizeMigrationDBController.java|WidgetStacks.migrationKey
+Widget stacks|src/com/android/launcher3/model/GridSizeMigrationDBController.java|a widget stack's widgets go with it
+Widget stacks|src/com/android/launcher3/model/GridSizeMigrationLogic.kt|WidgetStacks.ITEM_TYPE_WIDGET_STACK
+Widget stacks|src/com/android/launcher3/util/ItemInflater.kt|WidgetStackView.create
+Widget stacks|src/com/android/launcher3/Launcher.java|WidgetStacks.deleteStack
+Widget stacks|src/com/android/launcher3/Launcher.java|WidgetStacks.bindInStack
+Widget stacks|src/com/android/launcher3/Workspace.java|WidgetStacks.findWidgetView
+Widget stacks|src/com/android/launcher3/Workspace.java|WidgetStacks.removeWidgets
+Widget menu|src/com/android/launcher3/Workspace.java|WidgetMenu.showForView
+Widget stacks|quickstep/src/com/android/quickstep/logging/StatsLogCompatManager.kt|as? CollectionInfo
+Widget stacks|quickstep/src/com/android/launcher3/model/QuickstepModelDelegate.java|widgetstack.WidgetStackInfo
 Branding|build.gradle|com.nguyendoconsulting.launcher
 Branding|build.gradle|ndshades/res
 Branding|build.gradle|NDShades.

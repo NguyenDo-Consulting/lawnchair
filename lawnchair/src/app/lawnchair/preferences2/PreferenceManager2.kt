@@ -403,6 +403,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_widget_unlimited_size),
     )
 
+    // NDShades: swiping past a widget stack's last widget goes back to the first (and the other way).
+    val loopWidgetStacks = preference(
+        key = booleanPreferencesKey(name = "loop_widget_stacks"),
+        defaultValue = true,
+    )
+
     val showStatusBar = preference(
         key = booleanPreferencesKey(name = "show_status_bar"),
         defaultValue = context.resources.getBoolean(R.bool.config_default_show_status_bar),

@@ -30,6 +30,7 @@ import android.text.TextUtils
 import android.util.Log
 import android.util.LongSparseArray
 import android.util.SparseArray
+import app.lawnchair.widgetstack.WidgetStacks
 import com.android.launcher3.Flags
 import com.android.launcher3.InvariantDeviceProfile
 import com.android.launcher3.LauncherSettings.Favorites
@@ -121,6 +122,9 @@ class WorkspaceItemProcessor(
                 Favorites.ITEM_TYPE_APP_PAIR -> processFolderOrAppPair()
                 Favorites.ITEM_TYPE_APPWIDGET,
                 Favorites.ITEM_TYPE_CUSTOM_APPWIDGET -> processWidget()
+                // NDShades: widget stacks
+                WidgetStacks.ITEM_TYPE_WIDGET_STACK ->
+                    c.checkAndAddItem(WidgetStacks.loadStack(c), loadedItems, memoryLogger)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Desktop items loading interrupted", e)
@@ -570,7 +574,8 @@ class WorkspaceItemProcessor(
             )
             return
         }
-        if (!c.isOnWorkspaceOrHotseat) {
+        // NDShades: a widget may also be in a widget stack; WidgetStacks.finalizeLoad checks that.
+        if (!c.isOnWorkspaceOrHotseat && !WidgetStacks.isPossibleStackChild(c.container)) {
             c.markDeleted(
                 "processWidget: invalid Widget container != CONTAINER_DESKTOP nor CONTAINER_HOTSEAT." +
                     " id=${c.id}," +
@@ -740,6 +745,8 @@ class WorkspaceItemProcessor(
         // Cleans up app pairs if they don't have the right number of member apps (2).
         removeItems(modelDbController.deleteBadAppPairs())
         removeItems(modelDbController.deleteUnparentedApps())
+        // NDShades: fill widget stacks and tidy up empty or one-widget ones
+        removeItems(WidgetStacks.finalizeLoad(loadedItems, modelDbController))
         return loadedItems
     }
 

@@ -257,6 +257,8 @@ import com.android.launcher3.views.FloatingIconView;
 import com.android.launcher3.views.FloatingSurfaceView;
 import com.android.launcher3.views.OptionsPopupView;
 import app.lawnchair.views.EditModePageStrip;
+import app.lawnchair.widgetstack.WidgetStackInfo; // NDShades: widget stacks
+import app.lawnchair.widgetstack.WidgetStacks;
 import com.android.launcher3.views.ScrimView;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
 import com.android.launcher3.widget.LauncherAppWidgetProviderInfo;
@@ -2077,6 +2079,12 @@ public class Launcher extends StatefulActivity<LauncherState>
             if (deleteFromDb) {
                 getModelWriter().deleteWidgetInfo(widgetInfo, getAppWidgetHolder(), reason);
             }
+        } else if (itemInfo instanceof WidgetStackInfo stack) {
+            // NDShades: a widget stack is removed with all its widgets
+            mWorkspace.removeWorkspaceItem(v);
+            if (deleteFromDb) {
+                WidgetStacks.deleteStack(getModelWriter(), getAppWidgetHolder(), stack, reason);
+            }
         } else {
             return false;
         }
@@ -2294,6 +2302,8 @@ public class Launcher extends StatefulActivity<LauncherState>
      * Add the views for a widget to the workspace.
      */
     public void bindAppWidget(LauncherAppWidgetInfo item) {
+        // NDShades: a widget in a widget stack is re-made inside its stack, not on a page
+        if (WidgetStacks.bindInStack(this, item)) return;
         View view = mItemInflater.inflateItem(item);
         if (view != null) {
             mWorkspace.addInScreen(view, item);

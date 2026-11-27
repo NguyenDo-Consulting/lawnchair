@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.model
 
@@ -21,6 +23,7 @@ import android.graphics.Point
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import app.lawnchair.preferences2.PreferenceManager2
+import app.lawnchair.widgetstack.WidgetStacks
 import com.android.launcher3.BuildConfig
 import com.android.launcher3.BuildConfigs
 import com.android.launcher3.Flags
@@ -442,7 +445,11 @@ class GridSizeMigrationLogic {
                     entryCountDiff[entry]?.let { entryDiff ->
                         if (entryDiff < 0) {
                             add(entry.id)
-                            if (entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER) {
+                            if (
+                                entry.itemType == LauncherSettings.Favorites.ITEM_TYPE_FOLDER ||
+                                    // NDShades: a widget stack's widgets go with it
+                                    entry.itemType == WidgetStacks.ITEM_TYPE_WIDGET_STACK
+                            ) {
                                 entry.mFolderItems.values.forEach { ids ->
                                     ids.forEach { value -> add(value) }
                                 }
