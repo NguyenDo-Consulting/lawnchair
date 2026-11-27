@@ -12,6 +12,8 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * Modifications copyright 2026, Nguyen-Do Consulting
  */
 package com.android.launcher3.dragndrop;
 
@@ -45,6 +47,8 @@ import com.android.launcher3.dragndrop.DragOptions.PreDragCondition;
 import com.android.launcher3.model.data.ItemInfo;
 import com.android.launcher3.util.TouchUtil;
 import com.android.launcher3.widget.util.WidgetDragScaleUtils;
+
+import app.lawnchair.allapps.drag.DrawerDragDrop; // NDShades: drag and drop in the app drawer
 
 /**
  * Drag controller for Launcher activity
@@ -244,7 +248,9 @@ public class LauncherDragController extends DragController<Launcher> {
 
     @Override
     protected void exitDrag() {
-        if (!mIsInPreDrag && !mActivity.isInState(EDIT_MODE)) {
+        // NDShades: a cancelled drag in the app drawer leaves the drawer open, see DrawerDragDrop
+        if (!mIsInPreDrag && !mActivity.isInState(EDIT_MODE)
+                && !DrawerDragDrop.isDrawerDragActive(mActivity)) {
             mActivity.getStateManager().goToState(NORMAL, SPRING_LOADED_EXIT_DELAY);
         }
     }

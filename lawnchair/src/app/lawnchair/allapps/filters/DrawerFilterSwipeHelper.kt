@@ -31,6 +31,7 @@ import app.lawnchair.preferences2.firstCached
 import com.android.launcher3.R
 import com.android.launcher3.allapps.ActivityAllAppsContainerView
 import com.android.launcher3.views.ActivityContext
+import java.util.WeakHashMap
 import kotlin.math.abs
 
 /**
@@ -63,6 +64,29 @@ class DrawerFilterSwipeHelper<T>(private val appsView: ActivityAllAppsContainerV
     private var velocityTracker: VelocityTracker? = null
     private var settleAnimator: ValueAnimator? = null
     private val tmpLocation = IntArray(2)
+
+    init {
+        instances[appsView] = this
+    }
+
+    /** Whether the list is moving between tabs, by a swipe or [slideToTab]. */
+    val isMoving: Boolean get() = dragging || settleAnimator != null
+
+    /**
+     * Slides to the next ([forward]) or previous tab without a finger, as a finished swipe does,
+     * over [duration] ms. Used while dragging an app to the edge of the drawer. Returns false when
+     * there's no tab that way or a switch is already moving.
+     */
+    fun slideToTab(forward: Boolean, duration: Long): Boolean {
+        if (isMoving || listWidth() <= 0f) return false
+        neighbors.prepare()
+        val neighbor = neighbors.neighbor(forward) ?: return false
+        target = neighbor
+        offset = 0f
+        neighbors.startDrag(neighbor)
+        settle(neighbor, -neighbor.side * listWidth(), switch = true, fixedDuration = duration)
+        return true
+    }
 
     /** Returns true to take the rest of the gesture from the app list and the tab pager. */
     fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
@@ -181,10 +205,15 @@ class DrawerFilterSwipeHelper<T>(private val appsView: ActivityAllAppsContainerV
         settle(neighbor, end, switch)
     }
 
-    private fun settle(neighbor: DrawerTabNeighbors<T>.Neighbor, end: Float, switch: Boolean) {
+    private fun settle(
+        neighbor: DrawerTabNeighbors<T>.Neighbor,
+        end: Float,
+        switch: Boolean,
+        fixedDuration: Long? = null,
+    ) {
         val width = listWidth()
         val distance = abs(end - offset)
-        val duration = if (width > 0) {
+        val duration = fixedDuration ?: if (width > 0) {
             (MAX_SETTLE_DURATION * distance / width).toLong().coerceIn(MIN_SETTLE_DURATION, MAX_SETTLE_DURATION)
         } else {
             MIN_SETTLE_DURATION
@@ -212,12 +241,21 @@ class DrawerFilterSwipeHelper<T>(private val appsView: ActivityAllAppsContainerV
     private fun listWidth(): Float = (appsView.activeRecyclerView?.width ?: 0).toFloat()
 
     companion object {
+        // The helper of each drawer, for slideToTab
+        private val instances = WeakHashMap<View, DrawerFilterSwipeHelper<*>>()
+
+        /** The swipe helper of [appsView], if it has one. */
+        fun of(appsView: View): DrawerFilterSwipeHelper<*>? = instances[appsView]
+
+        /** How long the list takes to slide the whole way after a swipe, at most. */
+        const val MAX_SETTLE_DURATION_MS = 250L
+
         /** How far the list has to be dragged to switch without a flick, of its width. */
         private const val SWITCH_FRACTION = 0.3f
 
         /** Sideways speed of a flick that switches, like the personal/work pager's. */
         private const val FLING_VELOCITY_DP = 500f
         private const val MIN_SETTLE_DURATION = 80L
-        private const val MAX_SETTLE_DURATION = 250L
+        private const val MAX_SETTLE_DURATION = MAX_SETTLE_DURATION_MS
     }
 }

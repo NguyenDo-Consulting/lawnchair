@@ -77,6 +77,26 @@ class FolderService @Inject constructor(
         folderDao.updateFolderTitleAndSortMode(folderId, title, sortMode.id)
     }
 
+    // NDShades: drag and drop in the app drawer, see app.lawnchair.allapps.drag
+    suspend fun moveItemToFolder(componentKey: String, folderId: Int) = withContext(Dispatchers.IO) {
+        folderDao.moveItemToFolder(componentKey, folderId)
+    }
+
+    // NDShades: drag and drop in the app drawer
+    suspend fun setFolderItems(folderId: Int, componentKeys: List<String>) = withContext(Dispatchers.IO) {
+        folderDao.setFolderItems(folderId, componentKeys)
+    }
+
+    // NDShades: drag and drop in the app drawer
+    suspend fun removeItemFromFolders(componentKey: String) = withContext(Dispatchers.IO) {
+        folderDao.deleteItemsByComponentKey(componentKey)
+    }
+
+    // NDShades: drag and drop in the app drawer
+    suspend fun createFolderWithItems(title: String, componentKeys: List<String>): Int = withContext(Dispatchers.IO) {
+        folderDao.createFolderWithItems(title, componentKeys)
+    }
+
     suspend fun deleteFolderInfo(id: Int) = withContext(Dispatchers.IO) {
         folderDao.deleteFolder(id)
     }

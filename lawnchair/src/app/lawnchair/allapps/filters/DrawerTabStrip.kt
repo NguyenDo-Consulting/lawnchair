@@ -372,6 +372,30 @@ class DrawerTabStrip @JvmOverloads constructor(
         }
     }
 
+    /** A personal tab: a [DrawerFilter] id, or null for "All" (or "Personal"). */
+    class PersonalTab(val filterId: String?)
+
+    /**
+     * The personal tab whose label is at ([screenX], [screenY]), for dragging an app onto it. None
+     * while the labels are hidden or over the Work tab.
+     */
+    fun personalTabAt(screenX: Int, screenY: Int): PersonalTab? {
+        if (labelsHidden || !isShown) return null
+        val location = IntArray(2)
+        for (i in 0 until tabContainer.childCount) {
+            val tab = tabs.getOrNull(i) ?: continue
+            if (tab.isWork) continue
+            val tabView = tabContainer.getChildAt(i)
+            tabView.getLocationOnScreen(location)
+            if (screenX >= location[0] && screenX < location[0] + tabView.width &&
+                screenY >= location[1] && screenY < location[1] + tabView.height
+            ) {
+                return PersonalTab(tab.filterId)
+            }
+        }
+        return null
+    }
+
     private fun appsView(): ActivityAllAppsContainerView<*>? {
         val activityContext = generateSequence(context) { (it as? ContextWrapper)?.baseContext }
             .firstOrNull { it is ActivityContext } as? ActivityContext

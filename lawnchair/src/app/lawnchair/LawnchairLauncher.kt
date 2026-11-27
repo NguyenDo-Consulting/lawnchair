@@ -35,6 +35,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairApp.Companion.showQuickstepWarningIfNecessary
 import app.lawnchair.LawnchairApp.Companion.showRestoreFailureIfNecessary
+import app.lawnchair.allapps.drag.DrawerDropTarget
 import app.lawnchair.allapps.filters.DrawerFilterState
 import app.lawnchair.applock.AppLockManager
 import app.lawnchair.compat.LawnchairQuickstepCompat
@@ -191,6 +192,9 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     val gestureController by unsafeLazy { GestureController(this) }
 
+    /** NDShades: drag and drop inside the app drawer, see DrawerDragDrop */
+    val drawerDropTarget by unsafeLazy { DrawerDropTarget(this) }
+
     /**
      * NDShades: Re-sorts closed "Most used" folders on the home screen and dock when usage
      * counts change.
@@ -215,6 +219,7 @@ class LawnchairLauncher : QuickstepLauncher() {
         launcher.stateManager.addStateListener(clearSearchStateListener)
         launcher.stateManager.addStateListener(drawerSessionEndListener) // NDShades
         FolderUsageStats.addListener(folderUsageListener) // NDShades: per-folder sorting
+        drawerDropTarget.register() // NDShades: drag and drop inside the app drawer
 
         if (prefs.autoLaunchRoot.get()) {
             lifecycleScope.launch {

@@ -101,6 +101,54 @@ interface FolderDao {
 
     @RawQuery
     suspend fun checkpoint(supportSQLiteQuery: SupportSQLiteQuery): Int
+
+    // NDShades: drag and drop in the app drawer, see app.lawnchair.allapps.drag
+    @Query("DELETE FROM FolderItems WHERE item_info = :componentKey")
+    suspend fun deleteItemsByComponentKey(componentKey: String)
+
+    // NDShades: drag and drop in the app drawer
+    @Query("SELECT MAX(rank) FROM FolderItems WHERE folderId = :folderId")
+    suspend fun getMaxItemRank(folderId: Int): Int?
+
+    /** NDShades: Puts an app at the end of a drawer folder, taking it out of any other folder. */
+    @Transaction
+    suspend fun moveItemToFolder(componentKey: String, folderId: Int) {
+        deleteItemsByComponentKey(componentKey)
+        val rank = (getMaxItemRank(folderId) ?: -1) + 1
+        insertFolderItems(listOf(FolderItemEntity(folderId = folderId, rank = rank, componentKey = componentKey)))
+    }
+
+    /**
+     * NDShades: Sets a drawer folder's apps in this order, taking them out of any other folder.
+     * The title and sort mode stay.
+     */
+    @Transaction
+    suspend fun setFolderItems(folderId: Int, componentKeys: List<String>) {
+        componentKeys.forEach { deleteItemsByComponentKey(it) }
+        deleteFolderItemsByFolderId(folderId)
+        insertFolderItems(
+            componentKeys.mapIndexed { index, key ->
+                FolderItemEntity(folderId = folderId, rank = index, componentKey = key)
+            },
+        )
+    }
+
+    /**
+     * NDShades: Creates a drawer folder after the others with these apps, taking them out of any
+     * other folder. Returns the new folder's id.
+     */
+    @Transaction
+    suspend fun createFolderWithItems(title: String, componentKeys: List<String>): Int {
+        componentKeys.forEach { deleteItemsByComponentKey(it) }
+        val rank = (getMaxFolderRank() ?: -1) + 1
+        val folderId = insertFolder(FolderInfoEntity(title = title, rank = rank)).toInt()
+        insertFolderItems(
+            componentKeys.mapIndexed { index, key ->
+                FolderItemEntity(folderId = folderId, rank = index, componentKey = key)
+            },
+        )
+        return folderId
+    }
 }
 
 data class FolderWithItems(

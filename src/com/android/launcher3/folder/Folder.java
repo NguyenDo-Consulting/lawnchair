@@ -141,6 +141,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.patrykmichalik.opto.core.PreferenceExtensionsKt;
+import app.lawnchair.allapps.drag.DrawerDragDrop; // NDShades: naming a new drawer folder
 import app.lawnchair.folder.FolderSortMode;
 import app.lawnchair.folder.FolderSortSheet;
 import app.lawnchair.folder.FolderSorter;
@@ -277,6 +278,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
 
     private boolean mItemAddedBackToSelfViaIcon = false;
     private boolean mIsEditingName = false;
+    // NDShades: a drawer folder just made by drag and drop shows its title until it closes, so it
+    // can be named. See openToNameInAppDrawer.
+    private boolean mNamingInAppDrawer = false;
 
     // Outside-touch deferred close state. Close the folder on ACTION_UP of a
     // confirmed single-finger tap rather than on ACTION_DOWN, so multi-finger
@@ -547,6 +551,26 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         return mInfo.container == ItemInfo.NO_ID;
     }
 
+    /** NDShades: Drawer folders hide their title, except while a new one is being named. */
+    private boolean hidesTitleInAppDrawer() {
+        return isInAppDrawer() && !mNamingInAppDrawer;
+    }
+
+    /**
+     * NDShades: Opens a drawer folder just made by drag and drop with its title showing and the
+     * keyboard up, to name it. The name is saved in onBackKey. See DrawerDragDrop.
+     */
+    public void openToNameInAppDrawer() {
+        mNamingInAppDrawer = true;
+        mFolderName.setVisibility(View.VISIBLE);
+        animateOpen();
+        mFolderName.post(() -> {
+            if (!mIsOpen) return;
+            mFolderName.requestFocus();
+            mFolderName.showKeyboard();
+        });
+    }
+
     /**
      * LC: App drawer folders live in Lawnchair's own database and are not part of the
      * launcher model, so writing them through ModelWriter can collide with an unrelated
@@ -583,6 +607,10 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         }
         mInfo.setTitle(newTitle, getModelWriter());
         mFolderIcon.onTitleChanged(newTitle);
+        // NDShades: drawer folders aren't in the launcher model, so their name is saved there
+        if (isInAppDrawer()) {
+            DrawerDragDrop.onDrawerFolderRenamed(this);
+        }
 
         if (TextUtils.isEmpty(mInfo.title)) {
             mFolderName.setHint(R.string.folder_hint_text);
@@ -1156,6 +1184,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
             mContent.unbindItems();
         }
         mSuppressFolderDeletion = false;
+        mNamingInAppDrawer = false; // NDShades: see openToNameInAppDrawer
         clearDragInfo();
         setState(STATE_CLOSED);
         mContent.setCurrentPage(0);
@@ -1170,7 +1199,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     public boolean acceptDrop(DragObject d) {
         // LC: App drawer folders are not backed by the launcher model, so dropping
         // into them would write through ModelWriter and crash (#7127).
-        return !isInAppDrawer() && willAcceptItemType(d.dragInfo.itemType);
+        // NDShades: except a drawer folder opened by a drag in the drawer, see onDropInAppDrawer
+        return (!isInAppDrawer() || mIsExternalDrag) && willAcceptItemType(d.dragInfo.itemType);
     }
 
     public void onDragEnter(DragObject d) {
@@ -1271,7 +1301,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     };
 
     public void completeDragExit() {
-        if (isInAppDrawer()) {
+        // NDShades: a drawer folder opened by a drag in the drawer closes when the drag leaves it,
+        // as on the home screen (upstream: isInAppDrawer() alone)
+        if (isInAppDrawer() && !mIsExternalDrag) {
             // LC: ff8c5a827b85f47a0d8ed5e6ac449ab8042705c6
             return;
         }
@@ -1410,7 +1442,8 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     }
 
     public boolean isDropEnabled() {
-        return mState != STATE_ANIMATING && !isInAppDrawer();
+        // NDShades: a drawer folder opened by a drag in the drawer takes drops, see acceptDrop
+        return mState != STATE_ANIMATING && (!isInAppDrawer() || mIsExternalDrag);
     }
 
     private void centerAboutIcon() {
@@ -1483,7 +1516,7 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     int getFooterHeight() {
         // NDShades: Drawer folders hide their title, so with no page indicator either the footer
         // only needs to mirror the top padding
-        if (isInAppDrawer() && mContent.getPageCount() <= 1) {
+        if (hidesTitleInAppDrawer() && mContent.getPageCount() <= 1) {
             return mActivityContext.getDeviceProfile().folderContentPaddingTop;
         }
         return mFooterHeight;
@@ -1520,8 +1553,9 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         int minTitleWidth = getResources().getDimensionPixelSize(R.dimen.folder_title_min_width);
-        // NDShades: App drawer folders already show their name under the folder icon
-        if (isInAppDrawer()
+        // NDShades: App drawer folders already show their name under the folder icon, except a new
+        // one being named
+        if (hidesTitleInAppDrawer()
                 || (enableLauncherVisualRefresh() && mFolderName.getMeasuredWidth() < minTitleWidth)) {
             ((MarginLayoutParams) mFolderName.getLayoutParams()).setMarginEnd(0);
             // The post is necessary for margins to be recalculated. RTL UI is shifted otherwise.
@@ -1539,6 +1573,11 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (isInAppDrawer() || mIsDragInProgress) {
             return;
         }
+        sortContents();
+    }
+
+    /** NDShades: The work of applySortMode, also used by onDropInAppDrawer. */
+    private void sortContents() {
         List<ItemInfo> sorted = FolderSorter.sortedContents(getContext(), mInfo);
         if (sorted == null) {
             return;
@@ -1641,6 +1680,11 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         if (launcher == null) {
             return;
         }
+        // NDShades: drawer folders aren't in the launcher model, see onDropInAppDrawer
+        if (isInAppDrawer()) {
+            onDropInAppDrawer(d, launcher);
+            return;
+        }
 
         PendingAddShortcutInfo pasi = d.dragInfo instanceof PendingAddShortcutInfo
                 ? (PendingAddShortcutInfo) d.dragInfo : null;
@@ -1729,6 +1773,40 @@ public class Folder extends AbstractFloatingView implements ClipPathView, DragSo
         }
         mStatsLogManager.logger().withItemInfo(d.dragInfo).withInstanceId(d.logInstanceId)
                 .log(LAUNCHER_ITEM_DROP_COMPLETED);
+    }
+
+    /**
+     * NDShades: Puts an app dragged in the app drawer into this open drawer folder: at the drop
+     * spot in a free-sorted folder, or in its sorted place. Only the folder on screen changes
+     * here. The drawer folder table is updated when the folder closes, see DrawerDragDrop.
+     */
+    private void onDropInAppDrawer(DragObject d, Launcher launcher) {
+        ItemInfo item = d.dragInfo;
+        View view = mContent.createAndAddViewForRank(item, mEmptyCellRank);
+        mIsExternalDrag = false;
+        mItemsInvalidated = true;
+        rearrangeChildren();
+        executeWithContentUpdateSuppressed(() -> addFolderContent(item, mEmptyCellRank, false));
+        mIsDragInProgress = false;
+        // Sorted first, so the drop animation ends where the app stays.
+        sortContents();
+        if (mFolderIcon != null) {
+            mFolderIcon.onItemsChanged(false);
+        }
+
+        if (d.dragView.hasDrawn()) {
+            float scaleX = getScaleX();
+            float scaleY = getScaleY();
+            setScaleX(1.0f);
+            setScaleY(1.0f);
+            launcher.getDragLayer().animateViewIntoPosition(d.dragView, view, null);
+            setScaleX(scaleX);
+            setScaleY(scaleY);
+        } else {
+            d.deferDragViewCleanupPostAnimation = false;
+            view.setVisibility(VISIBLE);
+        }
+        DrawerDragDrop.onDroppedInDrawerFolder(this, item);
     }
 
     // This is used so the item doesn't immediately appear in the folder when added. In one case

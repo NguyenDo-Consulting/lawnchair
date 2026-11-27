@@ -147,6 +147,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import app.lawnchair.allapps.drag.DrawerDragDrop; // NDShades: drag and drop in the app drawer
 import app.lawnchair.gestures.IconSwipeTarget;
 import app.lawnchair.hotseat.HotseatPagedView;
 import app.lawnchair.gestures.PanToMoveController;
@@ -570,7 +571,9 @@ public class Workspace<T extends View & PageIndicator> extends PagedView<T>
         if (!(options.isAccessibleDrag && dragObject.dragSource instanceof Folder)) {
             mPanToMoveController.onDragStarted();
         }
-        if (!mLauncher.isInState(EDIT_MODE)) {
+        // NDShades: a drag in the app drawer keeps the drawer open, see DrawerDragDrop
+        if (!mLauncher.isInState(EDIT_MODE)
+                && !DrawerDragDrop.keepsDrawerOpen(mLauncher, dragObject, options)) {
             mLauncher.getStateManager().goToState(SPRING_LOADED);
         }
         mStatsLogManager.logger().withItemInfo(dragObject.dragInfo)
